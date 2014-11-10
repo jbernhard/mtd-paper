@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
+
+import numpy as np
+# import mtd
+
+
+def load_skip_outliers(fn, outliers=(0, 3)):
+    """
+    Read a tabular text file, skipping outlier rows.
+
+    fn : filename
+    outliers : list of row numbers to skip
+
+    """
+    with open(fn) as f:
+        x = np.array([l.split() for n, l in enumerate(f) if n not in outliers],
+                     dtype=float)
+
+    return x
+
+
+def load_model(ic, datadir='../data/model', ext='dat'):
+    """
+    Load data for an initial condition.
+    
+    ic : IC model name.
+    datadir : Directory containing data files.
+    ext : Data file extension.
+
+    Filenames must have format {datadir}/{ic}_{name}.{ext}
+
+    """
+    fmtstr = '{datadir}/{ic}_{}.{ext}'
+
+    with open(fmtstr.format('cent', **vars())) as f:
+        cent = np.array(f.read().split(), dtype=float)
+
+    design = load_skip_outliers(fmtstr.format('design', **vars()))
+    mult = load_skip_outliers(fmtstr.format('mult', **vars()))
+    v2 = load_skip_outliers(fmtstr.format('v2-2', **vars()))
+    v3 = load_skip_outliers(fmtstr.format('v3-2', **vars()))
+
+    return design, cent, mult, v2, v3
+
+
+def main():
+    try:
+        ic = sys.argv[1]
+    except IndexError:
+        ic = 'glb'
+
+    design, cent, mult, v2, v3 = load_model(ic)
+    print(cent)
+    print(design.shape, mult.shape, v2.shape, v3.shape)
+
+
+if __name__ == "__main__":
+    main()
