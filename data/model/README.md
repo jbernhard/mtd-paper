@@ -1,0 +1,31 @@
+# Model results
+
+Each file is named `<IC>_<description>.dat` where
+
+- `IC` is the initial condition
+  - `glb`: Glauber model
+  - `glb`: validation data for Glauber
+  - `kln`: KLN model
+
+- `description` denotes what the file contains
+  - `cent`: Centrality bins.  Each bin has width 5%; the numbers in the file are the bin middles.
+  - `design`: Latin-hypercube design for the input parameters.
+  - `mult`: Charged-particle multiplicity.
+  - `params`: Table listing the input parameter labels, TeX-formatted names, min, and max.
+  - `vn-k`: Flow cumulant v\_n{k}.
+
+The design is repeated for each centrality bin.  The _minimum_ number of events for each centrality bin and
+design point is
+
+  - 0-5%: 1500
+  - 10-15%: 2000
+  - 20-25%: 2500
+  - 30-35%: 3000
+  - 40-45%: 3500
+  - 50-55%: 4000
+
+In the `design` file, columns correspond to input parameters (as listed in `params`) and rows to design
+points.
+
+In files `mult` and `vn-k`, columns correspond to centrality bins (as listed in `cent`) and rows to
+Latin-hypercube design points.
