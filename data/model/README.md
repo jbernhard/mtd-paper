@@ -29,3 +29,5 @@ points.
 
 In files `mult` and `vn-k`, columns correspond to centrality bins (as listed in `cent`) and rows to
 Latin-hypercube design points.
+
+All calculations match ALICE kinematic cuts: 0.2 < pT < 3.0 GeV, |eta| < 1.
