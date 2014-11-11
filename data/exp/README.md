@@ -4,7 +4,7 @@
 
 ALICE Collaboration
 
-Multiparticle azimuthal correlations in p-Pb and Pb-Pb collisions at the CERN Large Hadron Collider
+*Multiparticle azimuthal correlations in p-Pb and Pb-Pb collisions at the CERN Large Hadron Collider*
 
 [PRC90, 054901 (2014)](http://journals.aps.org/prc/abstract/10.1103/PhysRevC.90.054901)
 

@@ -4,7 +4,7 @@ Each file is named `<IC>_<description>.dat` where
 
 - `IC` is the initial condition
   - `glb`: Glauber model
-  - `glb`: validation data for Glauber
+  - `glb-validation`: validation data for Glauber
   - `kln`: KLN model
 
 - `description` denotes what the file contains
@@ -17,17 +17,19 @@ Each file is named `<IC>_<description>.dat` where
 The design is repeated for each centrality bin.  The _minimum_ number of events for each centrality bin and
 design point is
 
-  - 0-5%: 1500
-  - 10-15%: 2000
-  - 20-25%: 2500
-  - 30-35%: 3000
-  - 40-45%: 3500
-  - 50-55%: 4000
+Centrality bin | Minimum events
+-------------- | --------------
+0–5%           | 1500
+10–15%         | 2000
+20–25%         | 2500
+30–35%         | 3000
+40–45%         | 3500
+50–55%         | 4000
 
 In the `design` file, columns correspond to input parameters (as listed in `params`) and rows to design
 points.
 
-In files `mult` and `vn-k`, columns correspond to centrality bins (as listed in `cent`) and rows to
-Latin-hypercube design points.
+In files `mult` and `vn-k`, columns correspond to centrality bins (as listed in `cent`) and rows to design
+points.
 
-All calculations match ALICE kinematic cuts: 0.2 < pT < 3.0 GeV, |eta| < 1.
+All calculations match ALICE kinematic cuts: 0.2 < _p<sub>T</sub>_ < 3.0 GeV, |_η_| < 1.
