@@ -1,60 +1,115 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys
+import pickle
 
 import numpy as np
-# import mtd
+import mtd
 
 
-def load_skip_outliers(fn, outliers=(0, 3)):
+class ModelData:
     """
-    Read a tabular text file, skipping outlier rows.
-
-    fn : filename
-    outliers : list of row numbers to skip
+    Read data as created by DataPreprocessor in ../data/model/preprocess and
+    handle basic array manipulations.
 
     """
-    with open(fn) as f:
-        x = np.array([l.split() for n, l in enumerate(f) if n not in outliers],
-                     dtype=float)
+    def __init__(self, ic, datadir='../data/model'):
+        with open('{}/{}.pkl'.format(datadir, ic), 'rb') as f:
+            self.__dict__.update(pickle.load(f))
 
-    return x
+        # cache quantities for transforming mult
+        sqrt_mult = np.sqrt(self.mult)
+        self._sqrt_mult_mean = sqrt_mult.mean(axis=0)
+        self._sqrt_mult_std = sqrt_mult.std(axis=0)
+        self._v2_std = self.v2.std(axis=0)
 
+    @property
+    def full_output(self):
+        """
+        Full matrix of training data (mult, v2, v3).
 
-def load_model(ic, datadir='../data/model', ext='dat'):
-    """
-    Load data for an initial condition.
-    
-    ic : IC model name.
-    datadir : Directory containing data files.
-    ext : Data file extension.
+        """
+        return np.hstack((self.transform_mult(), self.v2, self.v3))
 
-    Filenames must have format {datadir}/{ic}_{name}.{ext}
+    def unpack_full_output(self, y):
+        """
+        Separate a full matrix into (mult, v2, v3).
 
-    """
-    fmtstr = '{datadir}/{ic}_{}.{ext}'
+        """
+        mult, v2, v3 = np.hsplit(y, 3)
+        mult = self.inv_transform_mult(mult)
+        return mult, v2, v3
 
-    with open(fmtstr.format('cent', **vars())) as f:
-        cent = np.array(f.read().split(), dtype=float)
+    @property
+    def ndim(self):
+        """
+        Number of input dimensions.
 
-    design = load_skip_outliers(fmtstr.format('design', **vars()))
-    mult = load_skip_outliers(fmtstr.format('mult', **vars()))
-    v2 = load_skip_outliers(fmtstr.format('v2-2', **vars()))
-    v3 = load_skip_outliers(fmtstr.format('v3-2', **vars()))
+        """
+        return self.design.shape[1]
 
-    return design, cent, mult, v2, v3
+    def transform_mult(self, mult=None):
+        """
+        Transform multiplicity data before PCA:
+
+            - Take square root (makes the distribution more normal).
+            - Center (subtract mean).
+            - Scale to same variance as v2.
+
+        """
+        if mult is None:
+            mult = self.mult
+
+        mult = np.sqrt(mult)
+        mult -= self._sqrt_mult_mean
+        mult *= self._v2_std / self._sqrt_mult_std
+
+        return mult
+
+    def inv_transform_mult(self, mult):
+        """
+        Apply the inverse multiplicity transformation.
+
+        """
+        mult = mult * self._sqrt_mult_std / self._v2_std
+        mult += self._sqrt_mult_mean
+        mult **= 2.
+
+        return mult
 
 
 def main():
-    try:
-        ic = sys.argv[1]
-    except IndexError:
-        ic = 'glb'
+    print('loading data')
+    ic = 'glb'
+    md = ModelData(ic)
+    ndim = md.ndim
+    kernel = (
+        1. *
+        mtd.kernels.ExpSquaredKernel(np.full(ndim, .5), ndim=ndim) +
+        mtd.kernels.WhiteKernel(1e-8, ndim=ndim)
+    )
 
-    design, cent, mult, v2, v3 = load_model(ic)
-    print(cent)
-    print(design.shape, mult.shape, v2.shape, v3.shape)
+    mgp = mtd.MultiGP(md.design, md.full_output, kernel, npc=.99)
+
+    print('training')
+    training_prior = (
+        mtd.priors.VariancePrior() +
+        ndim * mtd.priors.LengthScalePrior() +
+        mtd.priors.NoisePrior()
+    )
+    mgp.train(training_prior, 20, 100)
+    chains = np.array([
+        mgp.get_training_sampler_attr(n, 'chain') for n in range(len(mgp))
+    ])
+
+    print('predicting validation design')
+    mdv = ModelData(ic + '-validation')
+    pred = md.unpack_full_output(mgp.predict(mdv.design))
+
+    print('saving results')
+    results = dict(training_chains=chains, validation_predictions=pred)
+    with open('{}.pkl'.format(ic), 'wb') as f:
+        pickle.dump(results, f, pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":
