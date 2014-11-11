@@ -12,7 +12,7 @@ Each file is named `<IC>_<description>.dat` where
   - `design`: Latin-hypercube design for the input parameters.
   - `mult`: Charged-particle multiplicity.
   - `params`: Table listing the input parameter labels, TeX-formatted names, min, and max.
-  - `vn-k`: Flow cumulant v\_n{k}.
+  - `vn`: Flow cumulant _v<sub>n</sub>_{2}.
 
 The design is repeated for each centrality bin.  The _minimum_ number of events for each centrality bin and
 design point is
@@ -29,7 +29,7 @@ Centrality bin | Minimum events
 In the `design` file, columns correspond to input parameters (as listed in `params`) and rows to design
 points.
 
-In files `mult` and `vn-k`, columns correspond to centrality bins (as listed in `cent`) and rows to design
+In files `mult` and `vn`, columns correspond to centrality bins (as listed in `cent`) and rows to design
 points.
 
 All calculations match ALICE kinematic cuts: 0.2 < _p<sub>T</sub>_ < 3.0 GeV, |_η_| < 1.
