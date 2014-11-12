@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import integrate
+from scipy import interpolate
+
+
+experiment = 'alice'
+
+
+def main():
+    mult, cent_width, cent_high = np.loadtxt('{}_mult.dat'.format(experiment),
+                                             usecols=(2, 3, 4))[::-1].T
+
+    cent_width *= 100
+    cent_high *= 100
+    cent_mid = cent_high - .5*cent_width
+    mult_interp = interpolate.InterpolatedUnivariateSpline(cent_mid, mult, k=3)
+
+    # plt.plot(cent_high, mult, ls='steps-pre')
+    # plt.plot(cent_mid, mult, 'o')
+    # x = np.linspace(0, 95, 10000)
+    # plt.plot(x, mult_interp(x))
+    # plt.show()
+
+    v2_mult, v2, v2_stat, v2_sys = np.loadtxt('{}_v2-2.dat'.format(experiment),
+                                              unpack=True)
+
+    v2_interp = interpolate.InterpolatedUnivariateSpline(v2_mult, v2, k=3)
+
+    # plt.plot(v2_mult, v2, 'o')
+    # x = np.linspace(v2_mult.min(), v2_mult.max(), 1000)
+    # plt.plot(x, v2_interp(x))
+    # plt.show()
+
+    cw = 5.
+    cl = np.arange(0, 71, cw, dtype=float)
+    ch = cl + cw
+    cm = cl + .5*cw
+
+    v2_bin_middle = v2_interp(mult_interp(cm))
+    v2_mult_bin_avg = np.array([v2_interp(mult_interp.integral(l, h)/cw)
+                                for l, h in zip(cl, ch)])
+    v2_v2_bin_avg = np.array([
+        integrate.quad(lambda c: v2_interp(mult_interp(c)), l, h)[0]
+        for l, h in zip(cl, ch)
+    ])/cw
+
+    # plt.plot(cm, v2_bin_middle, '-', label='bin middle')
+    # plt.plot(cm, v2_mult_bin_avg, '-', label='mult bin avg')
+    # plt.plot(cm, v2_v2_bin_avg, '-', label='v2 bin avg')
+    # plt.ylim(0)
+    plt.plot(cm, v2_mult_bin_avg / v2_bin_middle, '-', label='mult bin avg')
+    plt.plot(cm, v2_v2_bin_avg / v2_bin_middle, '-', label='v2 bin avg')
+    plt.legend()
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()
