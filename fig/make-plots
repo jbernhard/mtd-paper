@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import functools
+import pickle
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+aspect = 1/1.618
+resolution = 72.27
+columnwidth = 246/resolution
+textwidth = 510/resolution
+textiny, texsmall, texnormal = 8., 9.25, 10.
+
+sns.set(
+    context='paper',
+    style='white',
+    font='CMU Serif'
+)
+
+
+def plotfn(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        print(f.__name__)
+        f(*args, **kwargs)
+        plt.savefig('{}.pdf'.format(f.__name__))
+        plt.close()
+    return wrapper
+
+
+@plotfn
+def training_posterior():
+    ic = 'glb'
+    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
+        chain = pd.DataFrame(pickle.load(f)['training_chains'][0])
+
+    def hist2d(*args, **kwargs):
+        kwargs.pop('color', None)
+        return plt.hist2d(*args, **kwargs)
+
+    g = sns.PairGrid(chain, size=textwidth/chain.shape[1])
+    g.map_diag(plt.hist, bins=20)
+    g.map_lower(hist2d, bins=20, cmap='Blues')
+
+    plt.gcf().subplots_adjust(wspace=.05, hspace=.05)
+
+
+@plotfn
+def validation():
+    ic = 'glb'
+    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
+        predicted = pickle.load(f)['validation_predictions']
+    with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
+        vdata = pickle.load(f)
+        actual = vdata['mult'], vdata['v2'], vdata['v3']
+        del vdata
+
+    fig, axes = plt.subplots(ncols=3, figsize=(textwidth, .5*aspect*textwidth))
+    for ax, pred, act in zip(axes, predicted, actual):
+        for p, a in zip(pred.T[::2], act.T):
+            ax.plot(p, a, 'o', ms=3)
+
+    plt.tight_layout(pad=0)
+    sns.despine(fig)
+
+
+if __name__ == "__main__":
+    training_posterior()
+    validation()

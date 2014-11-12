@@ -83,23 +83,28 @@ def main():
     ic = 'glb'
     md = ModelData(ic)
     ndim = md.ndim
+
+    # GP kernel and conjugate prior for hyperparameters
     kernel = (
         1. *
         mtd.kernels.ExpSquaredKernel(np.full(ndim, .5), ndim=ndim) +
         mtd.kernels.WhiteKernel(1e-8, ndim=ndim)
     )
-
-    mgp = mtd.MultiGP(md.design, md.full_output, kernel, npc=.99)
-
-    print('training')
     training_prior = (
         mtd.priors.VariancePrior() +
         ndim * mtd.priors.LengthScalePrior() +
         mtd.priors.NoisePrior()
     )
-    mgp.train(training_prior, 20, 100)
+
+    print('starting GPs')
+    mgp = mtd.MultiGP(md.design, md.full_output, kernel, npc=.99)
+    npc = len(mgp)
+    print('using {} PCs'.format(npc))
+
+    print('training')
+    mgp.train(training_prior, 200, 200)
     chains = np.array([
-        mgp.get_training_sampler_attr(n, 'chain') for n in range(len(mgp))
+        mgp.get_training_sampler_attr(n, 'flatchain') for n in range(npc)
     ])
 
     print('predicting validation design')
