@@ -99,20 +99,34 @@ def main():
     print('starting GPs')
     mgp = mtd.MultiGP(md.design, md.full_output, kernel, npc=.99)
     npc = len(mgp)
+    results = {}
     print('using {} PCs'.format(npc))
 
-    print('training')
-    mgp.train(training_prior, 200, 200)
-    chains = np.array([
+    mgp.train(training_prior, 200, 200, verbose=True)
+    results['training_chains'] = np.array([
         mgp.get_training_sampler_attr(n, 'flatchain') for n in range(npc)
     ])
 
+    with open('../data/exp/alice.pkl', 'rb') as f:
+        expdata = pickle.load(f)
+
+    yexp = np.concatenate((
+        md.transform_mult(expdata['mult']['mean']),
+        expdata['v2']['mean'],
+        expdata['v3']['mean']
+    ))
+    cal_prior = mtd.priors.FlatPrior() * ndim
+
+    mgp.calibrate(yexp, .03, cal_prior, 200, 200, verbose=True)
+    results['calibration_chain'] = mgp.get_calibration_chain(flat=True)
+
     print('predicting validation design')
     mdv = ModelData(ic + '-validation')
-    pred = md.unpack_full_output(mgp.predict(mdv.design))
+    results['validation_predictions'] = md.unpack_full_output(
+        mgp.predict(mdv.design)
+    )
 
     print('saving results')
-    results = dict(training_chains=chains, validation_predictions=pred)
     with open('{}.pkl'.format(ic), 'wb') as f:
         pickle.dump(results, f, pickle.HIGHEST_PROTOCOL)
 
