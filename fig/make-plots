@@ -34,8 +34,7 @@ def plotfn(f):
 
 
 @plotfn
-def training_posterior():
-    ic = 'glb'
+def training_posterior(ic):
     with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
         chain = pd.DataFrame(pickle.load(f)['training_chains'][0])
 
@@ -51,8 +50,47 @@ def training_posterior():
 
 
 @plotfn
-def validation():
-    ic = 'glb'
+def calibration_prior(ic, experiment):
+    with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
+        model = pickle.load(f)
+    with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
+        exp = pickle.load(f)
+
+    fig, axes = plt.subplots(ncols=3, figsize=(textwidth, columnwidth*aspect))
+
+    for obs, ax in zip(('mult', 'v2', 'v3'), axes):
+        c = model['cent']
+        for m in model[obs]:
+            ax.plot(c, m, color='SkyBlue', alpha=.2, lw=.5)
+
+        ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
+                    fmt='o', lw=.8, ms=2, capsize=0, color='.2')
+
+        ax.set_title(obs)
+        ax.set_xlabel('Centrality %')
+        ax.set_xlim(0, 55)
+
+    plt.tight_layout(pad=0)
+
+
+@plotfn
+def calibration_posterior(ic):
+    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
+        chain = pd.DataFrame(pickle.load(f)['calibration_chain'])
+
+    def hist2d(*args, **kwargs):
+        kwargs.pop('color', None)
+        return plt.hist2d(*args, **kwargs)
+
+    g = sns.PairGrid(chain, size=textwidth/chain.shape[1])
+    g.map_diag(plt.hist, bins=100)
+    g.map_lower(hist2d, bins=100, cmap='Blues')
+
+    plt.gcf().subplots_adjust(wspace=.05, hspace=.05)
+
+
+@plotfn
+def validation(ic):
     with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
         predicted = pickle.load(f)['validation_predictions']
     with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
@@ -70,5 +108,10 @@ def validation():
 
 
 if __name__ == "__main__":
-    training_posterior()
-    validation()
+    ic = 'glb'
+    experiment = 'alice'
+
+    training_posterior(ic)
+    calibration_prior(ic, experiment)
+    calibration_posterior(ic)
+    validation(ic)
