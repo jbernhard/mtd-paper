@@ -102,7 +102,8 @@ def main():
     results = {}
     print('using {} PCs'.format(npc))
 
-    mgp.train(training_prior, 200, 200, verbose=True)
+    mgp.train(training_prior,
+              nwalkers=300, nsteps=600, verbose=True)
     results['training_chains'] = np.array([
         mgp.get_training_sampler_attr(n, 'flatchain') for n in range(npc)
     ])
@@ -117,7 +118,8 @@ def main():
     ))
     cal_prior = mtd.priors.FlatPrior() * ndim
 
-    mgp.calibrate(yexp, .03, cal_prior, 200, 200, verbose=True)
+    mgp.calibrate(yexp, .03, cal_prior,
+                  nwalkers=500, nsteps=2000, verbose=True)
     results['calibration_chain'] = mgp.get_calibration_chain(flat=True)
 
     print('predicting validation design')
