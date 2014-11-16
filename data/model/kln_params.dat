@@ -1,0 +1,5 @@
+norm   Normalization 5.00 15.0
+lambda $\lambda$     0.10 0.30
+tau0   $\tau_0$      0.20 1.00
+etas   $\eta/s$      0.00 0.30
+taupi  $\tau_\Pi$    0.20 1.10
