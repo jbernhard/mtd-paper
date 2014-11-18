@@ -24,23 +24,6 @@ class ModelData:
         self._v2_std = self.v2.std(axis=0)
 
     @property
-    def full_output(self):
-        """
-        Full matrix of training data (mult, v2, v3).
-
-        """
-        return np.hstack((self.transform_mult(), self.v2, self.v3))
-
-    def unpack_full_output(self, y):
-        """
-        Separate a full matrix into (mult, v2, v3).
-
-        """
-        mult, v2, v3 = np.hsplit(y, 3)
-        mult = self.inv_transform_mult(mult)
-        return mult, v2, v3
-
-    @property
     def ndim(self):
         """
         Number of input dimensions.
@@ -48,7 +31,35 @@ class ModelData:
         """
         return self.design.shape[1]
 
-    def transform_mult(self, mult=None):
+    def full_output(self, *data):
+        """
+        Transform multiplicity and construct a full matrix of training data
+        (mult, v2, v3).
+
+        """
+        if len(data) == 0:
+            data = self.mult, self.v2, self.v3
+        mult, v2, v3 = data
+
+        return np.hstack((self.transform_mult(mult), v2, v3))
+
+    def unpack_full_output(self, y, std=None):
+        """
+        Separate a full matrix into (mult, v2, v3) and apply the inverse
+        transformation to mult.
+
+        """
+        tr_mult, v2, v3 = np.hsplit(y, 3)
+
+        if std is None:
+            mult = self.inv_transform_mult(tr_mult)
+            return mult, v2, v3
+        else:
+            tr_mult_std, v2_std, v3_std = np.hsplit(std, 3)
+            mult, mult_std = self.inv_transform_mult(tr_mult, tr_mult_std)
+            return (mult, mult_std), (v2, v2_std), (v3, v3_std)
+
+    def transform_mult(self, mult):
         """
         Transform multiplicity data before PCA:
 
@@ -57,25 +68,31 @@ class ModelData:
             - Scale to same variance as v2.
 
         """
-        if mult is None:
-            mult = self.mult
+        tr_mult = np.sqrt(mult)
+        tr_mult -= self._sqrt_mult_mean
+        tr_mult *= self._v2_std / self._sqrt_mult_std
 
-        mult = np.sqrt(mult)
-        mult -= self._sqrt_mult_mean
-        mult *= self._v2_std / self._sqrt_mult_std
+        return tr_mult
 
-        return mult
-
-    def inv_transform_mult(self, mult):
+    def inv_transform_mult(self, tr_mult, tr_std=None):
         """
         Apply the inverse multiplicity transformation.
 
+        tr_mult : array of transformed multiplicity data
+        tr_std : optional
+            Corresponding array of standard deviations.
+
         """
-        mult = mult * self._sqrt_mult_std / self._v2_std
+        mult = tr_mult * self._sqrt_mult_std / self._v2_std
         mult += self._sqrt_mult_mean
         mult **= 2.
 
-        return mult
+        if tr_std is None:
+            return mult
+        else:
+            std = tr_std * tr_mult
+            std *= 2. * self._sqrt_mult_std / self._v2_std
+            return mult, std
 
 
 def main():
@@ -97,7 +114,7 @@ def main():
     )
 
     print('starting GPs')
-    mgp = mtd.MultiGP(md.design, md.full_output, kernel, npc=.99)
+    mgp = mtd.MultiGP(md.design, md.full_output(), kernel, npc=.99)
     npc = len(mgp)
     results = {}
     print('using {} PCs'.format(npc))
@@ -124,9 +141,9 @@ def main():
 
     print('predicting validation design')
     mdv = ModelData(ic + '-validation')
-    results['validation_predictions'] = md.unpack_full_output(
-        mgp.predict(mdv.design)
-    )
+    pred_mean, pred_var = mgp.predict(mdv.design, mean_only=False)
+    pred_std = np.sqrt(pred_var, out=pred_var)
+    results['validation'] = md.unpack_full_output(pred_mean, pred_std)
 
     print('saving results')
     with open('{}.pkl'.format(ic), 'wb') as f:
