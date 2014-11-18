@@ -134,7 +134,7 @@ def main():
     )
     # cal_prior = mtd.priors.FlatPrior() * ndim
 
-    mgp.calibrate(yexp, .03,
+    mgp.calibrate(yexp, yerr=.10,
                   nwalkers=500, nsteps=5000, nburnsteps=1000,
                   verbose=True)
     results['cal_chain'] = mgp.cal_flatchain
