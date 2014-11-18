@@ -121,23 +121,22 @@ def main():
 
     mgp.train(training_prior,
               nwalkers=300, nsteps=600, verbose=True)
-    results['training_chains'] = np.array([
-        mgp.get_training_sampler_attr(n, 'flatchain') for n in range(npc)
-    ])
+    results['training_samplers'] = mgp.training_samplers
 
     with open('../data/exp/alice.pkl', 'rb') as f:
         expdata = pickle.load(f)
 
-    yexp = np.concatenate((
-        md.transform_mult(expdata['mult']['mean']),
+    yexp = md.full_output(
+        expdata['mult']['mean'],
         expdata['v2']['mean'],
         expdata['v3']['mean']
-    ))
-    cal_prior = mtd.priors.FlatPrior() * ndim
+    )
+    # cal_prior = mtd.priors.FlatPrior() * ndim
 
-    mgp.calibrate(yexp, .03, cal_prior,
+    mgp.calibrate(yexp, .03,
                   nwalkers=500, nsteps=2000, verbose=True)
-    results['calibration_chain'] = mgp.get_calibration_chain(flat=True)
+    results['cal_chain'] = mgp.cal_flatchain
+    results['cal_samples'] = md.unpack_full_output(mgp.cal_samples)
 
     print('predicting validation design')
     mdv = ModelData(ic + '-validation')
