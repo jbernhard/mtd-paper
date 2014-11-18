@@ -74,6 +74,38 @@ def prior_draws(ic, experiment):
 
 
 @plotfn
+def posterior_draws(ic, experiment):
+    with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
+        cent = pickle.load(f)['cent']
+    with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
+        exp = pickle.load(f)
+    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
+        cal_samples = pickle.load(f)['cal_samples']
+
+    sample_idx = np.random.randint(0, cal_samples[0].shape[0], size=100)
+
+    fig, axes = plt.subplots(ncols=3, figsize=(textwidth, columnwidth*aspect))
+
+    for obs, samples, ax in zip(('mult', 'v2', 'v3'), cal_samples, axes):
+        for i in sample_idx:
+            ax.plot(cent, samples[i], color='SkyBlue', alpha=.2, lw=.5)
+
+        ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
+                    fmt='o', lw=.8, ms=2, capsize=0, color='.2')
+
+        ax.set_title(obs)
+        ax.set_xlabel('Centrality %')
+        ax.set_xlim(0, 55)
+
+        if obs == 'mult':
+            ax.set_yscale('log')
+        else:
+            ax.set_ylim(ymin=0)
+
+    plt.tight_layout(pad=0)
+
+
+@plotfn
 def calibration_posterior(ic):
     with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
         chain = pd.DataFrame(pickle.load(f)['cal_chain'])
@@ -119,6 +151,7 @@ if __name__ == "__main__":
     experiment = 'alice'
 
     training_posterior(ic)
-    prior_draws(ic, experiment)
-    calibration_posterior(ic)
     validation(ic)
+    calibration_posterior(ic)
+    prior_draws(ic, experiment)
+    posterior_draws(ic, experiment)
