@@ -109,7 +109,7 @@ def main():
     )
     training_prior = (
         mtd.priors.VariancePrior() +
-        ndim * mtd.priors.LengthScalePrior(b=0.2) +
+        ndim * mtd.priors.LengthScalePrior(b=0.3) +
         mtd.priors.NoisePrior()
     )
 
