@@ -50,7 +50,7 @@ def training_posterior(ic):
 
 
 @plotfn
-def calibration_prior(ic, experiment):
+def prior_draws(ic, experiment):
     with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
         model = pickle.load(f)
     with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
@@ -119,6 +119,6 @@ if __name__ == "__main__":
     experiment = 'alice'
 
     training_posterior(ic)
-    calibration_prior(ic, experiment)
+    prior_draws(ic, experiment)
     calibration_posterior(ic)
     validation(ic)
