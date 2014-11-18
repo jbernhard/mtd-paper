@@ -120,7 +120,8 @@ def main():
     print('using {} PCs'.format(npc))
 
     mgp.train(training_prior,
-              nwalkers=300, nsteps=600, verbose=True)
+              nwalkers=300, nsteps=1000, nburnsteps=500,
+              verbose=True)
     results['training_samplers'] = mgp.training_samplers
 
     with open('../data/exp/alice.pkl', 'rb') as f:
@@ -134,7 +135,8 @@ def main():
     # cal_prior = mtd.priors.FlatPrior() * ndim
 
     mgp.calibrate(yexp, .03,
-                  nwalkers=500, nsteps=2000, verbose=True)
+                  nwalkers=500, nsteps=5000, nburnsteps=1000,
+                  verbose=True)
     results['cal_chain'] = mgp.cal_flatchain
     results['cal_samples'] = md.unpack_full_output(mgp.cal_samples)
 
