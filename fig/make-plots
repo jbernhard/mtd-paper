@@ -50,6 +50,22 @@ def training_posterior(ic):
 
 
 @plotfn
+def calibration_posterior(ic):
+    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
+        chain = pd.DataFrame(pickle.load(f)['cal_chain'])
+
+    def hist2d(*args, **kwargs):
+        kwargs.pop('color', None)
+        return plt.hist2d(*args, **kwargs)
+
+    g = sns.PairGrid(chain, size=textwidth/chain.shape[1])
+    g.map_diag(plt.hist, bins=100)
+    g.map_lower(hist2d, bins=100, cmap='Blues')
+
+    plt.gcf().subplots_adjust(wspace=.05, hspace=.05)
+
+
+@plotfn
 def prior_draws(ic, experiment):
     with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
         model = pickle.load(f)
@@ -106,22 +122,6 @@ def posterior_draws(ic, experiment):
         ax.set_ylim(ymin=0)
 
     plt.tight_layout(pad=0)
-
-
-@plotfn
-def calibration_posterior(ic):
-    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
-        chain = pd.DataFrame(pickle.load(f)['cal_chain'])
-
-    def hist2d(*args, **kwargs):
-        kwargs.pop('color', None)
-        return plt.hist2d(*args, **kwargs)
-
-    g = sns.PairGrid(chain, size=textwidth/chain.shape[1])
-    g.map_diag(plt.hist, bins=100)
-    g.map_lower(hist2d, bins=100, cmap='Blues')
-
-    plt.gcf().subplots_adjust(wspace=.05, hspace=.05)
 
 
 @plotfn
