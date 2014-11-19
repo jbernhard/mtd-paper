@@ -13,12 +13,23 @@ class DataHandler:
     manipulations.
 
     """
-    def __init__(self, ic, exp, datadir='../data'):
+    def __init__(self, ic, exp, weights=np.ones(3), datadir='../data'):
         with open('{}/model/{}.pkl'.format(datadir, ic), 'rb') as f:
             self.__dict__.update(pickle.load(f))
 
         with open('{}/exp/{}.pkl'.format(datadir, exp), 'rb') as f:
             self._exp = pickle.load(f)
+
+        obs = self.mult, self.v2, self.v3
+        self._nobs = len(obs)
+        self._ncent = obs[0].shape[1]
+        assert all(i.shape[1] == self._ncent for i in obs)
+        assert all(self._exp[i]['mean'].size == self._ncent
+                   for i in ('mult', 'v2', 'v3'))
+
+        weights = np.asarray(weights, dtype=float)
+        assert weights.size == self._nobs
+        self._weights = weights.repeat(self._ncent)
 
     @property
     def ndim(self):
@@ -34,7 +45,7 @@ class DataHandler:
         Number of outputs.
 
         """
-        return sum(i.shape[1] for i in (self.mult, self.v2, self.v3))
+        return self._nobs * self._ncent
 
     @property
     def exp_data(self):
@@ -51,7 +62,7 @@ class DataHandler:
         Calibration data.
 
         """
-        return np.ones(self.nfeatures)
+        return self._weights
 
     @property
     def training_data(self):
@@ -60,10 +71,13 @@ class DataHandler:
 
         Preprocessing:
             - Square root of mult.
+            - Apply weights.
             - Scale by experimental data.
 
         """
-        return self._concat(self.mult, self.v2, self.v3) / self.exp_data
+        data = self._concat(self.mult, self.v2, self.v3)
+        data *= self._weights / self.exp_data
+        return data
 
     @staticmethod
     def _concat(mult, v2, v3):
@@ -79,14 +93,14 @@ class DataHandler:
         preprocessing steps from self.training_data.
 
         """
-        y = y * self.exp_data
+        y = y * self.exp_data / self._weights
         sqrt_mult, v2, v3 = np.hsplit(y, 3)
         mult = np.square(sqrt_mult)
 
         if std is None:
             return dict(mult=mult, v2=v2, v3=v3)
         else:
-            std = std * self.exp_data
+            std = std * self.exp_data / self._weights
             sqrt_mult_std, v2_std, v3_std = np.hsplit(std, 3)
             mult_std = 2. * sqrt_mult_std * sqrt_mult
             return dict(
@@ -100,7 +114,7 @@ def main():
     print('loading data')
     ic = 'glb'
     exp = 'alice'
-    data = DataHandler(ic, exp)
+    data = DataHandler(ic, exp, weights=(3, 2, 1))
     ndim = data.ndim
 
     # GP kernel and conjugate prior for hyperparameters
@@ -122,21 +136,22 @@ def main():
     print('using {} PCs'.format(npc))
 
     mgp.train(training_prior,
-              nwalkers=50, nsteps=300, nburnsteps=100,
+              nwalkers=100, nsteps=300, nburnsteps=100,
               verbose=True)
     results['training_samplers'] = mgp.training_samplers
 
     # cal_prior = mtd.priors.FlatPrior() * ndim
     mgp.calibrate(data.cal_data, yerr=.10,
-                  nwalkers=100, nsteps=500, nburnsteps=200,
+                  nwalkers=200, nsteps=1000, nburnsteps=300,
                   verbose=True)
     results['cal_chain'] = mgp.cal_flatchain
     results['cal_samples'] = data.unpack(mgp.cal_samples)
     results['cal_logprob'] = mgp.cal_sampler.flatlnprobability
 
     print('predicting validation design')
-    vdata = DataHandler(ic + '-validation', exp)
-    pred_mean, pred_var = mgp.predict(vdata.design, mean_only=False)
+    with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
+        vdesign = pickle.load(f)['design']
+    pred_mean, pred_var = mgp.predict(vdesign, mean_only=False)
     pred_std = np.sqrt(pred_var, out=pred_var)
     results['validation'] = data.unpack(pred_mean, pred_std)
 
