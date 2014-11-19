@@ -141,13 +141,13 @@ def main():
     print('using {} PCs'.format(npc))
 
     mgp.train(training_prior,
-              nwalkers=100, nsteps=300, nburnsteps=100,
+              nwalkers=200, nsteps=1000, nburnsteps=200,
               verbose=True)
     results['training_samplers'] = mgp.training_samplers
 
     # cal_prior = mtd.priors.FlatPrior() * ndim
-    mgp.calibrate(data.cal_data, yerr=.10,
-                  nwalkers=200, nsteps=1000, nburnsteps=300,
+    mgp.calibrate(data.cal_data, yerr=.08,
+                  nwalkers=500, nsteps=2000, nburnsteps=500,
                   verbose=True)
     results['cal_chain'] = mgp.cal_flatchain
     results['cal_samples'] = data.unpack(mgp.cal_samples)
