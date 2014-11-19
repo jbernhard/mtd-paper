@@ -43,6 +43,7 @@ class DataPreprocessor:
 
 def main():
     DataPreprocessor('glb', outliers=(0, 3)).save()
+    DataPreprocessor('kln', outliers=(0, 3)).save()
     DataPreprocessor('glb-validation').save()
 
 

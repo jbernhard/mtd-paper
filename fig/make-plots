@@ -24,12 +24,15 @@ sns.set(
 )
 
 
+experiment = 'alice'
+
+
 def plotfn(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
-        print(f.__name__)
+        print(f.__name__, *args)
         f(*args, **kwargs)
-        plt.savefig('{}.pdf'.format(f.__name__))
+        plt.savefig('_'.join((f.__name__, args[0])) + '.pdf')
         plt.close()
     return wrapper
 
@@ -76,7 +79,7 @@ def calibration_posterior(ic):
 
 
 @plotfn
-def prior_draws(ic, experiment):
+def prior_draws(ic):
     with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
         model = pickle.load(f)
     with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
@@ -102,7 +105,7 @@ def prior_draws(ic, experiment):
 
 
 @plotfn
-def posterior_draws(ic, experiment):
+def posterior_draws(ic):
     with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
         cent = pickle.load(f)['cent']
     with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
@@ -170,11 +173,10 @@ def validation(ic):
 
 
 if __name__ == "__main__":
-    ic = 'glb'
-    experiment = 'alice'
+    for ic in 'glb', 'kln':
+        training_posterior(ic)
+        calibration_posterior(ic)
+        prior_draws(ic)
+        posterior_draws(ic)
 
-    training_posterior(ic)
-    validation(ic)
-    calibration_posterior(ic)
-    prior_draws(ic, experiment)
-    posterior_draws(ic, experiment)
+    validation('glb')

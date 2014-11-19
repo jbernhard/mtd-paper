@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pickle
+import sys
 
 import numpy as np
 import mtd
@@ -112,7 +113,11 @@ class DataHandler:
 
 def main():
     print('loading data')
-    ic = 'glb'
+    try:
+        ic = sys.argv[1]
+    except IndexError:
+        ic = 'glb'
+
     exp = 'alice'
     data = DataHandler(ic, exp, weights=(3, 2, 1))
     ndim = data.ndim
@@ -148,12 +153,13 @@ def main():
     results['cal_samples'] = data.unpack(mgp.cal_samples)
     results['cal_logprob'] = mgp.cal_sampler.flatlnprobability
 
-    print('predicting validation design')
-    with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
-        vdesign = pickle.load(f)['design']
-    pred_mean, pred_var = mgp.predict(vdesign, mean_only=False)
-    pred_std = np.sqrt(pred_var, out=pred_var)
-    results['validation'] = data.unpack(pred_mean, pred_std)
+    if ic == 'glb':
+        print('predicting validation design')
+        with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
+            vdesign = pickle.load(f)['design']
+        pred_mean, pred_var = mgp.predict(vdesign, mean_only=False)
+        pred_std = np.sqrt(pred_var, out=pred_var)
+        results['validation'] = data.unpack(pred_mean, pred_std)
 
     print('saving results')
     with open('{}.pkl'.format(ic), 'wb') as f:
