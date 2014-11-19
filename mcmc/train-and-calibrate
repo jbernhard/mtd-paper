@@ -7,21 +7,18 @@ import numpy as np
 import mtd
 
 
-class ModelData:
+class DataHandler:
     """
-    Read data as created by DataPreprocessor in ../data/model/preprocess and
-    handle basic array manipulations.
+    Read data as created by preprocessor scripts and handle basic array
+    manipulations.
 
     """
-    def __init__(self, ic, datadir='../data/model'):
-        with open('{}/{}.pkl'.format(datadir, ic), 'rb') as f:
+    def __init__(self, ic, exp, datadir='../data'):
+        with open('{}/model/{}.pkl'.format(datadir, ic), 'rb') as f:
             self.__dict__.update(pickle.load(f))
 
-        # cache quantities for transforming mult
-        sqrt_mult = np.sqrt(self.mult)
-        self._sqrt_mult_mean = sqrt_mult.mean(axis=0)
-        self._sqrt_mult_std = sqrt_mult.std(axis=0)
-        self._v2_std = self.v2.std(axis=0)
+        with open('{}/exp/{}.pkl'.format(datadir, exp), 'rb') as f:
+            self._exp = pickle.load(f)
 
     @property
     def ndim(self):
@@ -31,75 +28,80 @@ class ModelData:
         """
         return self.design.shape[1]
 
-    def full_output(self, *data):
+    @property
+    def nfeatures(self):
         """
-        Transform multiplicity and construct a full matrix of training data
-        (mult, v2, v3).
+        Number of outputs.
 
         """
-        if len(data) == 0:
-            data = self.mult, self.v2, self.v3
-        mult, v2, v3 = data
+        return sum(i.shape[1] for i in (self.mult, self.v2, self.v3))
 
-        return np.hstack((self.transform_mult(mult), v2, v3))
-
-    def unpack_full_output(self, y, std=None):
+    @property
+    def exp_data(self):
         """
-        Separate a full matrix into (mult, v2, v3) and apply the inverse
-        transformation to mult.
+        Experimental data (mult, v2, v3).
 
         """
-        tr_mult, v2, v3 = np.hsplit(y, 3)
+        mult, v2, v3 = (self._exp[i]['mean'] for i in ('mult', 'v2', 'v3'))
+        return self._concat(mult, v2, v3)
+
+    @property
+    def cal_data(self):
+        """
+        Calibration data.
+
+        """
+        return np.ones(self.nfeatures)
+
+    @property
+    def training_data(self):
+        """
+        Full matrix of training data (mult, v2, v3).
+
+        Preprocessing:
+            - Square root of mult.
+            - Scale by experimental data.
+
+        """
+        return self._concat(self.mult, self.v2, self.v3) / self.exp_data
+
+    @staticmethod
+    def _concat(mult, v2, v3):
+        """
+        Take square root of mult and concatenate rows.
+
+        """
+        return np.hstack((np.sqrt(mult), v2, v3))
+
+    def unpack(self, y, std=None):
+        """
+        Separate a full matrix into a dict of (mult, v2, v3) and invert
+        preprocessing steps from self.training_data.
+
+        """
+        y = y * self.exp_data
+        sqrt_mult, v2, v3 = np.hsplit(y, 3)
+        mult = np.square(sqrt_mult)
 
         if std is None:
-            mult = self.inv_transform_mult(tr_mult)
-            return mult, v2, v3
+            return dict(mult=mult, v2=v2, v3=v3)
         else:
-            tr_mult_std, v2_std, v3_std = np.hsplit(std, 3)
-            mult, mult_std = self.inv_transform_mult(tr_mult, tr_mult_std)
-            return (mult, mult_std), (v2, v2_std), (v3, v3_std)
-
-    def transform_mult(self, mult):
-        """
-        Transform multiplicity data before PCA:
-
-            - Take square root (makes the distribution more normal).
-            - Center (subtract mean).
-            - Scale to same variance as v2.
-
-        """
-        tr_mult = np.sqrt(mult)
-        tr_mult -= self._sqrt_mult_mean
-        tr_mult *= self._v2_std / self._sqrt_mult_std
-
-        return tr_mult
-
-    def inv_transform_mult(self, tr_mult, tr_std=None):
-        """
-        Apply the inverse multiplicity transformation.
-
-        tr_mult : array of transformed multiplicity data
-        tr_std : optional
-            Corresponding array of standard deviations.
-
-        """
-        mult = tr_mult * self._sqrt_mult_std / self._v2_std
-        mult += self._sqrt_mult_mean
-        mult **= 2.
-
-        if tr_std is None:
-            return mult
-        else:
-            std = tr_std * tr_mult
-            std *= 2. * self._sqrt_mult_std / self._v2_std
-            return mult, std
+            std = std * self.exp_data
+            sqrt_mult_std, v2_std, v3_std = np.hsplit(std, 3)
+            mult_std = 2. * sqrt_mult_std * sqrt_mult
+            return dict(
+                mult={'mean': mult, 'std': mult_std},
+                v2={'mean': v2, 'std': v2_std},
+                v3={'mean': v3, 'std': v3_std}
+            )
 
 
 def main():
     print('loading data')
     ic = 'glb'
-    md = ModelData(ic)
-    ndim = md.ndim
+    exp = 'alice'
+    data = DataHandler(ic, exp)
+    ndim = data.ndim
 
     # GP kernel and conjugate prior for hyperparameters
     kernel = (
@@ -114,37 +116,28 @@ def main():
     )
 
     print('starting GPs')
-    mgp = mtd.MultiGP(md.design, md.full_output(), kernel, npc=.99)
+    mgp = mtd.MultiGP(data.design, data.training_data, kernel, npc=.99)
     npc = len(mgp)
     results = {}
     print('using {} PCs'.format(npc))
 
     mgp.train(training_prior,
-              nwalkers=300, nsteps=1000, nburnsteps=500,
+              nwalkers=50, nsteps=300, nburnsteps=100,
               verbose=True)
     results['training_samplers'] = mgp.training_samplers
 
-    with open('../data/exp/alice.pkl', 'rb') as f:
-        expdata = pickle.load(f)
-
-    yexp = md.full_output(
-        expdata['mult']['mean'],
-        expdata['v2']['mean'],
-        expdata['v3']['mean']
-    )
     # cal_prior = mtd.priors.FlatPrior() * ndim
-
-    mgp.calibrate(yexp, yerr=.10,
-                  nwalkers=500, nsteps=5000, nburnsteps=1000,
+    mgp.calibrate(data.cal_data, yerr=.10,
+                  nwalkers=100, nsteps=500, nburnsteps=200,
                   verbose=True)
     results['cal_chain'] = mgp.cal_flatchain
-    results['cal_samples'] = md.unpack_full_output(mgp.cal_samples)
+    results['cal_samples'] = data.unpack(mgp.cal_samples)
 
     print('predicting validation design')
-    mdv = ModelData(ic + '-validation')
-    pred_mean, pred_var = mgp.predict(mdv.design, mean_only=False)
+    vdata = DataHandler(ic + '-validation', exp)
+    pred_mean, pred_var = mgp.predict(vdata.design, mean_only=False)
     pred_std = np.sqrt(pred_var, out=pred_var)
-    results['validation'] = md.unpack_full_output(pred_mean, pred_std)
+    results['validation'] = data.unpack(pred_mean, pred_std)
 
     print('saving results')
     with open('{}.pkl'.format(ic), 'wb') as f:
