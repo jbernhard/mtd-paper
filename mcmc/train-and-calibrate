@@ -135,7 +135,7 @@ def main():
     )
 
     print('starting GPs')
-    mgp = mtd.MultiGP(data.design, data.training_data, kernel, npc=.99)
+    mgp = mtd.MultiGP(data.design, data.training_data, kernel, npc=.995)
     npc = len(mgp)
     results = {}
     print('using {} PCs'.format(npc))
