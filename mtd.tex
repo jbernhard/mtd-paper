@@ -1,8 +1,16 @@
-\documentclass[aps,prc,reprint,amsmath]{revtex4-1}
+\documentclass[aps, prc, reprint, amsmath]{revtex4-1}
 
 \usepackage{hyperref}
 \usepackage{graphicx}
 \graphicspath{{fig/}}
+
+
+\newcommand{\widefig}[3][t]{
+  \begin{figure*}[#1]
+    \includegraphics{#2}
+    \caption{\label{fig:#2}#3}
+  \end{figure*}
+}
 
 
 \begin{document}
@@ -21,8 +29,8 @@
 \author{Peter Marcy}
 \affiliation{Los Alamos National Lab}
 
-\date{\today}
 
+\date{\today}
 
 \begin{abstract}
   hello
@@ -30,13 +38,71 @@
 
 \maketitle
 
+
 \section{Introduction}
 
 Similar to \cite{pratt-mtd, soltz-mtd}.
 
-\section{Conclusion}
+
+\section{Model}
+
+\widefig{prior_draws_glb}{
+  The full range of outputs from the Glauber model.
+}
+
+\widefig{prior_draws_kln}{
+  The full range of outputs from the KLN model.
+}
+
+
+\section{Gaussian process emulator}
+
+
+\widefig{validation_glb}{
+  Validation of the GP emulator for the Glauber model.
+}
+
+
+\section{Results}
 
 \cite{alice-cumulants}
+
+\widefig{calibration_posterior_glb}{
+  Marginal and joint distributions of the calibration parameters for the Glauber model.
+}
+
+\widefig{calibration_posterior_kln}{
+  Marginal and joint distributions of the calibration parameters for the KLN model.
+}
+
+\widefig{posterior_draws_glb}{
+  Random realizations of the calibrated posterior for the Glauber model.
+}
+
+\widefig{posterior_draws_kln}{
+  Random realizations of the calibrated posterior for the KLN model.
+}
+
+
+
+\section{Conclusion}
+
+
+
+\appendix
+
+
+\section{Emulator training}
+
+\widefig{training_posterior_glb}{
+  Marginal and joint distributions of the GP hyperparameters for the first Glauber principal component.
+}
+
+\widefig{training_posterior_kln}{
+  Marginal and joint distributions of the GP hyperparameters for the first KLN principal component.
+}
+
+
 
 \bibliography{sources}
 
