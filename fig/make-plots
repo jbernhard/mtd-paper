@@ -82,13 +82,13 @@ def posterior_draws(ic, experiment):
     with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
         cal_samples = pickle.load(f)['cal_samples']
 
-    sample_idx = np.random.randint(0, cal_samples[0].shape[0], size=100)
+    sample_idx = np.random.randint(0, cal_samples['mult'].shape[0], size=100)
 
     fig, axes = plt.subplots(ncols=3, figsize=(textwidth, columnwidth*aspect))
 
-    for obs, samples, ax in zip(('mult', 'v2', 'v3'), cal_samples, axes):
+    for ax, obs in zip(axes, ('mult', 'v2', 'v3')):
         for i in sample_idx:
-            ax.plot(cent, samples[i], color='SkyBlue', alpha=.2, lw=.5)
+            ax.plot(cent, cal_samples[obs][i], color='SkyBlue', alpha=.2, lw=.5)
 
         ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
                     fmt='o', lw=.8, ms=2, capsize=0, color='.2')
@@ -96,11 +96,7 @@ def posterior_draws(ic, experiment):
         ax.set_title(obs)
         ax.set_xlabel('Centrality %')
         ax.set_xlim(0, 55)
-
-        if obs == 'mult':
-            ax.set_yscale('log')
-        else:
-            ax.set_ylim(ymin=0)
+        ax.set_ylim(ymin=0)
 
     plt.tight_layout(pad=0)
 
@@ -127,14 +123,16 @@ def validation(ic):
         predicted = pickle.load(f)['validation']
     with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
         actual = pickle.load(f)
-        actual = actual['mult'], actual['v2'], actual['v3']
 
     fig, axes = plt.subplots(ncols=3, figsize=(textwidth, .5*aspect*textwidth))
-    for ax, pred, act in zip(axes, predicted, actual):
-        mean, std = pred
-        for m, e, a in zip(mean.T[::2], std.T[::2], act.T):
+    for ax, obs in zip(axes, ('mult', 'v2', 'v3')):
+        mean, std = (predicted[obs][i].T[::2] for i in ('mean', 'std'))
+        act = actual[obs].T
+
+        for c, m, e, a in zip(actual['cent'], mean, std, act):
             ax.errorbar(m, a, xerr=2*e,
-                        fmt='o', ms=2.5, lw=.6, capsize=0, alpha=.75)
+                        fmt='o', ms=2.5, lw=.6, capsize=0, alpha=.75,
+                        label=str(c))
 
         xymax = max(lim[1] for lim in (ax.get_xlim(), ax.get_ylim()))
         ax.set_xlim(0, xymax)
@@ -142,6 +140,7 @@ def validation(ic):
         ax.plot(ax.get_xlim(), ax.get_ylim(),
                 lw=.8, color='.5', alpha=.5, zorder=-10)
 
+    plt.legend(loc='best')
     plt.tight_layout(pad=0)
     sns.despine(fig)
 
