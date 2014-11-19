@@ -132,6 +132,7 @@ def main():
                   verbose=True)
     results['cal_chain'] = mgp.cal_flatchain
     results['cal_samples'] = data.unpack(mgp.cal_samples)
+    results['cal_logprob'] = mgp.cal_sampler.flatlnprobability
 
     print('predicting validation design')
     vdata = DataHandler(ic + '-validation', exp)

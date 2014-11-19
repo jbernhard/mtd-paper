@@ -80,15 +80,22 @@ def posterior_draws(ic, experiment):
     with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
         exp = pickle.load(f)
     with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
-        cal_samples = pickle.load(f)['cal_samples']
+        mcmc = pickle.load(f)
 
+    cal_samples = mcmc['cal_samples']
+    cal_logprob = mcmc['cal_logprob']
     sample_idx = np.random.randint(0, cal_samples['mult'].shape[0], size=100)
+    maxprob = cal_logprob.argmax()
 
     fig, axes = plt.subplots(ncols=3, figsize=(textwidth, columnwidth*aspect))
 
     for ax, obs in zip(axes, ('mult', 'v2', 'v3')):
+        samples = cal_samples[obs]
+
         for i in sample_idx:
-            ax.plot(cent, cal_samples[obs][i], color='SkyBlue', alpha=.2, lw=.5)
+            ax.plot(cent, samples[i], color='SkyBlue', alpha=.2, lw=.5)
+
+        ax.plot(cent, samples[maxprob], color='Crimson', lw=.5)
 
         ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
                     fmt='o', lw=.8, ms=2, capsize=0, color='.2')
