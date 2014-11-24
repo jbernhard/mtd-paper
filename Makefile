@@ -1,12 +1,14 @@
 NAME = mtd
 PDF = $(NAME).pdf
 SRC = $(NAME).tex
+BIB = sources.bib
+FIGS = $(wildcard fig/*.pdf)
 BUILDDIR = build
-LATEX = latexmk -pdf -output-directory=$(BUILDDIR)
+LATEX = latexmk -pdf -halt-on-error -synctex=1 -output-directory=$(BUILDDIR)
 
 all: $(PDF)
 
-$(PDF): $(SRC)
+$(PDF): $(SRC) $(BIB) $(FIGS)
 	$(LATEX) $(NAME)
 	mv $(BUILDDIR)/$(PDF) .
 
