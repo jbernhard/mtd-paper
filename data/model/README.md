@@ -10,9 +10,11 @@ Each file is named `<IC>_<description>.dat` where
 - `description` denotes what the file contains
   - `cent`: Centrality bins.  Each bin has width 5%; the numbers in the file are the bin middles.
   - `design`: Latin-hypercube design for the input parameters.
-  - `mult`: Charged-particle multiplicity.
   - `params`: Table listing the input parameter labels, TeX-formatted names, min, and max.
-  - `vn`: Flow cumulant _v<sub>n</sub>_{2}.
+  - `mult_<experiment>`: Charged-particle multiplicity with kinematic cuts set to match `<experiment>`.
+  - `vn_<experiment>`: Flow cumulant _v<sub>n</sub>_{2} with kinematic cuts set to match `<experiment>`.
+    - ALICE kinematic cuts: 0.2 < _p<sub>T</sub>_ < 3.0 GeV, |_η_| < 1.
+    - ATLAS kinematic cuts: 0.5 < _p<sub>T</sub>_ < 20.0 GeV, |_η_| < 2.5.
 
 The design is repeated for each centrality bin.  The _minimum_ number of events for each centrality bin and
 design point is
@@ -31,5 +33,3 @@ points.
 
 In files `mult` and `vn`, columns correspond to centrality bins (as listed in `cent`) and rows to design
 points.
-
-All calculations match ALICE kinematic cuts: 0.2 < _p<sub>T</sub>_ < 3.0 GeV, |_η_| < 1.
