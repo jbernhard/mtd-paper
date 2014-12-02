@@ -60,10 +60,13 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 \cite{iebe}
 
 \widefig{prior_draws_glb}{
-  Prior model calculations using Glauber initial conditions.  From left to right:  average charged-particle
-  multiplicity $\avg\nch$, elliptic flow two-particle cumulant $\vnk 2 2$, and triangular flow two-particle
-  cumulant $\vnk 3 2$.  Each plot has 254 lines corresponding to the 254 design points.  Data points are
-  experimental measurements from ALICE \cite{alice-cumulants}.
+  Prior model calculations using Glauber initial conditions.
+  From left to right:
+  average charged-particle multiplicity $\avg\nch$,
+  elliptic flow two-particle cumulant $\vnk 2 2$,
+  and triangular flow two-particle cumulant $\vnk 3 2$.
+  Each plot has 254 lines corresponding to the 254 design points.
+  Data points are experimental measurements from ALICE \cite{alice-cumulants}.
 }
 
 \widefig{prior_draws_kln}{
@@ -77,10 +80,10 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 \cite{ohagan, higdon2008, higdon2014}
 
 \widefig{validation_glb}{
-  Validation of the Gaussian process emulator for the Glauber model.  Each plot shows emulator predictions
-  against explicit calculations for the 64 validation design points and centrality bins 0--5\%, 20--25\%, and
-  40-45\%.  The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is
-  the explicit calculation.  The diagonal grey line represents $y = x$.
+  Validation of the Gaussian process emulator for the Glauber model.
+  Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\%, 20--25\%, and 40-45\%.
+  The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
+  The diagonal grey line represents $y = x$.
 }
 
 
@@ -90,9 +93,9 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 \cite{osu1, osu2}
 
 \widefig{calibration_posterior_glb}{
-  Posterior marginal and joint distributions of the calibration parameters for the Glauber model.  On the
-  diagonal are histograms of MCMC samples for the respective parameters, on the lower triangle are
-  two-dimensional histograms of MCMC samples showing the correlation between pairs of parameters.
+  Posterior marginal and joint distributions of the calibration parameters for the Glauber model.
+  On the diagonal are histograms of MCMC samples for the respective parameters,
+  on the lower triangle are two-dimensional histograms of MCMC samples showing the correlation between pairs of parameters.
   The upper triangle is blank for now. \textbf{FIXME}
 }
 
@@ -101,9 +104,10 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 }
 
 \widefig{posterior_draws_glb}{
-  Random realizations of the calibrated posterior for the Glauber model.  Similar to
-  FIG.~\ref{fig:prior_draws_glb}, except the lines are posterior emulator predictions instead of explicit
-  prior calculations.  The red line is the maximum a posteriori point of the MCMC chain.
+  Random realizations of the calibrated posterior for the Glauber model.
+  Similar to FIG.~\ref{fig:prior_draws_glb},
+  except the lines are posterior emulator predictions instead of explicit prior calculations.
+  The red line is the maximum a posteriori point of the MCMC chain.
 }
 
 \widefig{posterior_draws_kln}{
@@ -122,11 +126,11 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 \section{Emulator training}
 
 \widefig{training_posterior_glb}{
-  Posterior marginal and joint distributions of the Gaussian process hyperparameters for the first Glauber
-  principal component.  The notation $\ell\;x$ means the squared-exponential correlation length for parameter $x$. \textbf{IMPROVE THIS}
-  On the diagonal are histograms of MCMC samples for the respective hyperparameters, on the lower triangle are
-  two-dimensional histograms of MCMC samples showing the correlation between pairs of hyperparameters.  The
-  upper triangle is blank for now. \textbf{FIXME}
+  Posterior marginal and joint distributions of the Gaussian process hyperparameters for the first Glauber principal component.
+  The notation $\ell\;x$ means the squared-exponential correlation length for parameter $x$. \textbf{IMPROVE THIS}
+  On the diagonal are histograms of MCMC samples for the respective hyperparameters,
+  on the lower triangle are two-dimensional histograms of MCMC samples showing the correlation between pairs of hyperparameters.
+  The upper triangle is blank for now. \textbf{FIXME}
 }
 
 \widefig{training_posterior_kln}{
@@ -135,7 +139,7 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 
 
 
-\bibliography{sources}
+\bibliography{mtd}
 
 
 \end{document}
