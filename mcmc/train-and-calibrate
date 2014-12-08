@@ -141,9 +141,10 @@ def main():
     print('using {} PCs'.format(npc))
 
     mgp.train(training_prior,
-              nwalkers=200, nsteps=1000, nburnsteps=200,
+              nwalkers=200, nsteps=500, nburnsteps=500,
               verbose=True)
     results['training_samplers'] = mgp.training_samplers
+    results['kernel_pars'] = tuple(mgp.get_kernel_pars(n) for n in range(npc))
 
     # cal_prior = mtd.priors.FlatPrior() * ndim
     mgp.calibrate(data.cal_data, yerr=.08,
