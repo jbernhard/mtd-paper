@@ -40,7 +40,6 @@ sns.set(
         'ytick.color': offblack,
         'xtick.major.pad': 2.0,
         'ytick.major.pad': 2.0,
-        'pdf.fonttype': 42
     }
 )
 
@@ -90,20 +89,17 @@ def ciplot(x, y, **kwargs):
 
 
 @plotfn
-def training_posterior(ic):
-    with open('../data/model/{}_params.dat'.format(ic)) as f:
-        params = tuple(l.split()[1] for l in f)
-
-    labels = itertools.chain(
+def training_posterior(ic, labels, **kwargs):
+    hyperlabels = itertools.chain(
         ['GP variance'],
         (r'$\ell$ {}'.format('Norm' if p == 'Normalization' else p)
-         for p in params),
+         for p in labels),
         ['Noise'])
 
     with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
         results = pickle.load(f)
         chain = pd.DataFrame(results['training_samplers'][0].flatchain,
-                             columns=labels)
+                             columns=hyperlabels)
         kernel_pars = results['kernel_pars'][0]
         del results
 
@@ -127,9 +123,7 @@ def training_posterior(ic):
 
 
 @plotfn
-def calibration_posterior(ic):
-    with open('../data/model/{}_params.dat'.format(ic)) as f:
-        labels = tuple(l.split()[1] for l in f)
+def calibration_posterior(ic, labels, **kwargs):
     with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
         chain = pd.DataFrame(pickle.load(f)['cal_chain'], columns=labels)
 
@@ -139,16 +133,6 @@ def calibration_posterior(ic):
     g.map_diag(_histstep, bins=100, palette=palette)
     g.map_lower(_hist2d, bins=50, cmap=palette)
     g.map_upper(ciplot)
-
-    # for (ny, nx), ax in np.ndenumerate(g.axes):
-    #     if nx < ny:
-    #         continue
-    #     x = prior_params[ic][nx]
-    #     y = prior_params[ic][ny]
-    #     ax.axvline(x, color='DarkRed', lw=.5, alpha=.5, zorder=10)
-    #     if nx > ny:
-    #         ax.axhline(y, color='DarkRed', lw=.5, alpha=.5, zorder=10)
-    #         ax.plot([x], [y], 'o', color='DarkRed', ms=4)
 
     for ax in g.axes.flat:
         for axis in 'xaxis', 'yaxis':
@@ -162,7 +146,7 @@ def calibration_posterior(ic):
 
 
 @plotfn
-def prior_draws(ic):
+def prior_draws(ic, **kwargs):
     with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
         model = pickle.load(f)
     with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
@@ -190,7 +174,7 @@ def prior_draws(ic):
 
 
 @plotfn
-def posterior_draws(ic):
+def posterior_draws(ic, **kwargs):
     with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
         cent = pickle.load(f)['cent']
     with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
@@ -224,7 +208,7 @@ def posterior_draws(ic):
 
 
 @plotfn
-def validation(ic):
+def validation(ic, **kwargs):
     with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
         predicted = pickle.load(f)['validation']
     with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
@@ -264,23 +248,31 @@ def validation(ic):
     sns.despine(fig)
 
 
-ICs = 'glb', 'kln'
+params = {
+    'glb': {
+        'labels': ('Normalization', r'$\alpha$',
+                   r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
+        'prior': (56.8, 0.118, 0.6, 0.08, 0.5)
+    },
+    'kln': {
+        'labels': ('Normalization', r'$\lambda$',
+                   r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
+        'prior': (9.92, 0.138, 0.6, 0.08, 0.5)
+    }
+}
 experiment = 'alice'
 observables = (
     ('mult', r'$\langle N_\mathrm{ch} \rangle$'),
     ('v2', r'$v_2\{2\}$'),
     ('v3', r'$v_3\{2\}$')
 )
-prior_params = {
-    'glb': (56.763, 0.118, 0.6, 0.08, 0.5)
-}
 
 
 if __name__ == "__main__":
-    for ic in ICs:
-        training_posterior(ic)
-        calibration_posterior(ic)
-        prior_draws(ic)
-        posterior_draws(ic)
+    for ic, kwargs in params.items():
+        training_posterior(ic, **kwargs)
+        calibration_posterior(ic, **kwargs)
+        prior_draws(ic, **kwargs)
+        posterior_draws(ic, **kwargs)
 
-    validation('glb')
+    validation('glb', **params['glb'])
