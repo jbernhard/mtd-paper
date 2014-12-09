@@ -12,6 +12,16 @@
   \end{figure*}
 }
 
+\newcommand{\placeholderfig}[3][t]{
+  \begin{figure}[#1]
+    \centering
+    \framebox{\parbox[c][.5\columnwidth]{\columnwidth}{
+      placeholder
+    }}
+    \caption{\label{fig:#2}#3}
+  \end{figure}
+}
+
 \newcommand{\avg}[1]{\langle #1 \rangle}
 \newcommand{\nch}{N_\text{ch}}
 \newcommand{\vnk}[2]{v_#1\{#2\}}
@@ -79,6 +89,14 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 \cite{gpml}
 \cite{ohagan, higdon2008, higdon2014}
 
+\placeholderfig{gp}{
+  Conditioning a Gaussian process.
+}
+
+\placeholderfig{design}{
+  Latin-hypercube experiment design.
+}
+
 \widefig{validation_glb}{
   Validation of the Gaussian process emulator for the Glauber model.
   Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\%, 20--25\%, and 40-45\%.
@@ -101,6 +119,28 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 
 \widefig{calibration_posterior_kln}{
   Same as FIG.~\ref{fig:calibration_posterior_glb} for the KLN model.
+}
+
+\placeholderfig{posterior_comparison}{
+  Comparison of posterior distributions from the Glauber and KLN models (boxplots or similar).
+  Also comparison to prior guesses from OSU.
+}
+
+\begin{table}
+  \caption{
+    \label{tab:posterior}
+    Quantitative summary of posterior distributions.
+  }
+  \begin{ruledtabular}
+  \begin{tabular}{llll}
+    Parameter & Mean & Median & Confidence intervals \\
+    $\eta/s$ & & & \\
+  \end{tabular}
+  \end{ruledtabular}
+\end{table}
+
+\placeholderfig{chi_squared}{
+  Goodness of fit comparison.
 }
 
 \widefig{posterior_draws_glb}{
