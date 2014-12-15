@@ -1,6 +1,6 @@
 \documentclass[aps, prc, reprint, amsmath]{revtex4-1}
 
-\usepackage{hyperref}
+\usepackage[bookmarksopen=true]{hyperref}
 \usepackage{graphicx}
 \graphicspath{{fig/}}
 
@@ -84,7 +84,7 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 }
 
 
-\section{Gaussian process emulator}
+\section{Emulator}
 
 \cite{gpml}
 \cite{ohagan, higdon2008, higdon2014}
@@ -97,6 +97,10 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
   Latin-hypercube experiment design.
 }
 
+\placeholderfig{pca}{
+  Dimensionality reduction via principal component analysis.
+}
+
 \widefig{validation_glb}{
   Validation of the Gaussian process emulator for the Glauber model.
   Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\%, 20--25\%, and 40-45\%.
@@ -105,7 +109,7 @@ Similar to \cite{pratt-mtd, soltz-mtd}.
 }
 
 
-\section{Results}
+\section{Calibration}
 
 \cite{alice-cumulants}
 \cite{osu1, osu2}
