@@ -90,36 +90,43 @@ def ciplot(x, y, **kwargs):
 
 @plotfn
 def training_posterior(ic, labels, **kwargs):
-    hyperlabels = itertools.chain(
-        ['GP variance'],
-        (r'$\ell$ {}'.format('Norm' if p == 'Normalization' else p)
-         for p in labels),
-        ['Noise'])
+    hyperlabels = (
+        ['GP variance'] +
+        [r'$\ell$ {}'.format('Norm' if p == 'Normalization' else p)
+         for p in labels] +
+        ['Noise']
+    )
 
     with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
-        results = pickle.load(f)
-        chain = pd.DataFrame(results['training_samplers'][0].flatchain,
-                             columns=hyperlabels)
-        kernel_pars = results['kernel_pars'][0]
-        del results
+        samplers = pickle.load(f)['training_samplers']
 
-    g = sns.PairGrid(chain, size=textwidth/chain.shape[1])
-    g.map_diag(_histstep, bins=40)
-    g.map_lower(_hist2d, bins=20, cmap='Blues')
+    npc = len(samplers)
+    nhyper = len(hyperlabels)
 
-    for n, p in enumerate(kernel_pars):
-        g.axes[n][n].axvline(p, color='black')
+    fig, axes = plt.subplots(nrows=npc, ncols=nhyper,
+                             sharex='col', sharey='row',
+                             figsize=(textwidth, .08*textwidth*aspect*nhyper))
 
-    for ax in g.axes.flat:
-        for axis in 'xaxis', 'yaxis':
-            getattr(ax, axis).set_major_locator(
-                tick.MaxNLocator(4, prune='both'))
-            ax.ticklabel_format(scilimits=(-3, 3))
+    for n, (row, sampler) in enumerate(zip(axes, samplers)):
+        for ax, chain, label in zip(row, sampler.flatchain.T, hyperlabels):
+            if ax.is_first_col():
+                ax.set_xlim(0, 3)
+                ax.set_xticks(np.arange(4))
+                ax.set_ylabel('PC {}'.format(n))
+            else:
+                ax.set_xlim(0, 1)
+                ax.set_xticks((0., .5, 1.))
+                ax.set_xticklabels(('0', '0.5', '1'))
+            if ax.is_last_row():
+                ax.set_xlabel(label)
 
-    plt.gcf().subplots_adjust(
-        left=.064, bottom=.047, right=.998, top=.998,
-        wspace=.05, hspace=.05
-    )
+            ax.xaxis.set_tick_params(length=2)
+            ax.set_yticks([])
+
+            ax.hist(chain, bins=20, range=ax.get_xlim(), histtype='step')
+
+    sns.despine()
+    fig.tight_layout(pad=0, h_pad=.2, w_pad=.2)
 
 
 @plotfn
