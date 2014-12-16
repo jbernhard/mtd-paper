@@ -135,10 +135,13 @@ def main():
     )
 
     print('starting GPs')
-    mgp = mtd.MultiGP(data.design, data.training_data, kernel, npc=.995)
-    npc = len(mgp)
+    npc = 5
+    mgp = mtd.MultiGP(data.design, data.training_data, kernel, npc=npc)
     results = {}
-    print('using {} PCs'.format(npc))
+    print('{} PCs explain {:g} of variance'.format(
+        npc, mgp.pca.weights[:npc].sum()))
+
+    results['pca'] = mgp.pca
 
     mgp.train(training_prior,
               nwalkers=200, nsteps=500, nburnsteps=500,
