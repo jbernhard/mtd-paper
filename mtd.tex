@@ -1,9 +1,11 @@
-\documentclass[aps, prc, reprint, amsmath]{revtex4-1}
+\documentclass[aps,prc,reprint,amsmath]{revtex4-1}
 
 \usepackage[bookmarksopen=true]{hyperref}
 \usepackage{graphicx}
 \graphicspath{{fig/}}
 
+\usepackage{color}
+\newcommand{\todo}[1]{\textcolor{red}{#1}}
 
 \newcommand{\widefig}[3][t]{
   \begin{figure*}[#1]
@@ -55,7 +57,49 @@
 
 \section{Introduction}
 
-Similar to \cite{Novak:2013bqa, Soltz:2012rk}.
+Relativistic heavy-ion collisions produce a hot, dense phase of strongly-interacting matter commonly known as the quark-gluon plasma (QGP) which rapidly expands and freezes into discrete particles \cite{}.
+Since the QGP is not directly observable---only final-state hadrons are detected---present research seeks to quantify the fundamental properties of the QGP, such as its transport coefficients and the nature of the initial state, through comparisons of experimental measurements to computational model calculations.
+
+Computational models must take a set of input parameters including the physical properties of interest, simulate the full time-evolution of heavy-ion collisions, and produce output analogous to experimental measurements.
+The true values of the physical properties are extracted by calibrating the input parameters so that the model output optimally reproduces experimental data.
+This generic recipe is called ``model-to-data comparison''.
+
+Notably, previous studies have used viscous relativistic fluid dynamics to place constraints on the QGP shear viscosity to entropy density ratio $\eta/s$ by comparing anisotropic flow coefficients $v_n$ between model and experiment \cite{}.
+$\eta/s$ cannot be calculated directly from QCD, and while there is a conjectured lower bound $\eta/s~\geq~1/4\pi~\simeq~0.08$ from AdS/CFT holography \cite{}, model-to-data comparison is the most attractive option for determining the precise value.
+These studies generally proceed by calculating fluid dynamical $v_n$ at several values of $\eta/s$, then choosing the value which most closely matches experimental $v_n$.
+A variety of complimentary results have constrained $\eta/s$ to an approximate range of 0.08--0.20 \cite{}.
+
+However, $\eta/s$ is not the only model input parameter:
+many other parameters remain unconstrained, e.g.~the hydrodynamic thermalization time $\tau_0$, equation of state, and initial conditions; and models often have non-physical nuisance parameters that nonetheless should be tuned to optimal values.
+$v_n$ is not the only output:
+basic observables like the charged-particle multiplicity and transverse-momentum distributions must also be simulated accurately.
+Input parameters are in general correlated among each other and each affects multiple outputs, so they cannot be constrained independently.
+Due to these practical limitations, most studies to date have focused on a single input parameter, fixed secondary parameters to default values, and calibrated to a minimal set of observables \cite{}.
+This leads to nebulous results with poorly-defined constraints, non-quantitative uncertainties, and no treatment of correlations.
+
+\todo{
+  Cite R.~Soltz \emph{et.~al.}\ somehow \cite{Soltz:2012rk}.
+  They do a more systematic study but do not use an emulator.
+}
+
+Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex multivariate input-output parameter space, but MCMC requires a very large number of model evaluations: $\mathcal O(10^6)$ or more.
+Heavy-ion collision models may run for several hours, so a direct MCMC approach is intractable.
+The situation is exacerbated with a full event-by-event model, since many thousands of events must be calculated \emph{at each point in parameter space} to capture event-by-event fluctuations.
+
+These limitations may be overcome through a modern Bayesian method for analyzing computationally expensive models \cite{OHagan:2006ba,Higdon:2008cmc,Higdon:2014tva}.
+A set of salient model parameters is chosen for calibration---the set should include any fundamental physical properties of interest---and the model is evaluated at a relatively small $\mathcal O(10^2)$ number of points in parameter space.
+Those points are then interpolated with a Gaussian process emulator \cite{Rasmussen:2006gp} to provide a continuous picture of parameter space.
+The emulator acts as a fast surrogate to the full model:
+it predicts model output at arbitrary points in parameter space with negligible computational cost.
+Parameters are calibrated by sampling the emulator with standard MCMC techniques.
+
+Emulators have been successfully used to study a wide range of physical systems, including galaxy formation \cite{Gomez:2012ak} and heavy-ion collisions \cite{Novak:2013bqa}.
+Reference \cite{Novak:2013bqa} calibrated a hydrodynamic model to identified particle spectra from the Relativistic Heavy Ion Collider (RHIC) and extracted constraints on $\eta/s$ and several initial state parameters.
+However, this study used an event-averaged initial condition model, limiting its ability to investigate event-by-event fluctuations.
+
+In this work, we apply Bayesian methodology to a full event-by-event heavy-ion collision model.
+We calibrate to anisotropic flow data from the Large Hadron Collider (LHC) and constrain the shear viscosity $\eta/s$ along with other hydrodynamic and initial condition parameters.
+The analysis framework handles arbitrary numbers of inputs and outputs, systematically calculates quantitative constraints on all inputs simultaneously, and quickly evaluates the efficacy of physical models.
 
 
 \section{Model}
@@ -130,7 +174,7 @@ Similar to \cite{Novak:2013bqa, Soltz:2012rk}.
   Also comparison to prior guesses from OSU.
 }
 
-\begin{table}
+\begin{table}[b]
   \caption{
     \label{tab:posterior}
     Quantitative summary of posterior distributions.
