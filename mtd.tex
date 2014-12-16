@@ -104,14 +104,102 @@ The analysis framework handles arbitrary numbers of inputs and outputs, systemat
 
 \section{Model}
 
-\cite{Bass:2000ib, Nonaka:2006yn, Song:2010mg}
-\cite{Miller:2007ri}
-\cite{Drescher:2006pi}
-\cite{Song:2007ux}
-\cite{Cooper:1974mv}
-\cite{Qiu:2013wca}
-\cite{Bass:1998ca, Bleicher:1999xi}
-\cite{Shen:2014vra}
+Prototypical heavy-ion collision models simulate QGP spacetime evolution in several stages:
+an initial condition model handles the very early pre-QGP stage, viscous relativistic hydrodynamics simulates the hot and dense QGP expansion, the system is converted into an ensemble of hadrons, and finally a Boltzmann transport model calculates hadronic scatterings and decays \cite{Bass:2000ib,Nonaka:2006yn,Song:2010mg}.
+
+We opt for a mature, well-tested set of event-by-event models \cite{Shen:2014vra}.
+This way, the outcome of the systematic model-to-data comparison will be directly comparable to known results using the same models.
+
+\subsection{Initial conditions}
+
+Initial condition models simulate the collision's pre-equilibrium evolution until the hydrodynamic thermalization time at approximately 0.5 fm/c.
+Some models explicitly calculate pre-equilibrium dynamics \cite{}; others skip this time frame and generate initial conditions directly at the thermalization time.
+
+We select two of the oldest and most widely used models in the latter category:
+the Monte Carlo Glauber \cite{Miller:2007ri} and Monte Carlo KLN \cite{Drescher:2006pi} models.
+Although neither is state-of-the-art, both provide reasonable event-by-event initial conditions with well-understood behavior.
+
+\subsection{Hydrodynamics}
+
+The initial condition furnishes the hydrodynamic stress-energy tensor $T^{\mu\nu}$ at the thermalization time $\tau_0$.
+Viscous hydrodynamics then solves the conservation equations
+\begin{equation}
+  \partial_\mu T^{\mu\nu} = 0
+\end{equation}
+where
+\begin{equation}
+  T^{\mu\nu} = (\epsilon + P) u^\mu u^\nu - P g^{\mu\nu} + \pi^{\mu\nu};
+\end{equation}
+$\epsilon$, $P$, and $u^\mu$ are the energy density, pressure, and flow velocity of the fluid; $g^{\mu\nu}$ is the metric tensor; and $\pi^{\mu\nu}$ is the shear stress tensor.
+An equation of state
+\begin{equation}
+  P = P(\epsilon)
+\end{equation}
+closes the system of hydrodynamic equations and is usually provided by lattice QCD calculations.
+
+We employ VISH2+1 \cite{Song:2007ux}, a stable, extensively tested implementation of boost-invariant viscous hydrodynamics \cite{Bjorken:1982qr}.
+VISH2+1 uses the popular s95-PCE equation of state \cite{Huovinen:2009yb}.
+
+\subsection{Freeze-out}
+
+As the medium expands and cools, it freezes into discrete hadrons with spectra given by the Cooper-Frye formula \cite{Cooper:1974mv}
+\begin{equation}
+  E \frac{dN_i}{d^3p} = \int_\sigma f_i(x,p) \, p^\mu \, d^3\sigma_\mu,
+  \label{eq:cf}
+\end{equation}
+where $f_i$ is the distribution function for particle species $i$, $p^\mu$ is the four-momentum, and the integral is taken over an isothermal spacetime hypersurface $\sigma$ at the equation of state transition temperature $T \simeq 165$ MeV.
+Equation~\eqref{eq:cf} is randomly sampled as a probability density function to produce an ensemble of particles.
+
+We use a recent hypersurface sampler designed specifically for an event-by-event context \cite{Qiu:2013wca,Shen:2014vra}.
+
+\subsection{Afterburner}
+
+After freeze-out, the medium continues to expand as a hadron gas while particles scatter and decay.
+This stage is modeled by a hadronic ``afterburner'', which solves the Boltzmann equation
+\begin{equation}
+  \frac{df_i(x,p)}{dt} = \mathcal C_i(x,p),
+\end{equation}
+where $f_i$ is the distribution function for particle species $i$ and $\mathcal C_i$ is the collision kernel which describes source terms.
+Particles emerging from the afterburner are analogous to particles streaming into an experimental detector.
+
+We adopt the stalwart Ultra-relativistic Quantum Molecular Dynamics (UrQMD) model \cite{Bass:1998ca,Bleicher:1999xi} as an afterburner.
+
+\subsection{Postprocessing}
+
+The full event-by-model is executed $\mathcal O(10^4)$ times for a given set of input parameters.
+Events are binned into centrality intervals and the raw event data are postprocessed into physical observables for direct comparison with experiment.
+We calculate the centrality dependence of several standard standard observables:
+the average charged-particle multiplicity $\avg\nch$ and multi-particle flow cumulants $\vnk n {2k}$.
+
+Flow cumulants $\vnk n {2k}$ are defined as the $2k$-particle correlation function of the $n$th-order azimuthal anisotropy.
+For example, the two-particle cumulant is
+\begin{equation}
+  \vnk n 2^2 \equiv \bigl\langle e^{in(\phi_i - \phi_j)} \bigr\rangle,
+\end{equation}
+where $\phi_i$ is the azimuthal angle of the transverse momentum of particle $i$ and the average is over all distinct pairs of particles $i,j$.
+The two-particle cumulant is also approximately equal to the root-mean-square of the full $v_n$ distribution:
+\begin{equation}
+  \vnk n 2 \simeq \sqrt{\avg{v_n^2}}.
+\end{equation}
+We compute two-particle cumulants for elliptic and triangular flow $\vnk 2 2$, $\vnk 3 2$ using the direct $Q$-cumulant method \cite{Bilandzic:2010jr}.
+Higher-order cumulants are currently out of reach due to insufficient quantities of events.
+
+Postprocessed observables are compared to corresponding experimental results recently measured by the ALICE experiment at the LHC \cite{Abelev:2014mda}.
+All observables are subjected to the same kinematic cuts as the ALICE detector, namely charged particles with $|\eta| < 1$ and $0.2 < p_T < 3.0$ GeV.
+
+
+\section{Emulator}
+
+\subsection{Gaussian processes}
+
+\cite{Rasmussen:2006gp}
+\cite{OHagan:2006ba, Higdon:2008cmc, Higdon:2014tva}
+
+\placeholderfig[b]{gp}{
+  Conditioning a Gaussian process.
+}
+
+\subsection{Computer experiment design}
 
 \widefig{prior_draws_glb}{
   Prior model calculations using Glauber initial conditions.
@@ -127,23 +215,17 @@ The analysis framework handles arbitrary numbers of inputs and outputs, systemat
   Same as FIG.~\ref{fig:prior_draws_glb} for KLN initial conditions.
 }
 
-
-\section{Emulator}
-
-\cite{Rasmussen:2006gp}
-\cite{OHagan:2006ba, Higdon:2008cmc, Higdon:2014tva}
-
-\placeholderfig{gp}{
-  Conditioning a Gaussian process.
-}
-
 \placeholderfig{design}{
   Latin-hypercube experiment design.
 }
 
+\subsection{Dimensionality reduction}
+
 \placeholderfig{pca}{
   Dimensionality reduction via principal component analysis.
 }
+
+\subsection{Validation}
 
 \widefig{validation_glb}{
   Validation of the Gaussian process emulator for the Glauber model.
