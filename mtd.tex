@@ -278,11 +278,12 @@ Now, instead of completely random functions, we desire functions which pass thro
 This is accomplished by \emph{conditioning} the GP on the training data to yield a predictive distribution for $y$ at any input point $\x$.
 Recalling the test points $X_*$, the predictive distribution for the corresponding outputs $\y_*$ is the multivariate normal distribution
 \begin{equation}
-\begin{aligned}
-  \y_* &\sim \N(\muvec, \Sigma), \\
-  \muvec &= \sigma(X_*, X)\sigma(X, X)^{-1}\y, \\
-  \Sigma &= \sigma(X_*,X_*) - \sigma(X_*,X)\sigma(X,X)^{-1}\sigma(X,X_*).
-\end{aligned}
+  \begin{aligned}
+    \y_* &\sim \N(\muvec, \Sigma), \\
+    \muvec &= \sigma(X_*, X)\sigma(X, X)^{-1}\y, \\
+    \Sigma &= \sigma(X_*,X_*) - \sigma(X_*,X)\sigma(X,X)^{-1}\sigma(X,X_*).
+  \end{aligned}
+  \label{eq:cond}
 \end{equation}
 See the right panel of FIG.~\ref{fig:gp} for an example of conditioning a GP on one-dimensional training data.
 
@@ -357,20 +358,22 @@ Unfortunately, this leads to a total number of design points $m = n^k$ which eve
 
 \widefig{prior_draws_kln}{
   Same as FIG.~\ref{fig:prior_draws_glb} for KLN initial conditions.
+  \todo{Convert to a single figure ($2\times3$ grid).}
 }
 
 A popular algorithm for generating efficient design points is Latin hypercube (LH) sampling \cite{Tang:1993lh}.
-This method produces sparse, space-filling randomized designs with several desirable properties:
+This method produces space-filling randomized designs with several desirable properties:
 \begin{itemize}
   \item The \emph{minimum} distance between points is \emph{maximized}, thus avoiding large gaps and tight clusters.
   \item Projections of the design into lower dimensions are uniformly distributed.
 \end{itemize}
 Figure~\ref{fig:design} illustrates these traits.
-An LH design with relatively few points $m \sim 20n$ provides an efficient scaffolding of parameter space for interpolation by a GP emulator.
+A LH design with relatively few points $m \sim 20n$ provides an efficient scaffolding of parameter space for interpolation by a GP emulator.
 
 We use a 256 point LH design across the $n = 5$ input parameters; FIG.~\ref{fig:design} shows a two-dimensional projection.
 At each design point, we have executed the event-by-event model $\mathcal O(10^3)$ times in each of six centrality bins 0--5\%, 10--15\%, \ldots, 50-55\%, for both the Glauber and KLN models, yielding $\mathcal O(10^7)$ events in total.
 Two design points that were very near to the edge of the design space resulted in non-physical results and have been discarded, so the operational design has $m = 254$ points.
+\todo{Mention the OSG?}
 
 Figures~\ref{fig:prior_draws_glb} and \ref{fig:prior_draws_kln} show the postprocessed observables $\avg\nch$, $\vnk 2 2$, $\vnk 3 2$ as a function of centrality for each point in the design.
 The results have a broad distribution which is a direct result of the wide ranges of input parameters.
@@ -385,39 +388,71 @@ In general, the model takes the $m \times n$ design matrix $X$ and computes an $
 The present event-by-event model has $p = 18$ outputs (three observables each in six centrality bins).
 
 An obvious workaround is to use independent GP emulators for each of the $p$ outputs, however, this would neglect correlations and quickly become unwieldy for higher-dimensional output.
+Instead, we construct orthogonal linear combinations of the outputs via principal component (PC) analysis and emulate each transformed PC.
+The PCs are uncorrelated by construction and can also be used to reduce the dimensionality of the output space.
 
-Principal component analysis---uncorrelated linear combinations.
-Center $Y$.
-Singular value decomposition
+To construct the PCs, we first subtract the mean of the output data $Y$ so that each column has mean zero, then compute the eigendecomposition of the sample covariance matrix $Y\tran Y$:
 \begin{equation}
-  Y = UDV\tran
+  Y\tran Y = U \Lambda U\tran,
+  \label{eq:cov}
 \end{equation}
-where $U$, $V$ are orthogonal matrices and $D$ is diagonal containing the singular values of $Y$.
-Columns of $V$ are the eigenvectors of the sample covariance matrix $Y\tran Y$, and singular values are the square roots of the eigenvalues $\lambda$ of $Y\tran Y$.
+where $U$ is an orthogonal $p \times p$ matrix containing the eigenvectors of $Y\tran Y$ and $\Lambda$ is diagonal containing the eigenvalues $\lambda_1, \ldots, \lambda_p$ in non-increasing order.
+$U$ now defines a linear transformation which ``rotates'' the output data $Y$ into PC space:
 \begin{equation}
-  Z = \sqrt m \, YV
+  Z = \sqrt m \, YU,
 \end{equation}
+where $Z$ is an $m \times p$ matrix (same shape as $Y$) of the transformed PCs.
+The eigenvalues $\lambda_i$ represent the variance accounted for by principal component $i$; since they are sorted in non-increasing order, the \emph{fraction} of the variance accounted for by the first $q \leq p$ PCs is
 \begin{equation}
-  Y = \frac{1}{\sqrt m} ZV\tran
+  V(q) = \frac{\sum_{i=1}^q \lambda_i}{\sum_{i=1}^p \lambda_i}.
 \end{equation}
-$q$ PCs, first $q$ columns of $Z$.  $Z$ is $m \times q$.
+Often, the first few PCs describe most of the variance, as shown in FIG.~\ref{fig:pca}.
+Hence we can construct a reduced-dimension transformation with minimal loss of precision by choosing $q < p$ so that $V(q)$ satisfies some threshold (e.g.~$V(q) \geq 0.99$) and taking only the first $q$ columns of $U$:
+\begin{equation}
+  Z_q = \sqrt m \, YU_q,
+\end{equation}
+where $Z_q$ is now an $m \times q$ matrix.
 
+We may now use $q$ independent GP emulators for each of the columns of $Z_q$.
+GPs are conditioned on the design $X$ according to Eq.~\eqref{eq:cond} and predict the PCs $Z_*$ at arbitrary test points $X_*$ which are then transformed back to physical space as
+\begin{equation}
+  Y_* = \frac{1}{\sqrt m} Z_* U\tran.
+\end{equation}
+
+There is an important caveat for principal components:
+the original data $Y$ must have a multivariate normal distribution for the transformed PCs $Z$ to be uncorrelated.
+There is no guarantee that a particular model will produce normally-distributed outputs so this must be verified on a case-by-case basis.
+For the present event-by-event model we perform the following steps:
+\begin{enumerate}
+  \item Assess the normality of each observable $\avg\nch$, $\vnk 2 2$, $\vnk 3 2$.
+    While the flow cumulants are approximately normal without modification, we take the square root of multiplicity $\sqrt{\avg\nch}$ to obtain a normal distribution.
+  \item Divide each observable by its corresponding experimental value from ALICE \cite{Abelev:2014mda}.
+    This converts everything to unitless quantities of order one.
+  \item \todo{Weights?  The current results have $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 3 2$ weighted 1.2~:~1.0~:~0.6.}
+  \item Concatenate the unitless data into a $254 \times 18$ matrix $Y$ and subtract the mean.
+  \item Calculate the PC transformed data $Z$ using $q = 5$ PCs, which accounts for over 99\% of the variance as shown in FIG.~\ref{fig:pca}.
+\end{enumerate}
+These steps are inverted to transform PCs back to physical space.
+
+In practice, the covariance method for computing principal components is prone to numerical error, so a more robust algorithm using the singular value decomposition (SVD) is preferred.
+The SVD of the data $Y$ is
+\begin{equation}
+  Y = VDW\tran
+  \label{eq:svd}
+\end{equation}
+where $V$, $W$ are orthogonal matrices containing the so-called left and right-singular vectors of $Y$ and $D$ is diagonal containing the singular values.
+Inserting \eqref{eq:svd} into \eqref{eq:cov} yields
+\begin{equation}
+  Y\tran Y = W D^2 W\tran = U \Lambda U\tran,
+\end{equation}
+hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ and the right singular vectors $W$ are the eigenvectors $U$.
 
 \placeholderfig{pca}{
-  Dimensionality reduction via principal component analysis.
+  Fraction of the variance $V(q)$ explained by the first $q$ principal components.
+  $q = 5$ accounts for approximately 99\% of the total variance.
 }
 
 \subsection{Emulator construction and validation}
-
-Squared-exponential covariance function
-\begin{equation}
-  \sigma(\x, \x') = \sigma_\text{GP}^2 \exp\biggl[ -\sum_{k=1}^n \frac{(x_k - x'_k)^2}{2\ell_k^2} \biggr] + \sigma_\text{noise}^2\delta_{xx'},
-\end{equation}
-$\sigma_\text{GP}^2$ is the overall variance of the GP,
-$\sigma_\text{noise}^2$ is the noise variance,
-$\ell_k$ is the characteristic length scale for dimension $k$.
-
-For details about training see appendix \ref{app:train}.
 
 \widefig{validation_glb}{
   Validation of the Gaussian process emulator for the Glauber model.
@@ -425,6 +460,33 @@ For details about training see appendix \ref{app:train}.
   The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
   The diagonal grey line represents $y = x$.
 }
+
+We emulate the model by conditioning independent Gaussian processes on each of the principal components $Z_q$ and the input design $X$ according to Eq.~\eqref{eq:cond}.
+Model outputs inevitably include statistical noise, i.e.\ we cannot compute $y = f(\x)$ exactly, only $y = f(\x) + \epsilon$ where $\epsilon$ is Gaussian noise.
+This is accounted for by adding a noise term to the diagonal of the covariance matrix:
+\begin{equation*}
+  \sigma(\x, \x') \rightarrow \sigma(\x, \x') + \sigma^2_n\delta_{\x\x'},
+\end{equation*}
+where $\sigma^2_n$ is the variance of the noise and $\delta_{\x\x'}$ is a Kronecker delta.
+Effectively, the noise term relaxes the requirement that the GP must pass exactly through each training point.
+
+We use a squared-exponential covariance function with a noise term:
+\begin{equation}
+  \sigma(\x, \x') = \sigma_\text{GP}^2 \exp\Biggl[ -\sum_{k=1}^n \frac{(x_k - x'_k)^2}{2\ell_k^2} \Biggr] + \sigma_n^2\delta_{\x\x'},
+\end{equation}
+where $\sigma_\text{GP}^2$ is the overall variance of the GP and $\ell_k$ is the characteristic length scale for dimension $k$.
+These \emph{hyperparameters} $(\sigma_\text{GP}$, $\sigma_n$, $\ell_k)$ are not known a priori and must be estimated from the training data, however, in the present case predictions appear to be relatively insensitive to the precise choice of hyperparameters, as will be demonstrated promptly.
+For details about the selection of hyperparameters see appendix \ref{app:train}.
+
+As with any interpolation scheme, the GP emulator must be validated to ensure it faithfully predicts model output.
+In other words, given an arbitrary test point $\x_*$, the GP prediction at $\x_*$ should agree (within its uncertainty) with an explicit computation at $\x_*$.
+To this end, we have generated a separate validation design $X_*$, evaluated the full event-by-event model at each validation point just as for the training design $X$, and predicted the model outputs at $X_*$ using the GP emulator.
+
+Figure~\ref{fig:validation_glb} validates that the emulator does indeed faithfully predict the model.
+Recall that the emulator provides probability distributions of finite width, so it need not predict every validation point exactly---in fact, in the ideal case the residuals would have a normal distribution with mean zero.
+Most of the uncertainty visible in FIG.~\ref{fig:validation_glb} is actually due to the statistical noise in the flow cumulants, particularly for $\vnk 3 2$.
+The emulator accurately depicts the noise present in the underlying data.
+\todo{Additional figure showing the distribution of emulator errors?}
 
 
 \section{Calibration}
@@ -511,6 +573,7 @@ Figures~\ref{fig:posterior_draws_glb} and \ref{fig:posterior_draws_kln}.
 
 \widefig{posterior_draws_kln}{
   Same as FIG.~\ref{fig:posterior_draws_glb} for the KLN model.
+  \todo{Convert to a single figure ($2\times3$ grid).}
 }
 
 
