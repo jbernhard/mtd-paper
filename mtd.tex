@@ -1,5 +1,6 @@
 \documentclass[aps,prc,reprint,amsmath]{revtex4-1}
 
+\usepackage{amssymb}
 \usepackage[bookmarksopen=true]{hyperref}
 \usepackage{graphicx}
 \graphicspath{{fig/}}
@@ -27,6 +28,7 @@
 \newcommand{\avg}[1]{\langle #1 \rangle}
 \newcommand{\nch}{N_\text{ch}}
 \newcommand{\vnk}[2]{v_#1\{#2\}}
+\newcommand{\tran}{^\intercal}
 
 
 \begin{document}
@@ -190,16 +192,157 @@ All observables are subjected to the same kinematic cuts as the ALICE detector, 
 
 \section{Emulator}
 
+This section constructs a Gaussian process (GP) emulator to act as a surrogate for the full event-by-event model.
+The strategy is to evaluate the model on a carefully chosen set of input parameter points, then use a GP to interpolate the parameter space.
+Unlike alternative interpolation schemes such as splines or polynomial interpolation, a GP emulator provides a \emph{probability distribution} at each point in parameter space, hence, it not only predicts the output of the model at arbitrary points in parameter space, but also quantifies the uncertainty of its predictions.
+Further, GPs are non-parametric interpolators, i.e.\ they do not require an assumed functional form for the underlying model.
+These features are essential for emulation of computer codes.
+
 \subsection{Gaussian processes}
 
-\cite{Rasmussen:2006gp}
-\cite{OHagan:2006ba, Higdon:2008cmc, Higdon:2014tva}
+\newcommand{\x}{\mathbf x}
+\newcommand{\y}{\mathbf y}
+\newcommand{\zero}{\mathbf 0}
+\newcommand{\muvec}{\boldsymbol\mu}
+\newcommand{\N}{\mathcal N}
 
-\placeholderfig[b]{gp}{
-  Conditioning a Gaussian process.
+This subsection summarizes the theory of Gaussian process emulators as detailed in chapter 2 of \cite{Rasmussen:2006gp}.
+
+A Gaussian process (GP) is defined as a collection of random variables, any finite number of which have a joint Gaussian distribution.
+A GP may be thought of as a stochastic function $f(\x)$ which maps $n$-dimensional input vectors $\x$ to normally distributed outputs $y$.
+It is fully specified by a mean function $\mu(\x)$ which gives the mean of $f$ at input point $\x$ and a covariance function $\sigma(\x, \x')$ which provides the covariance of $f$ between a pair of points $\x$, $\x'$.
+
+As a concrete example, let $\x_1$ be an input point and $y_1 = f(\x_1)$ be the output of the GP at $\x_1$; then $y_1$ has a normal distribution with mean $\mu(\x_1)$ and variance $\sigma(\x_1, \x_1)$:
+\begin{equation}
+  y_1 \sim \N(\mu(\x_1), \sigma(\x_1, \x_1)).
+\end{equation}
+Now if $\x_2$ is another input and $y_2 = f(\x_2)$ is the corresponding output, $y_1$ and $y_2$ have a bivariate normal distribution
+\begin{equation}
+  \begin{pmatrix}
+    y_1 \\ y_2
+  \end{pmatrix}
+  \sim \N\biggl[
+    \begin{pmatrix}
+      \mu(\x_1) \\ \mu(\x_2)
+    \end{pmatrix},
+    \begin{pmatrix}
+      \sigma(\x_1, \x_1) & \sigma(\x_1, \x_2) \\
+      \sigma(\x_2, \x_1) & \sigma(\x_2, \x_2) \\
+    \end{pmatrix}
+  \biggr].
+\end{equation}
+In general, the set of $m$ random output variables $\y~=~\{y_1, \ldots, y_m\}~=~f(X)$ corresponding to input points $X~=~\{\x_1, \ldots, \x_m\}$ have a multivariate normal distribution
+\begin{equation}
+  \y \sim \N(\muvec, \Sigma)
+\end{equation}
+where
+\begin{equation}
+  \muvec = \mu(X) = \{\mu(\x_1), \mu(\x_2), \ldots, \mu(\x_m)\} \\
+\end{equation}
+is the $m$-dimensional mean vector from applying the mean function to each input, and
+\begin{equation}
+  \Sigma = \sigma(X, X) =
+  \begin{pmatrix}
+    \sigma(\x_1, \x_1) & \cdots & \sigma(\x_1, \x_m) \\
+    \vdots & \ddots & \vdots \\
+    \sigma(\x_m, \x_1) & \cdots & \sigma(\x_m, \x_m) \\
+  \end{pmatrix}
+\end{equation}
+is the $m \times m$ covariance matrix from applying the covariance function to each pair of inputs..
+
+In practice, one often sets the mean function to zero, since one can always subtract off the mean of a distribution.
+The covariance function must be carefully chosen, for it controls the degree of similarity between pairs of points.
+A standard choice is the squared-exponential function
+\begin{equation}
+  \sigma(\x, \x') = \exp\biggl( -\frac{|\x - \x'|^2}{2\ell^2} \biggr),
+\end{equation}
+where $\ell$ is a characteristic length scale.
+Notice that nearby points are strongly correlated ($k \approx 1$) while distant points are independent ($k \rightarrow 0$).
+This implies that the GP is smooth, i.e.\ nearby input points produce similar outputs.
+
+Just as we can sample random numbers from a distribution, we can draw random functions from a GP.
+We choose a set of test points $X_*$ (the reason for the subscript $*$ will become clear in a moment), calculate the covariance matrix $\Sigma = \sigma(X_*, X_*)$, and generate multivariate normal samples from $\N(\zero, \Sigma)$.
+We can then plot the input-output points as smooth curves, as in the left panel of FIG.~\ref{fig:gp}.
+
+\placeholderfig[t]{gp}{
+  Left: random functions drawn from a Gaussian process using a squared-exponential covariance function with length scale $\ell = 1$.
+  Right: functions drawn from a GP conditioned on the training points indicated by dots.
+  In both plots, the grey band represents twice the GP standard deviation (roughly 95\% confidence interval).
 }
 
+Of course, simply generating random functions is not particularly useful---we want to use a GP to interpolate a computer model.
+Suppose we have a model which takes a vector of input parameters $\x$ and produces an output $y$ according to some unknown GP $f(\x)$; for example, $f$ could be a hydrodynamic model with input parameters $\x = (\tau_0, \eta/s)$ and the output could be elliptic flow $v_2$.
+We choose a set of training points $X$, run the model at each point, and observe a set of outputs $\y$.
+Now, instead of completely random functions, we desire functions which pass through (interpolate) all the training points $(X, \y)$.
+This is accomplished by \emph{conditioning} the GP on the training data to yield a predictive distribution for $y$ at any input point $\x$.
+Recalling the test points $X_*$, the predictive distribution for the corresponding outputs $\y_*$ is the multivariate normal distribution
+\begin{equation}
+\begin{aligned}
+  \y_* &\sim \N(\muvec, \Sigma), \\
+  \muvec &= \sigma(X_*, X)\sigma(X, X)^{-1}\y, \\
+  \Sigma &= \sigma(X_*,X_*) - \sigma(X_*,X)\sigma(X,X)^{-1}\sigma(X,X_*).
+\end{aligned}
+\end{equation}
+See the right panel of FIG.~\ref{fig:gp} for an example of conditioning a GP on one-dimensional training data.
+
+We emphasize that the prediction $\y_*$ is not constant, but a \emph{probability distribution} for the model outputs at $X_*$.
+As demonstrated in FIG.~\ref{fig:gp}, the predictive distribution is narrow when near the training points and wide when far away, hence, it reflects the true state of knowledge of the interpolation.
+This is accomplished without assuming a parametric form for the model---we must only assume that the model is a GP with a specified covariance function.
+
+
 \subsection{Computer experiment design}
+
+The full event-by-event model is to be evaluated on a set of training points $X = \{\x_1, \ldots, \x_m\}$, where each $\x_i$ is an $n$-dimensional vector of input parameters, so $X$ may be viewed as an $m \times n$ design matrix.
+These points must be chosen with care.
+
+For the present study, we choose a set of $n = 5$ input parameters
+\begin{equation}
+  \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, \tau_\Pi)
+\end{equation}
+where
+\begin{itemize}
+  \item Norm is the overall normalization factor, a multiplicative constant that determines how much entropy is deposited in the initial condition.
+  \item I.C.\ param is a parameter specific to each initial condition model.
+    For the Glauber model the parameter is $\alpha$, which controls how entropy is distributed to wounded nucleons and binary collisions;
+    for the KLN model it is $\lambda$, the exponent for the saturation scale.
+    Both parameters are related to the centrality dependence of multiplicity.
+    \todo{Explain more or introduce earlier?}
+  \item $\tau_0$ is the hydrodynamic thermalization time.
+  \item $\eta/s$ is the shear viscosity to entropy density ratio.
+  \item $\tau_\Pi$ is the shear stress relaxation time, which dictates how quickly the hydro medium relaxes to the Navier-Stokes limit.
+    \todo{Verify this.}
+\end{itemize}
+We choose intentionally large ranges for each parameter, summarized in table~\ref{tab:design}.
+
+The number $m$ of design points and their distribution in parameter space is also critical.
+Perhaps the most obvious choice is a uniform grid, e.g.\ $k$ evenly-spaced points in each dimension.
+Unfortunately, this leads to a total number of design points $m = n^k$ which even for a modest $k = 10$ and $n = 5$ is intractably large, $\mathcal O(10^7)$.
+
+\placeholderfig{design}{
+  The Latin hypercube experiment design projected into the $(\tau_0, \eta/s)$ dimensions.
+  Note that the other design parameters also vary for each point, so the points that appear very close in the projection are not necessarily close in the full-dimensional space.
+}
+
+\begin{table}[t]
+  \caption{
+    \label{tab:design}
+    Input parameter ranges for the Glauber and KLN initial condition models and for the hydrodynamic model.
+  }
+  \begin{ruledtabular}
+  \begin{tabular}{llllll}
+    \multicolumn{2}{c}{\bf Glauber} &
+    \multicolumn{2}{c}{\bf KLN} &
+    \multicolumn{2}{c}{\bf Hydro} \\
+    Norm & 20--60 &
+    Norm & 5--15 &
+    $\tau_0$ & 0.2--1.0 fm \\
+    $\alpha$ & 0.05--0.30&
+    $\lambda$ & 0.1--0.3 &
+    $\eta/s$ & 0--0.3 \\
+    & & & & $\tau_\Pi$ & 0.2--1.1 fm \\
+  \end{tabular}
+  \end{ruledtabular}
+\end{table}
 
 \widefig{prior_draws_glb}{
   Prior model calculations using Glauber initial conditions.
@@ -215,17 +358,65 @@ All observables are subjected to the same kinematic cuts as the ALICE detector, 
   Same as FIG.~\ref{fig:prior_draws_glb} for KLN initial conditions.
 }
 
-\placeholderfig{design}{
-  Latin-hypercube experiment design.
-}
+A popular algorithm for generating efficient design points is Latin hypercube (LH) sampling \cite{Tang:1993lh}.
+This method produces sparse, space-filling randomized designs with several desirable properties:
+\begin{itemize}
+  \item The \emph{minimum} distance between points is \emph{maximized}, thus avoiding large gaps and tight clusters.
+  \item Projections of the design into lower dimensions are uniformly distributed.
+\end{itemize}
+Figure~\ref{fig:design} illustrates these traits.
+An LH design with relatively few points $m \sim 20n$ provides an efficient scaffolding of parameter space for interpolation by a GP emulator.
 
-\subsection{Dimensionality reduction}
+We use a 256 point LH design across the $n = 5$ input parameters; FIG.~\ref{fig:design} shows a two-dimensional projection.
+At each design point, we have executed the event-by-event model $\mathcal O(10^3)$ times in each of six centrality bins 0--5\%, 10--15\%, \ldots, 50-55\%, for both the Glauber and KLN models, yielding $\mathcal O(10^7)$ events in total.
+Two design points that were very near to the edge of the design space resulted in non-physical results and have been discarded, so the operational design has $m = 254$ points.
+
+Figures~\ref{fig:prior_draws_glb} and \ref{fig:prior_draws_kln} show the postprocessed observables $\avg\nch$, $\vnk 2 2$, $\vnk 3 2$ as a function of centrality for each point in the design.
+The results have a broad distribution which is a direct result of the wide ranges of input parameters.
+There is some statistical error present in $\vnk 3 2$ due to insufficient quantities of events.
+
+Note that these results constitute the training data for the GP emulator, not any kind of best-fit.
+
+\subsection{Multivariate output}
+
+Gaussian processes are fundamentally scalar functions, but computer models often produce multivariate output.
+In general, the model takes the $m \times n$ design matrix $X$ and computes an $m \times p$ output matrix $Y$.
+The present event-by-event model has $p = 18$ outputs (three observables each in six centrality bins).
+
+An obvious workaround is to use independent GP emulators for each of the $p$ outputs, however, this would neglect correlations and quickly become unwieldy for higher-dimensional output.
+
+Principal component analysis---uncorrelated linear combinations.
+Center $Y$.
+Singular value decomposition
+\begin{equation}
+  Y = UDV\tran
+\end{equation}
+where $U$, $V$ are orthogonal matrices and $D$ is diagonal containing the singular values of $Y$.
+Columns of $V$ are the eigenvectors of the sample covariance matrix $Y\tran Y$, and singular values are the square roots of the eigenvalues $\lambda$ of $Y\tran Y$.
+\begin{equation}
+  Z = \sqrt m \, YV
+\end{equation}
+\begin{equation}
+  Y = \frac{1}{\sqrt m} ZV\tran
+\end{equation}
+$q$ PCs, first $q$ columns of $Z$.  $Z$ is $m \times q$.
+
 
 \placeholderfig{pca}{
   Dimensionality reduction via principal component analysis.
 }
 
-\subsection{Validation}
+\subsection{Emulator construction and validation}
+
+Squared-exponential covariance function
+\begin{equation}
+  \sigma(\x, \x') = \sigma_\text{GP}^2 \exp\biggl[ -\sum_{k=1}^n \frac{(x_k - x'_k)^2}{2\ell_k^2} \biggr] + \sigma_\text{noise}^2\delta_{xx'},
+\end{equation}
+$\sigma_\text{GP}^2$ is the overall variance of the GP,
+$\sigma_\text{noise}^2$ is the noise variance,
+$\ell_k$ is the characteristic length scale for dimension $k$.
+
+For details about training see appendix \ref{app:train}.
 
 \widefig{validation_glb}{
   Validation of the Gaussian process emulator for the Glauber model.
@@ -290,10 +481,11 @@ All observables are subjected to the same kinematic cuts as the ALICE detector, 
 
 
 
+
+
 \appendix
 
-
-\section{Emulator training}
+\section{\label{app:train}Emulator training}
 
 \widefig{training_posterior_glb}{
   Posterior distributions of the principal component Gaussian process hyperparameters for the Glauber model.
