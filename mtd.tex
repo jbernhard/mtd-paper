@@ -429,8 +429,45 @@ For details about training see appendix \ref{app:train}.
 
 \section{Calibration}
 
+\newcommand{\xs}{\x_\star}
+\newcommand{\z}{\mathbf z}
+\newcommand{\yexp}{\y_\text{exp}}
+\newcommand{\zexp}{\z_\text{exp}}
+
+\cite{OHagan:2006ba,Higdon:2008cmc,Higdon:2014tva}
+
+
+Bayes' theorem
+\begin{equation}
+  P(\xs|X,Y,\yexp) = \frac{P(X,Y,\yexp|\xs)P(\xs)}{P(X,Y,\yexp)}
+\end{equation}
+
+
+\subsection{MCMC}
+
+\begin{equation}
+  P(\z|\xs) \propto \exp\biggl\{ -\frac{1}{2} [\z(\xs) - \zexp]\tran \Sigma_z^{-1} [(\z(\xs) - \zexp] \biggr\}
+\end{equation}
+
+% \begin{equation}
+%   P(\z|\xs) \propto \exp( -\tfrac{1}{2} \mathbf u\tran \Sigma_z^{-1} \mathbf u), \quad
+%   \mathbf u = \z(\xs) - \zexp
+% \end{equation}
+
+\begin{equation}
+  \Sigma_z = \text{diag}(\sigma^2_z\,\zexp)
+\end{equation}
+
+Affine-invariant ensemble sampler \cite{Goodman:2010en,FM:2013mc}.
+
+\subsection{Results}
+
 \cite{Abelev:2014mda}
-\cite{Shen:2011zc, Heinz:2011kt}
+\cite{Shen:2011zc,Heinz:2011kt}
+
+Figures~\ref{fig:calibration_posterior_glb} and \ref{fig:calibration_posterior_kln}.
+Table~\ref{tab:posterior}.
+Figures~\ref{fig:posterior_draws_glb} and \ref{fig:posterior_draws_kln}.
 
 \widefig{calibration_posterior_glb}{
   Posterior marginal and joint distributions of the calibration parameters for the Glauber model.
