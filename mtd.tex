@@ -326,23 +326,21 @@ Unfortunately, this leads to a total number of design points $m = n^k$ which eve
   Note that the other design parameters also vary for each point, so the points that appear very close in the projection are not necessarily close in the full-dimensional space.
 }
 
-\begin{table}[t]
+\begin{table}[b]
   \caption{
     \label{tab:design}
-    Input parameter ranges for the Glauber and KLN initial condition models and for the hydrodynamic model.
+    Input parameter ranges for the Glauber (Glb) and KLN initial condition models and for the hydrodynamic model.
   }
   \begin{ruledtabular}
-  \begin{tabular}{llllll}
-    \multicolumn{2}{c}{\bf Glauber} &
-    \multicolumn{2}{c}{\bf KLN} &
-    \multicolumn{2}{c}{\bf Hydro} \\
-    Norm & 20--60 &
-    Norm & 5--15 &
-    $\tau_0$ & 0.2--1.0 fm \\
-    $\alpha$ & 0.05--0.30&
-    $\lambda$ & 0.1--0.3 &
-    $\eta/s$ & 0--0.3 \\
-    & & & & $\tau_\Pi$ & 0.2--1.1 fm \\
+  \begin{tabular}{lll}
+    \bf Parameter & \bf Description & \bf Range \\
+    Glb Norm & Overall normalization & 20--60 \\
+    Glb $\alpha$ & Wounded nucleon / binary collision & 0.05--0.30 \\
+    KLN Norm & Overall normalization & 5--15 \\
+    KLN $\lambda$ & Saturation scale exponent & 0.1--0.3 \\
+    $\tau_0$ & Thermalization time & 0.2--1.0 fm \\
+    $\eta/s$ & Specific shear viscosity & 0--0.3 \\
+    $\tau_\Pi$ & Shear stress relaxation time & 0.2--1.1 fm \\
   \end{tabular}
   \end{ruledtabular}
 \end{table}
