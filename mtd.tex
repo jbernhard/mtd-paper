@@ -497,31 +497,57 @@ The emulator accurately depicts the noise present in the underlying data.
 \newcommand{\yexp}{\y_\text{exp}}
 \newcommand{\zexp}{\z_\text{exp}}
 
-\cite{OHagan:2006ba,Higdon:2008cmc,Higdon:2014tva}
-
-
-Bayes' theorem
+With the validated Gaussian process emulator in hand, it may be used as a fast surrogate to the full event-by-event model for calibration.
+\emph{Calibration} means tuning the model input parameters so that the output optimally agrees with experimental data and in the process extracting probability distributions for each parameter.
+Recall the input parameters are
+\begin{equation*}
+  \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, \tau_\Pi).
+\end{equation*}
+Presumably there exists a \emph{true} set of parameters $\xs$; the task now is to find the probability distribution of $\xs$ given the training data $(X, Y)$ and experimental measurements $\yexp$.
+This distribution may be framed in terms of Bayes' theorem as
 \begin{equation}
-  P(\xs|X,Y,\yexp) = \frac{P(X,Y,\yexp|\xs)P(\xs)}{P(X,Y,\yexp)}
+  P(\xs|X,Y,\yexp) \propto P(X,Y,\yexp|\xs) P(\xs)
 \end{equation}
+where
+\begin{itemize}
+  \item $P(\xs)$ is the \emph{prior} probability which embodies initial knowledge of $\xs$;
+  \item $P(X,Y,\yexp|\xs)$ is the likelihood:
+    the probability of observing $(X, Y, \yexp)$ given a proposed value of $\xs$; and
+  \item $P(\xs|X,Y,\yexp)$ is the \emph{posterior} probability for $\xs$ given the observations $(X, Y, \yexp)$.
+    This is the probability distribution we wish to construct.
+\end{itemize}
+In general Bayes' theorem has a normalization constant which has been omitted since we are only concerned with relative probabilities.
 
+The remainder of this section applies the methodology from \cite{OHagan:2006ba,Higdon:2008cmc,Higdon:2014tva} to calibrate the model and determine the posterior probability for $\xs$.
 
 \subsection{MCMC}
 
+The workhorse of any Bayesian calibration is Markov chain Monte Carlo (MCMC), a powerful and flexible method for directly sampling the posterior probability.
+Perhaps the most common version is the Metropolis-Hastings algorithm, which generates a random walk through parameter space by accepting or rejecting steps based on the posterior probability.
+For a large number of steps the samples of the random walk equilibrate to the posterior distribution.
+We use the affine-invariant ensemble sampler for MCMC \cite{Goodman:2010en,FM:2013mc}, an alternative algorithm which uses a large ensemble of interdependent walkers.
+Ensemble sampling notably has a much shorter autocorrelation time than Metropolis-Hastings sampling and hence converges  more quickly to the equilibrium distribution. 
+
+We place a non-informative flat prior on $\xs$, that is, the prior probability is constant within the design range (table~\ref{tab:design}) and zero outside.
+The likelihood is evaluated in principal component space:
+at each MCMC-sampled $\xs$ point, the emulator predicts the principal components $\z(\xs)$, and the likelihood is
 \begin{equation}
-  P(\z|\xs) \propto \exp\biggl\{ -\frac{1}{2} [\z(\xs) - \zexp]\tran \Sigma_z^{-1} [(\z(\xs) - \zexp] \biggr\}
+  P(\z|\xs) \propto \exp\biggl\{ -\frac{1}{2} [\z(\xs) - \zexp]\tran \Sigma_z^{-1} [(\z(\xs) - \zexp] \biggr\},
+  \label{eq:likelihood}
 \end{equation}
-
-% \begin{equation}
-%   P(\z|\xs) \propto \exp( -\tfrac{1}{2} \mathbf u\tran \Sigma_z^{-1} \mathbf u), \quad
-%   \mathbf u = \z(\xs) - \zexp
-% \end{equation}
-
+where $\zexp$ is the principal component transform of the experimental data $\yexp$ and $\Sigma_z$ is the covariance (uncertainty) matrix.
+There are a number of sources of uncertainty including experimental statistical and systematic error, model statistical and systematic error, and emulator uncertainty.
+In the present study, we do not attempt to precisely account for each contribution, for this would inevitably require dubious assumptions about systematic error correlations and the unknown error of the model.
+We assume a simple fractional error on the principal components, i.e.\ the covariance matrix is
 \begin{equation}
-  \Sigma_z = \text{diag}(\sigma^2_z\,\zexp)
+  \Sigma_z = \text{diag}(\sigma^2_z\,\zexp).
 \end{equation}
+While this is a rough assumption, it is perhaps more admissible than it initially seems, especially since the principal components automatically include correlations among observables.
 
-Affine-invariant ensemble sampler \cite{Goodman:2010en,FM:2013mc}.
+Given the flat prior on $\xs$, the posterior probability is equal to the likelihood \eqref{eq:likelihood} within the design range and zero outside.
+The MCMC algorithm draws samples directly from this distribution.
+We first run approximately $1 \times 10^6$ MCMC steps to allow the chain to equilibrate---these ``burn-in'' samples are discarded---followed by approximately $3 \times 10^6$ steps to generate the posterior distribution.
+\todo{Remember to update these numbers for the final version.}
 
 \subsection{Results}
 
