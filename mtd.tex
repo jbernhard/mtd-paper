@@ -530,7 +530,7 @@ We place a non-informative flat prior on $\xs$, that is, the prior probability i
 The likelihood is evaluated in principal component space:
 at each MCMC-sampled $\xs$ point, the emulator predicts the principal components $\z(\xs)$, and the likelihood is
 \begin{equation}
-  P(\z|\xs) \propto \exp\biggl\{ -\frac{1}{2} [\z(\xs) - \zexp]\tran \Sigma_z^{-1} [(\z(\xs) - \zexp] \biggr\},
+  P(\z|\xs) \propto \exp\biggl\{ -\frac{1}{2} [\z(\xs) - \zexp]\tran \Sigma_z^{-1} [\z(\xs) - \zexp] \biggr\},
   \label{eq:likelihood}
 \end{equation}
 where $\zexp$ is the principal component transform of the experimental data $\yexp$ and $\Sigma_z$ is the covariance (uncertainty) matrix.
@@ -538,9 +538,11 @@ There are a number of sources of uncertainty including experimental statistical 
 In the present study, we do not attempt to precisely account for each contribution, for this would inevitably require dubious assumptions about systematic error correlations and the unknown error of the model.
 We assume a simple fractional error on the principal components, i.e.\ the covariance matrix is
 \begin{equation}
-  \Sigma_z = \text{diag}(\sigma^2_z\,\zexp).
+  \Sigma_z = \text{diag}(\sigma^2_z\,\zexp),
 \end{equation}
-While this is a rough assumption, it is perhaps more admissible than it initially seems, especially since the principal components automatically include correlations among observables.
+where $\sigma^2_z$ is a manually set constant ($\sigma_z = 0.06$ for the present study).
+While this is itself a rough assumption, it is perhaps no worse than the alternative, since experimental systematic errors are typically estimated percentages themselves and the principal component transformation automatically includes natural correlations among observables.
+The primary goal of this study is to develop and test a model-to-data comparison framework; details such as the precise treatment of uncertainties can be improved later.
 
 Given the flat prior on $\xs$, the posterior probability is equal to the likelihood \eqref{eq:likelihood} within the design range and zero outside.
 The MCMC algorithm draws samples directly from this distribution.
