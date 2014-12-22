@@ -345,19 +345,14 @@ Unfortunately, this leads to a total number of design points $m = n^k$ which eve
   \end{ruledtabular}
 \end{table}
 
-\widefig{prior_draws_glb}{
-  Prior model calculations using Glauber initial conditions.
+\widefig{prior_draws}{
+  Prior model calculations using Glauber (top) and KLN (bottom) initial conditions.
   From left to right:
   average charged-particle multiplicity $\avg\nch$,
   elliptic flow two-particle cumulant $\vnk 2 2$,
   and triangular flow two-particle cumulant $\vnk 3 2$.
   Each plot has 254 lines corresponding to the 254 design points.
   Data points are experimental measurements from ALICE \cite{Abelev:2014mda}.
-}
-
-\widefig{prior_draws_kln}{
-  Same as FIG.~\ref{fig:prior_draws_glb} for KLN initial conditions.
-  \todo{Convert to a single figure ($2\times3$ grid).}
 }
 
 A popular algorithm for generating efficient design points is Latin hypercube (LH) sampling \cite{Tang:1993lh}.
@@ -374,7 +369,7 @@ At each design point, we have executed the event-by-event model $\mathcal O(10^3
 Two design points that were very near to the edge of the design space resulted in non-physical results and have been discarded, so the operational design has $m = 254$ points.
 \todo{Mention the OSG?}
 
-Figures~\ref{fig:prior_draws_glb} and \ref{fig:prior_draws_kln} show the postprocessed observables $\avg\nch$, $\vnk 2 2$, $\vnk 3 2$ as a function of centrality for each point in the design.
+Figure~\ref{fig:prior_draws} shows the postprocessed observables $\avg\nch$, $\vnk 2 2$, $\vnk 3 2$ as a function of centrality for each point in the design.
 The results have a broad distribution which is a direct result of the wide ranges of input parameters.
 There is some statistical error present in $\vnk 3 2$ due to insufficient quantities of events.
 
@@ -453,7 +448,7 @@ hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ a
 
 \subsection{Emulator construction and validation}
 
-\widefig{validation_glb}{
+\widefig{validation}{
   Validation of the Gaussian process emulator for the Glauber model.
   Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\%, 20--25\%, and 40-45\%.
   The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
@@ -481,9 +476,9 @@ As with any interpolation scheme, the GP emulator must be validated to ensure it
 In other words, given an arbitrary test point $\x_*$, the GP prediction at $\x_*$ should agree (within its uncertainty) with an explicit computation at $\x_*$.
 To this end, we have generated a separate validation design $X_*$, evaluated the full event-by-event model at each validation point just as for the training design $X$, and predicted the model outputs at $X_*$ using the GP emulator.
 
-Figure~\ref{fig:validation_glb} validates that the emulator does indeed faithfully predict the model.
+Figure~\ref{fig:validation} validates that the emulator does indeed faithfully predict the model.
 Recall that the emulator provides probability distributions of finite width, so it need not predict every validation point exactly---in fact, in the ideal case the residuals would have a normal distribution with mean zero.
-Most of the uncertainty visible in FIG.~\ref{fig:validation_glb} is actually due to the statistical noise in the flow cumulants, particularly for $\vnk 3 2$.
+Most of the uncertainty visible in FIG.~\ref{fig:validation} is actually due to the statistical noise in the flow cumulants, particularly for $\vnk 3 2$.
 The emulator accurately depicts the noise present in the underlying data.
 \todo{Additional figure showing the distribution of emulator errors?}
 
@@ -554,19 +549,19 @@ We first run approximately $1 \times 10^6$ MCMC steps to allow the chain to equi
 \cite{Abelev:2014mda}
 \cite{Shen:2011zc,Heinz:2011kt}
 
-Figures~\ref{fig:calibration_posterior_glb} and \ref{fig:calibration_posterior_kln}.
+Figures~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln}.
 Table~\ref{tab:posterior}.
-Figures~\ref{fig:posterior_draws_glb} and \ref{fig:posterior_draws_kln}.
+Figure~\ref{fig:post_draws}.
 
-\widefig{calibration_posterior_glb}{
+\widefig{cal_post_glb}{
   Posterior marginal and joint distributions of the calibration parameters for the Glauber model.
   On the diagonal are histograms of MCMC samples for the respective parameters,
   on the lower triangle are two-dimensional histograms of MCMC samples showing the correlation between pairs of parameters,
   and on the upper triangle are approximate contours for 68\%, 95\%, and 99\% confidence intervals along with a dot indicating the median.
 }
 
-\widefig{calibration_posterior_kln}{
-  Same as FIG.~\ref{fig:calibration_posterior_glb} for the KLN model.
+\widefig{cal_post_kln}{
+  Same as FIG.~\ref{fig:cal_post_glb} for the KLN model.
 }
 
 \placeholderfig{posterior_comparison}{
@@ -591,16 +586,11 @@ Figures~\ref{fig:posterior_draws_glb} and \ref{fig:posterior_draws_kln}.
   Goodness of fit comparison.
 }
 
-\widefig{posterior_draws_glb}{
-  Random realizations of the calibrated posterior for the Glauber model.
-  Similar to FIG.~\ref{fig:prior_draws_glb},
+\widefig{post_draws}{
+  Random realizations of the calibrated posterior for the Glauber (top) and KLN (bottom) models.
+  Similar to FIG.~\ref{fig:prior_draws},
   except the lines are posterior emulator predictions instead of explicit prior calculations.
   The red line is the maximum a posteriori point of the MCMC chain.
-}
-
-\widefig{posterior_draws_kln}{
-  Same as FIG.~\ref{fig:posterior_draws_glb} for the KLN model.
-  \todo{Convert to a single figure ($2\times3$ grid).}
 }
 
 
@@ -623,13 +613,13 @@ JEB is supported through NSF grant no.~PHY-0941373.
 
 \section{\label{app:train}Emulator training}
 
-\widefig{training_posterior_glb}{
+\widefig{train_glb}{
   Posterior distributions of the principal component Gaussian process hyperparameters for the Glauber model.
   The notation $\ell\;x$ means the squared-exponential correlation length for parameter $x$.
 }
 
-\widefig{training_posterior_kln}{
-  Same as FIG.~\ref{fig:training_posterior_glb} for the KLN model.
+\widefig{train_kln}{
+  Same as FIG.~\ref{fig:train_glb} for the KLN model.
 }
 
 

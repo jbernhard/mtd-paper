@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import collections
 import functools
+import inspect
 import pickle
+import sys
 
 import numpy as np
 import pandas as pd
@@ -47,24 +50,78 @@ sns.set(
 )
 
 
-def plotfn(f):
+class Results(dict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__dict__ = self
+
+observables = (
+    ('mult', r'$\langle N_\mathrm{ch} \rangle$'),
+    ('v2', r'$v_2\{2\}$'),
+    ('v3', r'$v_3\{2\}$')
+)
+
+ic_data = collections.OrderedDict((
+    ('glb', Results(
+        display_name='Glauber',
+        labels=('Normalization', r'$\alpha$',
+                r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
+        initial_params=(56.8, 0.118, 0.6, 0.08, 0.5)
+    )),
+    ('kln', Results(
+        display_name='KLN',
+        labels=('Normalization', r'$\lambda$',
+                r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
+        initial_params=(9.92, 0.138, 0.6, 0.08, 0.5)
+    ))
+))
+
+for ic, data in ic_data.items():
+    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
+        # pca, training_samplers, kernel_pars
+        # cal_chain, cal_samples, cal_logprob
+        # validation
+        data.update(pickle.load(f))
+    with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
+        # cent, design, mult, v2, v3
+        data.update(pickle.load(f))
+
+experiment = 'alice'
+
+with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
+    exp = pickle.load(f)
+
+
+plotfns = {}
+
+
+def _register_plotfn(f):
+    name = f.__name__
+
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
-        print(f.__name__, *args)
+        print(name)
         f(*args, **kwargs)
-        plt.savefig('_'.join((f.__name__, args[0])) + '.pdf')
+        plt.savefig(name + '.pdf')
         plt.close()
-    return wrapper
+
+    plotfns[name] = wrapper
 
 
-def _histstep(*args, **kwargs):
-    kwargs['histtype'] = 'stepfilled'
-    kwargs.pop('color', None)
-    palette = kwargs.pop('palette', 'Blues')
-    cmap = getattr(plt.cm, palette)
-    kwargs['color'] = cmap(.2)
-    kwargs['edgecolor'] = cmap(.95)
-    return plt.hist(*args, **kwargs)
+def plotfn(f):
+    p = tuple(inspect.signature(f).parameters.values())
+    if (
+            len(p) >= 2 and
+            p[0].name == 'ic' and
+            p[0].default is inspect.Parameter.empty and
+            p[1].name == 'data'
+    ):
+        for ic, data in ic_data.items():
+            g = functools.partial(f, ic, data)
+            g.__name__ = '_'.join((f.__name__, ic))
+            _register_plotfn(g)
+    else:
+        _register_plotfn(f)
 
 
 def nicehist(x, bins=50, cmap=plt.cm.Blues, **kwargs):
@@ -101,16 +158,14 @@ def ciplot(x, y, bins=30, levels=(.68, .95, .99), **kwargs):
 
 
 @plotfn
-def training_posterior(ic, labels, **kwargs):
+def train(ic, data):
+    samplers = data.training_samplers
     hyperlabels = (
         ['GP variance'] +
         [r'$\ell$ {}'.format('Norm' if p == 'Normalization' else p)
-         for p in labels] +
+         for p in data.labels] +
         ['Noise']
     )
-
-    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
-        samplers = pickle.load(f)['training_samplers']
 
     npc = len(samplers)
     nhyper = len(hyperlabels)
@@ -142,9 +197,8 @@ def training_posterior(ic, labels, **kwargs):
 
 
 @plotfn
-def calibration_posterior(ic, labels, **kwargs):
-    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
-        chain = pd.DataFrame(pickle.load(f)['cal_chain'], columns=labels)
+def cal_post(ic, data):
+    chain = pd.DataFrame(data.cal_chain, columns=data.labels)
 
     cmap = plt.cm.Blues
 
@@ -167,71 +221,79 @@ def calibration_posterior(ic, labels, **kwargs):
 
 
 @plotfn
-def prior_draws(ic, **kwargs):
-    with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
-        model = pickle.load(f)
-    with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
-        exp = pickle.load(f)
+def prior_draws():
+    nic = len(ic_data)
+    nobs = len(observables)
+    fig, axes = plt.subplots(nrows=nic, ncols=nobs, sharex='col',
+                             figsize=(textwidth, nobs/nic*columnwidth*aspect))
 
-    fig, axes = plt.subplots(ncols=3, figsize=(textwidth, columnwidth*aspect))
+    ylims = 6000., .15, .045
 
-    for ax, (obs, label) in zip(axes, observables):
-        c = model['cent']
-        for m in model[obs]:
-            ax.plot(c, m, color='SkyBlue', alpha=.2, lw=.5)
+    for row, (ic, data) in zip(axes, ic_data.items()):
+        row[0].set_ylabel(data.display_name)
+        for ax, (obs, label), ymax in zip(row, observables, ylims):
+            x = data['cent']
+            for y in data[obs]:
+                ax.plot(x, y, color='SkyBlue', alpha=.2, lw=.5)
 
-        ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
-                    fmt='o', lw=.8, ms=2, capsize=0, color='.2')
+            ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
+                        fmt='o', lw=.8, ms=2, capsize=0, color='.2')
+            ax.yaxis.set_major_locator(tick.MaxNLocator(
+                nbins=4, steps=(1, 2, 3, 5, 10)))
 
-        ax.set_xlabel('Centrality %')
-        ax.set_xlim(0, 55)
-        ax.set_ylim(ymin=0)
+            ax.set_ylim(0, ymax)
 
-        ax.annotate(label, (.5, .98), xycoords='axes fraction',
-                    ha='center', va='top')
+            if ax.is_first_row():
+                ax.set_title(label)
+            else:
+                ax.set_xlabel('Centrality %')
+                ax.set_xlim(0, x.max() + .5)
 
     sns.despine()
-    fig.tight_layout(pad=0)
+    fig.tight_layout(pad=0, w_pad=.4)
 
 
 @plotfn
-def posterior_draws(ic, **kwargs):
-    with open('../data/model/{}.pkl'.format(ic), 'rb') as f:
-        cent = pickle.load(f)['cent']
-    with open('../data/exp/{}.pkl'.format(experiment), 'rb') as f:
-        exp = pickle.load(f)
-    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
-        cal_samples = pickle.load(f)['cal_samples']
+def post_draws():
+    nic = len(ic_data)
+    nobs = len(observables)
+    fig, axes = plt.subplots(nrows=nic, ncols=nobs, sharex='col',
+                             figsize=(textwidth, nobs/nic*columnwidth*aspect))
 
-    sample_idx = np.random.randint(0, cal_samples['mult'].shape[0], size=100)
+    sample_idx = np.random.randint(0, ic_data['glb']['cal_chain'].shape[0],
+                                   size=100)
 
-    fig, axes = plt.subplots(ncols=3, figsize=(textwidth, columnwidth*aspect))
+    ylims = 3200., .12, .035
 
-    for ax, (obs, label) in zip(axes, observables):
-        samples = cal_samples[obs]
+    for row, (ic, data) in zip(axes, ic_data.items()):
+        row[0].set_ylabel(data.display_name)
+        for ax, (obs, label), ymax in zip(row, observables, ylims):
+            x = data['cent']
+            samples = data.cal_samples[obs]
+            for i in sample_idx:
+                ax.plot(x, samples[i], color='SkyBlue', alpha=.2, lw=.5)
 
-        for i in sample_idx:
-            ax.plot(cent, samples[i], color='SkyBlue', alpha=.2, lw=.5)
+            ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
+                        fmt='o', lw=.8, ms=2, capsize=0, color='.2')
+            ax.yaxis.set_major_locator(tick.MaxNLocator(
+                nbins=4, steps=(1, 2, 3, 5, 10)))
 
-        ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
-                    fmt='o', lw=.8, ms=2, capsize=0, color='.2')
+            ax.set_ylim(0, ymax)
 
-        ax.set_xlabel('Centrality %')
-        ax.set_xlim(0, 55)
-        ax.set_ylim(ymin=0)
-
-        ax.annotate(label, (.5, .9 if obs == 'mult' else .5),
-                    xycoords='axes fraction',
-                    ha='center', va='top')
+            if ax.is_first_row():
+                ax.set_title(label)
+            else:
+                ax.set_xlabel('Centrality %')
+                ax.set_xlim(0, x.max() + .5)
 
     sns.despine()
-    fig.tight_layout(pad=0)
+    fig.tight_layout(pad=0, w_pad=.4)
 
 
 @plotfn
-def validation(ic, **kwargs):
-    with open('../mcmc/{}.pkl'.format(ic), 'rb') as f:
-        predicted = pickle.load(f)['validation']
+def validation(ic='glb'):
+    predicted = ic_data[ic].validation
+
     with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
         actual = pickle.load(f)
 
@@ -269,31 +331,14 @@ def validation(ic, **kwargs):
     sns.despine()
 
 
-params = {
-    'glb': {
-        'labels': ('Normalization', r'$\alpha$',
-                   r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
-        'prior': (56.8, 0.118, 0.6, 0.08, 0.5)
-    },
-    'kln': {
-        'labels': ('Normalization', r'$\lambda$',
-                   r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
-        'prior': (9.92, 0.138, 0.6, 0.08, 0.5)
-    }
-}
-experiment = 'alice'
-observables = (
-    ('mult', r'$\langle N_\mathrm{ch} \rangle$'),
-    ('v2', r'$v_2\{2\}$'),
-    ('v3', r'$v_3\{2\}$')
-)
+def main():
+    if len(sys.argv) > 1:
+        for a in sys.argv[1:]:
+            plotfns[a.rstrip('.pdf')]()
+    else:
+        for fn in plotfns.values():
+            fn()
 
 
 if __name__ == "__main__":
-    for ic, kwargs in params.items():
-        training_posterior(ic, **kwargs)
-        calibration_posterior(ic, **kwargs)
-        prior_draws(ic, **kwargs)
-        posterior_draws(ic, **kwargs)
-
-    validation('glb', **params['glb'])
+    main()
