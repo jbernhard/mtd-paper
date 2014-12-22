@@ -8,10 +8,8 @@ import pickle
 import sys
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
-import seaborn as sns
 
 
 aspect = 1/1.618
@@ -21,33 +19,34 @@ textwidth = 510/resolution
 textiny, texsmall, texnormal = 8., 9.25, 10.
 offblack = '#262626'
 
-sns.set(
-    context='paper',
-    style='white',
-    font='CMU Serif',
-    rc={
-        'font.size': texsmall,
-        'legend.fontsize': texsmall,
-        'axes.labelsize': texsmall,
-        'axes.titlesize': texsmall,
-        'xtick.labelsize': textiny,
-        'ytick.labelsize': textiny,
-        'lines.linewidth': .9,
-        'patch.linewidth': .9,
-        'axes.linewidth': .5,
-        'xtick.major.width': .5,
-        'ytick.major.width': .5,
-        'text.color': offblack,
-        'axes.edgecolor': offblack,
-        'axes.labelcolor': offblack,
-        'xtick.color': offblack,
-        'ytick.color': offblack,
-        'xtick.direction': 'in',
-        'ytick.direction': 'in',
-        'xtick.major.pad': 2.0,
-        'ytick.major.pad': 2.0,
-    }
-)
+plt.rcParams.update({
+    'font.family': ['CMU Serif'],
+    'font.size': texsmall,
+    'legend.fontsize': texsmall,
+    'axes.labelsize': texsmall,
+    'axes.titlesize': texsmall,
+    'xtick.labelsize': textiny,
+    'ytick.labelsize': textiny,
+    'lines.linewidth': .9,
+    'lines.markeredgewidth': .1,
+    'patch.linewidth': .9,
+    'axes.linewidth': .5,
+    'xtick.major.width': .5,
+    'ytick.major.width': .5,
+    'xtick.major.size': 2,
+    'ytick.major.size': 2,
+    'xtick.major.pad': 1.8,
+    'ytick.major.pad': 1.8,
+    'text.color': offblack,
+    'axes.edgecolor': offblack,
+    'axes.labelcolor': offblack,
+    'xtick.color': offblack,
+    'ytick.color': offblack,
+    'legend.numpoints': 1,
+    'legend.scatterpoints': 1,
+    'legend.frameon': False,
+    'pdf.fonttype': 42
+})
 
 
 class Results(dict):
@@ -66,13 +65,15 @@ ic_data = collections.OrderedDict((
         display_name='Glauber',
         labels=('Normalization', r'$\alpha$',
                 r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
-        initial_params=(56.8, 0.118, 0.6, 0.08, 0.5)
+        initial_params=(56.8, 0.118, 0.6, 0.08, 0.5),
+        param_ranges=((20., 60.), (.05, .3), (.2, 1.), (0., .3), (.2, 1.1))
     )),
     ('kln', Results(
         display_name='KLN',
         labels=('Normalization', r'$\lambda$',
                 r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
-        initial_params=(9.92, 0.138, 0.6, 0.08, 0.5)
+        initial_params=(9.92, 0.138, 0.6, 0.08, 0.5),
+        param_ranges=((5., 15.), (.1, .3), (.2, 1.), (0., .3), (.2, 1.1))
     ))
 ))
 
@@ -124,37 +125,20 @@ def plotfn(f):
         _register_plotfn(f)
 
 
-def nicehist(x, bins=50, cmap=plt.cm.Blues, **kwargs):
-    counts, edges = np.histogram(x, bins=bins)
-    middles = .5 * (edges[1:] + edges[:-1])
-    color = cmap(.8)
+def finish(despine=True, remove_ticks=True, pad=0., h_pad=None, w_pad=None):
+    fig = plt.gcf()
 
-    ax = plt.gca()
-    ax.plot(middles, counts, color=color)
-    ax.fill_between(middles, counts, color=color, alpha=.1)
+    for ax in fig.axes:
+        for spine in 'top', 'right':
+            ax.spines[spine].set_visible(False)
+        if remove_ticks:
+            for ax_name in 'xaxis', 'yaxis':
+                getattr(ax, ax_name).set_ticks_position('none')
+        else:
+            ax.xaxis.set_ticks_position('bottom')
+            ax.yaxis.set_ticks_position('left')
 
-
-def hist2d(*args, **kwargs):
-    kwargs.pop('color', None)
-    kwargs['cmin'] = 1
-    plt.hist2d(*args, **kwargs)
-
-
-def ciplot(x, y, bins=30, levels=(.68, .95, .99), **kwargs):
-    colors = sns.color_palette('Blues_d', len(levels)+1)
-
-    H, xedges, yedges = np.histogram2d(x, y, bins=bins)
-    xmids = .5*(xedges[1:] + xedges[:-1])
-    ymids = .5*(yedges[1:] + yedges[:-1])
-
-    Hsorted = np.sort(H, axis=None)
-    cs = Hsorted.cumsum()
-    cs /= cs[-1]
-    V = np.array([Hsorted[np.count_nonzero(cs <= 1.-i)] for i in levels])
-
-    ax = plt.gca()
-    ax.plot(np.median(x), np.median(y), 'o', color=offblack, ms=4)
-    ax.contour(xmids, ymids, H.T, V, colors=colors)
+    fig.tight_layout(pad=pad, h_pad=h_pad, w_pad=w_pad)
 
 
 @plotfn
@@ -192,32 +176,95 @@ def train(ic, data):
 
             ax.hist(chain, bins=20, range=ax.get_xlim(), histtype='step')
 
-    sns.despine()
-    fig.tight_layout(pad=0, h_pad=.2, w_pad=.2)
+    finish(h_pad=.2, w_pad=.2)
+
+
+def nice_range(x, perc=.1, rcut=1.08, dcut=.09):
+    xmin = x.min()
+    xmax = x.max()
+    xlow = np.percentile(x, perc)
+    xhigh = np.percentile(x, 100.-perc)
+
+    if xmin/xmax < .05:
+        a = 0.
+    elif xlow/xmin > rcut and (xlow-xmin) > (xmax-xmin)*dcut:
+        a = xlow
+    else:
+        a = xmin
+
+    if xmax/xhigh > rcut and (xmax-xhigh) > (xmax-xmin)*dcut:
+        b = xhigh
+    else:
+        b = xmax
+
+    return a, b
 
 
 @plotfn
 def cal_post(ic, data):
-    chain = pd.DataFrame(data.cal_chain, columns=data.labels)
-
+    chain = data.cal_chain.T
+    labels = data.labels
     cmap = plt.cm.Blues
+    levels = (.68, .95, .99)
 
-    g = sns.PairGrid(chain, size=textwidth/chain.shape[1])
-    g.map_diag(nicehist, bins=100, cmap=cmap)
-    g.map_lower(hist2d, bins=50, cmap=cmap)
-    g.map_upper(ciplot)
+    line_color = cmap(.8)
+    fill_color = cmap(.5, alpha=.1)
+    level_colors = cmap(np.linspace(.5, .9, len(levels)))[::-1]
 
-    for ax in g.axes.flat:
-        prune = None if ax.is_first_col() else 'lower'
+    nxy = chain.shape[0]
+    assert nxy == len(labels)
+
+    # ranges = tuple(nice_range(x) for x in chain)
+    ranges = data.param_ranges
+
+    fig, axes = plt.subplots(nrows=nxy, ncols=nxy,
+                             sharex='col', sharey='row',
+                             figsize=(textwidth, textwidth))
+
+    for ax, x, (xmin, xmax) in zip(axes.diagonal(), chain, ranges):
+        counts, edges = np.histogram(
+            x, bins=100, range=(xmin, xmax), density=True
+        )
+        middles = .5 * (edges[1:] + edges[:-1])
+        counts *= .9 * (xmax - xmin) / counts.max()
+        counts += xmin
+        ax.plot(middles, counts, color=line_color)
+        ax.fill_between(middles, counts, color=fill_color)
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(xmin, xmax)
+
+    for ny, nx in zip(*np.tril_indices_from(axes, k=-1)):
+        x = chain[nx]
+        y = chain[ny]
+        hist = functools.partial(
+            np.histogram2d, x, y, range=(ranges[nx], ranges[ny])
+        )
+
+        ax = axes[ny][nx]
+        H, xedges, yedges = hist(bins=60)
+        H[H == 0] = None
+        ax.pcolorfast(xedges, yedges, H.T, cmap=cmap)
+
+        ax = axes[nx][ny]
+        H, xedges, yedges = hist(bins=25)
+        xmids = .5*(xedges[1:] + xedges[:-1])
+        ymids = .5*(yedges[1:] + yedges[:-1])
+        Hsorted = np.sort(H, axis=None)
+        cs = Hsorted.cumsum()
+        cs /= cs[-1]
+        V = np.array([Hsorted[np.count_nonzero(cs <= 1.-i)] for i in levels])
+        ax.plot(np.median(y), np.median(x), 'o', color=cmap(1.), ms=4)
+        ax.contour(ymids, xmids, H, V, colors=level_colors)
+
+    for ax in axes.flat:
         for axis in ax.xaxis, ax.yaxis:
             axis.set_major_locator(tick.MaxNLocator(
-                nbins=5, steps=(1, 2, 3, 5, 10), prune=prune))
-            axis.set_tick_params(length=2)
+                nbins=5, steps=(1, 2, 3, 4, 10), prune='lower'))
+    for n, label in enumerate(labels):
+        axes[-1][n].set_xlabel(label)
+        axes[n][0].set_ylabel(label)
 
-    plt.gcf().subplots_adjust(
-        left=.064, bottom=.047, right=.998, top=.998,
-        wspace=.05, hspace=.05
-    )
+    finish(remove_ticks=False)
 
 
 @plotfn
@@ -249,8 +296,7 @@ def prior_draws():
                 ax.set_xlabel('Centrality %')
                 ax.set_xlim(0, x.max() + .5)
 
-    sns.despine()
-    fig.tight_layout(pad=0, w_pad=.4)
+    finish(w_pad=.4)
 
 
 @plotfn
@@ -286,8 +332,7 @@ def post_draws():
                 ax.set_xlabel('Centrality %')
                 ax.set_xlim(0, x.max() + .5)
 
-    sns.despine()
-    fig.tight_layout(pad=0, w_pad=.4)
+    finish(w_pad=.4)
 
 
 @plotfn
@@ -327,8 +372,7 @@ def validation(ic='glb'):
             ax.set_ylabel('Observed')
             ax.legend(loc='best')
 
-    fig.tight_layout(pad=.4, w_pad=-.2)
-    sns.despine()
+    finish(pad=.4, w_pad=-.2)
 
 
 def main():
