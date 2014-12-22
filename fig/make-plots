@@ -63,17 +63,19 @@ observables = (
 ic_data = collections.OrderedDict((
     ('glb', Results(
         display_name='Glauber',
+        cmap=plt.cm.Blues,
         labels=('Normalization', r'$\alpha$',
                 r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
         initial_params=(56.8, 0.118, 0.6, 0.08, 0.5),
-        param_ranges=((20., 60.), (.05, .3), (.2, 1.), (0., .3), (.2, 1.1))
+        param_ranges=((20., 60.), (.05, .3), (.2, 1.), (0., .3), (.2, 1.08))
     )),
     ('kln', Results(
         display_name='KLN',
+        cmap=plt.cm.Greens,
         labels=('Normalization', r'$\lambda$',
                 r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
         initial_params=(9.92, 0.138, 0.6, 0.08, 0.5),
-        param_ranges=((5., 15.), (.1, .3), (.2, 1.), (0., .3), (.2, 1.1))
+        param_ranges=((5., 15.), (.1, .3), (.2, 1.), (0., .3), (.2, 1.08))
     ))
 ))
 
@@ -141,9 +143,24 @@ def finish(despine=True, remove_ticks=True, pad=0., h_pad=None, w_pad=None):
     fig.tight_layout(pad=pad, h_pad=h_pad, w_pad=w_pad)
 
 
+def set_loc(ax, xy=None, nbins=5, steps=(1, 2, 3, 4, 10), prune=None):
+    if xy == 'x':
+        axes = ax.xaxis,
+    elif xy == 'y':
+        axes = ax.yaxis,
+    else:
+        axes = ax.xaxis, ax.yaxis
+
+    for axis in axes:
+        axis.set_major_locator(
+            tick.MaxNLocator(nbins=nbins, steps=steps, prune=prune)
+        )
+
+
 @plotfn
 def train(ic, data):
     samplers = data.training_samplers
+    color = data.cmap(.7)
     hyperlabels = (
         ['GP variance'] +
         [r'$\ell$ {}'.format('Norm' if p == 'Normalization' else p)
@@ -174,7 +191,8 @@ def train(ic, data):
             ax.xaxis.set_tick_params(length=2)
             ax.set_yticks([])
 
-            ax.hist(chain, bins=20, range=ax.get_xlim(), histtype='step')
+            ax.hist(chain, bins=20, range=ax.get_xlim(), histtype='step',
+                    color=color)
 
     finish(h_pad=.2, w_pad=.2)
 
@@ -204,7 +222,7 @@ def nice_range(x, perc=.1, rcut=1.08, dcut=.09):
 def cal_post(ic, data):
     chain = data.cal_chain.T
     labels = data.labels
-    cmap = plt.cm.Blues
+    cmap = data.cmap
     levels = (.68, .95, .99)
 
     line_color = cmap(.8)
@@ -253,13 +271,12 @@ def cal_post(ic, data):
         cs = Hsorted.cumsum()
         cs /= cs[-1]
         V = np.array([Hsorted[np.count_nonzero(cs <= 1.-i)] for i in levels])
-        ax.plot(np.median(y), np.median(x), 'o', color=cmap(1.), ms=4)
+        ax.plot(np.median(y), np.median(x), 'o', ms=3.5, mew=0,
+                color=cmap(1., alpha=.9))
         ax.contour(ymids, xmids, H, V, colors=level_colors)
 
     for ax in axes.flat:
-        for axis in ax.xaxis, ax.yaxis:
-            axis.set_major_locator(tick.MaxNLocator(
-                nbins=5, steps=(1, 2, 3, 4, 10), prune='lower'))
+        set_loc(ax, prune='lower')
     for n, label in enumerate(labels):
         axes[-1][n].set_xlabel(label)
         axes[n][0].set_ylabel(label)
@@ -278,15 +295,15 @@ def prior_draws():
 
     for row, (ic, data) in zip(axes, ic_data.items()):
         row[0].set_ylabel(data.display_name)
+        color = data.cmap(.6)
         for ax, (obs, label), ymax in zip(row, observables, ylims):
             x = data['cent']
             for y in data[obs]:
-                ax.plot(x, y, color='SkyBlue', alpha=.2, lw=.5)
+                ax.plot(x, y, color=color, alpha=.1, lw=.5)
 
             ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
                         fmt='o', lw=.8, ms=2, capsize=0, color='.2')
-            ax.yaxis.set_major_locator(tick.MaxNLocator(
-                nbins=4, steps=(1, 2, 3, 5, 10)))
+            set_loc(ax, 'y', nbins=4)
 
             ax.set_ylim(0, ymax)
 
@@ -313,16 +330,16 @@ def post_draws():
 
     for row, (ic, data) in zip(axes, ic_data.items()):
         row[0].set_ylabel(data.display_name)
+        color = data.cmap(.6)
         for ax, (obs, label), ymax in zip(row, observables, ylims):
             x = data['cent']
             samples = data.cal_samples[obs]
             for i in sample_idx:
-                ax.plot(x, samples[i], color='SkyBlue', alpha=.2, lw=.5)
+                ax.plot(x, samples[i], color=color, alpha=.1, lw=.5)
 
             ax.errorbar(exp['cent'], exp[obs]['mean'], yerr=exp[obs]['sys'],
                         fmt='o', lw=.8, ms=2, capsize=0, color='.2')
-            ax.yaxis.set_major_locator(tick.MaxNLocator(
-                nbins=4, steps=(1, 2, 3, 5, 10)))
+            set_loc(ax, 'y', nbins=4)
 
             ax.set_ylim(0, ymax)
 
@@ -342,20 +359,26 @@ def validation(ic='glb'):
     with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
         actual = pickle.load(f)
 
+    ncent = len(actual['cent'])
+    colors = plt.cm.Set2(np.linspace(0, (ncent-1)/8, ncent))
+
     fig, axes = plt.subplots(ncols=3,
                              figsize=(textwidth, .55*aspect*textwidth))
 
-    xylim = 5500., .12, .045
-    xyticks = np.r_[0:5000:3j], np.r_[0:.12:5j], np.r_[0:.04:5j]
+    xylim = 5300., .12, .043
+    xyticks = np.r_[0:5000:3j], np.r_[0:.12:4j], np.r_[0:.04:3j]
 
     for ax, (obs, label), lim, ticks in zip(axes, observables, xylim, xyticks):
         mean, std = (predicted[obs][i].T[::2] for i in ('mean', 'std'))
         act = actual[obs].T
 
-        for c, m, e, a in zip(actual['cent'], mean, std, act):
-            ax.errorbar(m, a, xerr=2*e,
-                        fmt='o', ms=2.5, lw=.6, capsize=0, alpha=.75,
-                        label=str(c), zorder=int(c))
+        for c, m, e, a, color in zip(actual['cent'], mean, std, act, colors):
+            ax.errorbar(
+                m, a, xerr=2*e, fmt='o', ms=2.5, lw=.6, capsize=0,
+                color=color, alpha=.7,
+                label='–'.join(str(int(c+d)) for d in (-2.5, 2.5)) + '%',
+                zorder=(100.-int(c))
+            )
 
         ax.set_aspect('equal')
         ax.set_xlim(0, lim)
@@ -370,7 +393,7 @@ def validation(ic='glb'):
 
         if ax.is_first_col():
             ax.set_ylabel('Observed')
-            ax.legend(loc='best')
+            ax.legend(loc='upper left', handletextpad=.1)
 
     finish(pad=.4, w_pad=-.2)
 

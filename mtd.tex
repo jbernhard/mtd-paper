@@ -346,7 +346,7 @@ Unfortunately, this leads to a total number of design points $m = n^k$ which eve
 \end{table}
 
 \widefig{prior_draws}{
-  Prior model calculations using Glauber (top) and KLN (bottom) initial conditions.
+  Prior model calculations using Glauber (top, blue) and KLN (bottom, green) initial conditions.
   From left to right:
   average charged-particle multiplicity $\avg\nch$,
   elliptic flow two-particle cumulant $\vnk 2 2$,
@@ -450,7 +450,7 @@ hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ a
 
 \widefig{validation}{
   Validation of the Gaussian process emulator for the Glauber model.
-  Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\%, 20--25\%, and 40-45\%.
+  Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\% (green), 20--25\% (orange), and 40-45\% (purple).
   The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
   The diagonal grey line represents $y = x$.
 }
@@ -587,10 +587,9 @@ Figure~\ref{fig:post_draws}.
 }
 
 \widefig{post_draws}{
-  Random realizations of the calibrated posterior for the Glauber (top) and KLN (bottom) models.
+  Random realizations of the calibrated posterior for Glauber (top, blue) and KLN (bottom, green) initial conditions.
   Similar to FIG.~\ref{fig:prior_draws},
   except the lines are posterior emulator predictions instead of explicit prior calculations.
-  The red line is the maximum a posteriori point of the MCMC chain.
 }
 
 
