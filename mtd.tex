@@ -8,6 +8,13 @@
 \usepackage{color}
 \newcommand{\todo}[1]{\textcolor{red}{#1}}
 
+\newcommand{\colfig}[3][t]{
+  \begin{figure}[#1]
+    \includegraphics{#2}
+    \caption{\label{fig:#2}#3}
+  \end{figure}
+}
+
 \newcommand{\widefig}[3][t]{
   \begin{figure*}[#1]
     \includegraphics{#2}
@@ -317,14 +324,15 @@ where
 \end{itemize}
 We choose intentionally large ranges for each parameter, summarized in table~\ref{tab:design}.
 
+\colfig{design}{
+  The Latin hypercube experiment design projected into the $(\eta/s, \tau_0)$ dimensions.
+  All other parameters also vary across the design, so the points that appear very close in the projection are not necessarily close in the full-dimensional space.
+  The edge histograms show the distributions flattened into one dimension; note that they are approximately uniform.
+}
+
 The number $m$ of design points and their distribution in parameter space is also critical.
 Perhaps the most obvious choice is a uniform grid, e.g.\ $k$ evenly-spaced points in each dimension.
 Unfortunately, this leads to a total number of design points $m = n^k$ which even for a modest $k = 10$ and $n = 5$ is intractably large, $\mathcal O(10^7)$.
-
-\placeholderfig{design}{
-  The Latin hypercube experiment design projected into the $(\tau_0, \eta/s)$ dimensions.
-  Note that the other design parameters also vary for each point, so the points that appear very close in the projection are not necessarily close in the full-dimensional space.
-}
 
 \begin{table}[b]
   \caption{

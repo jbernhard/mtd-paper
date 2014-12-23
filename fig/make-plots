@@ -398,6 +398,52 @@ def validation(ic='glb'):
     finish(pad=.4, w_pad=-.2)
 
 
+@plotfn
+def design():
+    fig = plt.figure(figsize=(columnwidth, columnwidth))
+    ratio = 5
+    gs = plt.GridSpec(ratio + 1, ratio + 1)
+
+    ax_j = fig.add_subplot(gs[1:, :-1])
+    ax_x = fig.add_subplot(gs[0, :-1], sharex=ax_j)
+    ax_y = fig.add_subplot(gs[1:, -1], sharey=ax_j)
+
+    data = ic_data['glb']
+    y, x = data.design.T[2:4]
+    ylabel, xlabel = data.labels[2:4]
+
+    color = [0.15, 0.65, 0.65]
+    hist_kw = dict(bins=20, color=color + [.5], edgecolor='white')
+
+    ax_j.plot(x, y, 'o', ms=3.5, color=color, mec='white', mew=.3)
+    ax_x.hist(x, **hist_kw)
+    ax_y.hist(y, orientation='horizontal', **hist_kw)
+
+    for ax in fig.axes:
+        ax.tick_params(top='off', right='off')
+        spines = ['top', 'right']
+        if ax is ax_x:
+            spines += ['left']
+        elif ax is ax_y:
+            spines += ['bottom']
+        for spine in spines:
+            ax.spines[spine].set_visible(False)
+        for ax_name in 'xaxis', 'yaxis':
+            getattr(ax, ax_name).set_ticks_position('none')
+
+    for ax in ax_x, ax_y:
+        ax.tick_params(labelbottom='off', labelleft='off')
+
+    ax_j.set_xlim(0., .3)
+    ax_j.set_ylim(.2, 1.)
+    ax_j.set_xticks((.0, .1, .2, .3))
+    ax_j.set_yticks((.2, .4, .6, .8, 1.))
+    ax_j.set_xlabel(xlabel)
+    ax_j.set_ylabel(ylabel)
+
+    gs.tight_layout(fig=fig, pad=0.)
+
+
 def main():
     if len(sys.argv) > 1:
         for a in sys.argv[1:]:
