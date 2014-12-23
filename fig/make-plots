@@ -10,6 +10,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
+import george
 
 
 aspect = 1/1.618
@@ -19,6 +20,7 @@ textwidth = 510/resolution
 textiny, texsmall, texnormal = 8., 9.25, 10.
 offblack = '#262626'
 
+plt.rcdefaults()
 plt.rcParams.update({
     'font.family': ['CMU Serif'],
     'font.size': texsmall,
@@ -399,6 +401,51 @@ def validation(ic='glb'):
 
 
 @plotfn
+def gp():
+    np.random.seed(321478)
+    plt.rc('axes', color_cycle=plt.cm.Set2(np.linspace(0, 1, 8)).tolist())
+
+    fig, axes = plt.subplots(nrows=2, sharex='col',
+                             figsize=(columnwidth, 2*aspect*columnwidth))
+
+    t = np.linspace(0, 5, 500)
+    x = np.linspace(.5, 4.5, 4)
+    gp = george.GP(
+        george.kernels.ExpSquaredKernel(1.) +
+        george.kernels.WhiteKernel(1e-8)
+    )
+    gp.compute(x)
+    y = gp.sample()
+
+    mean_kw = dict(color='.42', dashes=(3.5, 1.5))
+    err_kw = dict(color='.93')
+
+    ax = axes[0]
+    ax.axhspan(-2, 2, **err_kw)
+    ax.axhline(0, **mean_kw)
+    for s in gp.sample(t, size=4):
+        ax.plot(t, s)
+
+    ax = axes[1]
+    mu, cov = gp.predict(y, t)
+    std = np.sqrt(cov.diagonal())
+    ax.fill_between(t, mu+2*std, mu-2*std, **err_kw)
+    ax.plot(t, mu, **mean_kw)
+    for s in gp.sample_conditional(y, t, size=3):
+        ax.plot(t, s)
+    ax.plot(x, y, 'o', ms=3.2, color=offblack)
+
+    ax.set_xlabel('$x$')
+
+    for ax in axes:
+        ax.set_xlim(0, 5)
+        ax.set_ylim(-2.3, 2.3)
+        ax.set_ylabel('$y$')
+
+    finish()
+
+
+@plotfn
 def design():
     fig = plt.figure(figsize=(columnwidth, columnwidth))
     ratio = 5
@@ -447,7 +494,9 @@ def design():
 def main():
     if len(sys.argv) > 1:
         for a in sys.argv[1:]:
-            plotfns[a.rstrip('.pdf')]()
+            if a.endswith('.pdf'):
+                a = a[:-4]
+            plotfns[a]()
     else:
         for fn in plotfns.values():
             fn()

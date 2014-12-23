@@ -271,12 +271,12 @@ This implies that the GP is smooth, i.e.\ nearby input points produce similar ou
 
 Just as we can sample random numbers from a distribution, we can draw random functions from a GP.
 We choose a set of test points $X_*$ (the reason for the subscript $*$ will become clear in a moment), calculate the covariance matrix $\Sigma = \sigma(X_*, X_*)$, and generate multivariate normal samples from $\N(\zero, \Sigma)$.
-We can then plot the input-output points as smooth curves, as in the left panel of FIG.~\ref{fig:gp}.
+We can then plot the input-output points as smooth curves, as in the top panel of FIG.~\ref{fig:gp}.
 
-\placeholderfig[t]{gp}{
-  Left: random functions drawn from a Gaussian process using a squared-exponential covariance function with length scale $\ell = 1$.
-  Right: functions drawn from a GP conditioned on the training points indicated by dots.
-  In both plots, the grey band represents twice the GP standard deviation (roughly 95\% confidence interval).
+\colfig{gp}{
+  Top: random functions drawn from a Gaussian process using a squared-exponential covariance function with length scale $\ell = 1$.
+  Bottom: functions drawn from a GP conditioned on the training points indicated by dots.
+  In both plots, the dashed line represents the GP mean and the grey band is twice the GP standard deviation (roughly 95\% confidence interval).
 }
 
 Of course, simply generating random functions is not particularly useful---we want to use a GP to interpolate a computer model.
@@ -293,7 +293,7 @@ Recalling the test points $X_*$, the predictive distribution for the correspondi
   \end{aligned}
   \label{eq:cond}
 \end{equation}
-See the right panel of FIG.~\ref{fig:gp} for an example of conditioning a GP on one-dimensional training data.
+See the bottom panel of FIG.~\ref{fig:gp} for an example of conditioning a GP on one-dimensional training data.
 
 We emphasize that the prediction $\y_*$ is not constant, but a \emph{probability distribution} for the model outputs at $X_*$.
 As demonstrated in FIG.~\ref{fig:gp}, the predictive distribution is narrow when near the training points and wide when far away, hence, it reflects the true state of knowledge of the interpolation.
@@ -301,6 +301,22 @@ This is accomplished without assuming a parametric form for the model---we must 
 
 
 \subsection{Computer experiment design}
+
+\colfig[b]{design}{
+  The Latin hypercube experiment design projected into the $(\eta/s, \tau_0)$ dimensions.
+  All other parameters also vary across the design, so the points that appear very close in the projection are not necessarily close in the full-dimensional space.
+  The edge histograms show the distributions flattened into one dimension; note that they are approximately uniform.
+}
+
+\widefig{prior_draws}{
+  Prior model calculations using Glauber (top, blue) and KLN (bottom, green) initial conditions.
+  From left to right:
+  average charged-particle multiplicity $\avg\nch$,
+  elliptic flow two-particle cumulant $\vnk 2 2$,
+  and triangular flow two-particle cumulant $\vnk 3 2$.
+  Each plot has 254 lines corresponding to the 254 design points.
+  Data points are experimental measurements from ALICE \cite{Abelev:2014mda}.
+}
 
 The full event-by-event model is to be evaluated on a set of training points $X = \{\x_1, \ldots, \x_m\}$, where each $\x_i$ is an $n$-dimensional vector of input parameters, so $X$ may be viewed as an $m \times n$ design matrix.
 These points must be chosen with care.
@@ -324,12 +340,6 @@ where
 \end{itemize}
 We choose intentionally large ranges for each parameter, summarized in table~\ref{tab:design}.
 
-\colfig{design}{
-  The Latin hypercube experiment design projected into the $(\eta/s, \tau_0)$ dimensions.
-  All other parameters also vary across the design, so the points that appear very close in the projection are not necessarily close in the full-dimensional space.
-  The edge histograms show the distributions flattened into one dimension; note that they are approximately uniform.
-}
-
 The number $m$ of design points and their distribution in parameter space is also critical.
 Perhaps the most obvious choice is a uniform grid, e.g.\ $k$ evenly-spaced points in each dimension.
 Unfortunately, this leads to a total number of design points $m = n^k$ which even for a modest $k = 10$ and $n = 5$ is intractably large, $\mathcal O(10^7)$.
@@ -352,16 +362,6 @@ Unfortunately, this leads to a total number of design points $m = n^k$ which eve
   \end{tabular}
   \end{ruledtabular}
 \end{table}
-
-\widefig{prior_draws}{
-  Prior model calculations using Glauber (top, blue) and KLN (bottom, green) initial conditions.
-  From left to right:
-  average charged-particle multiplicity $\avg\nch$,
-  elliptic flow two-particle cumulant $\vnk 2 2$,
-  and triangular flow two-particle cumulant $\vnk 3 2$.
-  Each plot has 254 lines corresponding to the 254 design points.
-  Data points are experimental measurements from ALICE \cite{Abelev:2014mda}.
-}
 
 A popular algorithm for generating efficient design points is Latin hypercube (LH) sampling \cite{Tang:1993lh}.
 This method produces space-filling randomized designs with several desirable properties:
@@ -415,6 +415,11 @@ Hence we can construct a reduced-dimension transformation with minimal loss of p
 \end{equation}
 where $Z_q$ is now an $m \times q$ matrix.
 
+\placeholderfig{pca}{
+  Fraction of the variance $V(q)$ explained by the first $q$ principal components.
+  $q = 5$ accounts for approximately 99\% of the total variance.
+}
+
 We may now use $q$ independent GP emulators for each of the columns of $Z_q$.
 GPs are conditioned on the design $X$ according to Eq.~\eqref{eq:cond} and predict the PCs $Z_*$ at arbitrary test points $X_*$ which are then transformed back to physical space as
 \begin{equation}
@@ -436,6 +441,13 @@ For the present event-by-event model we perform the following steps:
 \end{enumerate}
 These steps are inverted to transform PCs back to physical space.
 
+\widefig{validation}{
+  Validation of the Gaussian process emulator for the Glauber model.
+  Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\% (green), 20--25\% (orange), and 40-45\% (purple).
+  The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
+  The diagonal grey line represents $y = x$.
+}
+
 In practice, the covariance method for computing principal components is prone to numerical error, so a more robust algorithm using the singular value decomposition (SVD) is preferred.
 The SVD of the data $Y$ is
 \begin{equation}
@@ -449,19 +461,7 @@ Inserting \eqref{eq:svd} into \eqref{eq:cov} yields
 \end{equation}
 hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ and the right singular vectors $W$ are the eigenvectors $U$.
 
-\placeholderfig{pca}{
-  Fraction of the variance $V(q)$ explained by the first $q$ principal components.
-  $q = 5$ accounts for approximately 99\% of the total variance.
-}
-
 \subsection{Emulator construction and validation}
-
-\widefig{validation}{
-  Validation of the Gaussian process emulator for the Glauber model.
-  Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\% (green), 20--25\% (orange), and 40-45\% (purple).
-  The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
-  The diagonal grey line represents $y = x$.
-}
 
 We emulate the model by conditioning independent Gaussian processes on each of the principal components $Z_q$ and the input design $X$ according to Eq.~\eqref{eq:cond}.
 Model outputs inevitably include statistical noise, i.e.\ we cannot compute $y = f(\x)$ exactly, only $y = f(\x) + \epsilon$ where $\epsilon$ is Gaussian noise.
