@@ -385,6 +385,12 @@ Note that these results constitute the training data for the GP emulator, not an
 
 \subsection{Multivariate output}
 
+\colfig[b]{pc_scatter}{
+  Principal component decomposition of the observables $\sqrt{\avg\nch}$, $\vnk 2 2$ for the Glauber model in 20--25\% centrality.
+  Each data point represents a model calculation and the edge histograms show the approximate normal distribution of each observable.
+  Arrows represent the PC vectors with lengths proportional to the explained variance.
+}
+
 Gaussian processes are fundamentally scalar functions, but computer models often produce multivariate output.
 In general, the model takes the $m \times n$ design matrix $X$ and computes an $m \times p$ output matrix $Y$.
 The present event-by-event model has $p = 18$ outputs (three observables each in six centrality bins).
@@ -408,16 +414,16 @@ The eigenvalues $\lambda_i$ represent the variance accounted for by principal co
 \begin{equation}
   V(q) = \frac{\sum_{i=1}^q \lambda_i}{\sum_{i=1}^p \lambda_i}.
 \end{equation}
-Often, the first few PCs describe most of the variance, as shown in FIG.~\ref{fig:pca}.
+Often, the first few PCs describe most of the variance, as shown in FIG.~\ref{fig:pc_var}.
 Hence we can construct a reduced-dimension transformation with minimal loss of precision by choosing $q < p$ so that $V(q)$ satisfies some threshold (e.g.~$V(q) \geq 0.99$) and taking only the first $q$ columns of $U$:
 \begin{equation}
   Z_q = \sqrt m \, YU_q,
 \end{equation}
 where $Z_q$ is now an $m \times q$ matrix.
 
-\placeholderfig{pca}{
-  Fraction of the variance $V(q)$ explained by the first $q$ principal components.
-  $q = 5$ accounts for approximately 99\% of the total variance.
+\colfig{pc_var}{
+  Fraction of the variance $V(q)$ explained by the first $q$ principal components for Glauber (blue circles) and KLN (green triangles).
+  $q = 5$ accounts for approximately 99\% of the total variance, a significant reduction from the original 18 dimensions.
 }
 
 We may now use $q$ independent GP emulators for each of the columns of $Z_q$.
@@ -437,7 +443,7 @@ For the present event-by-event model we perform the following steps:
     This converts everything to unitless quantities of order one.
   \item \todo{Weights?  The current results have $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 3 2$ weighted 1.2~:~1.0~:~0.6.}
   \item Concatenate the unitless data into a $254 \times 18$ matrix $Y$ and subtract the mean.
-  \item Calculate the PC transformed data $Z$ using $q = 5$ PCs, which accounts for over 99\% of the variance as shown in FIG.~\ref{fig:pca}.
+  \item Calculate the PC transformed data $Z$ using $q = 5$ PCs, which accounts for over 99\% of the variance as shown in FIG.~\ref{fig:pc_var}.
 \end{enumerate}
 These steps are inverted to transform PCs back to physical space.
 
