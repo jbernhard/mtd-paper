@@ -299,7 +299,7 @@ def post_compare():
     idx = 3
     ymax = 0
 
-    for ic, data in ic_data.items():
+    for data in ic_data.values():
         x = data.cal_chain[:, idx]
         counts, edges = np.histogram(
             x, bins=128, range=data.param_ranges[idx], density=True)
@@ -334,7 +334,7 @@ def prior_draws():
 
     ylims = 6000., .15, .045
 
-    for row, (ic, data) in zip(axes, ic_data.items()):
+    for row, data in zip(axes, ic_data.values()):
         row[0].set_ylabel(data.display_name)
         color = data.cmap(.6)
         for ax, (obs, label), ymax in zip(row, observables, ylims):
@@ -369,7 +369,7 @@ def post_draws():
 
     ylims = 3200., .12, .035
 
-    for row, (ic, data) in zip(axes, ic_data.items()):
+    for row, data in zip(axes, ic_data.values()):
         row[0].set_ylabel(data.display_name)
         color = data.cmap(.6)
         for ax, (obs, label), ymax in zip(row, observables, ylims):
