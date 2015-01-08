@@ -8,6 +8,8 @@
 \usepackage{color}
 \newcommand{\todo}[1]{\textcolor{red}{#1}}
 
+\usepackage{multirow}
+
 \newcommand{\colfig}[3][t]{
   \begin{figure}[#1]
     \includegraphics{#2}
@@ -584,18 +586,14 @@ Figure~\ref{fig:post_draws}.
   The vertical grey lines indicate the canonical values 0.08 for Glauber and 0.20 for KLN \cite{}.
 }
 
-\begin{table}[b]
+\begin{table*}
   \caption{
     \label{tab:posterior}
     Quantitative summary of posterior distributions.
+    For each parameter, the initially guessed value \todo{[cite somehow]}, mean, median, and confidence intervals are given.
   }
-  \begin{ruledtabular}
-  \begin{tabular}{llll}
-    Parameter & Mean & Median & Confidence intervals \\
-    $\eta/s$ & & & \\
-  \end{tabular}
-  \end{ruledtabular}
-\end{table}
+  \input{fig/posterior_table}
+\end{table*}
 
 \placeholderfig{chi_squared}{
   Goodness of fit comparison.

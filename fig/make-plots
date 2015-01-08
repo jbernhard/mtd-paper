@@ -625,6 +625,40 @@ def pc_var():
     finish()
 
 
+def table():
+    with open('posterior_table.tex', 'w') as f:
+        write = functools.partial(print, file=f)
+        write(r'\begin{ruledtabular}')
+        write(r'\begin{tabular}{lllllccc}')
+        write(r'  & Parameter & Initial guess & Mean & Median & '
+              r'68\% C.I. & 95\% C.I. & 99\% C.I. \\')
+        for data in ic_data.values():
+            write(r'  \hline')
+            write(r'  \multirow{' + str(len(data.labels)) +
+                  r'}{*}{\rotatebox{90}{' + data.display_name + r'\ \ }}')
+            fmt_str = '{:#.3g}'
+            for label, guess, samples in zip(
+                    data.labels, data.initial_params, data.cal_chain.T):
+                if label == 'Normalization':
+                    label = 'Norm.'
+                strings = [label, str(guess)]
+
+                for n in np.mean(samples), np.median(samples):
+                    strings += [fmt_str.format(n)]
+
+                for p in 68, 95, 99:
+                    strings += ['--'.join((
+                        fmt_str.format(i)
+                        for i in np.percentile(samples, (50-p/2, 50+p/2))
+                    ))]
+
+                write('  & ' + ' & '.join(strings) + r' \\')
+        write(r'\end{tabular}')
+        write(r'\end{ruledtabular}')
+
+plotfns['table'] = table
+
+
 def main():
     if len(sys.argv) > 1:
         for a in sys.argv[1:]:

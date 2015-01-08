@@ -1,3 +1,4 @@
 build/
 *.pdf
 *.pkl
+fig/posterior_table.tex
