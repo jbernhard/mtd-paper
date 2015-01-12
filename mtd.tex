@@ -562,11 +562,43 @@ We first run approximately $1 \times 10^6$ MCMC steps to allow the chain to equi
 
 \subsection{Results}
 
-\cite{Abelev:2014mda}
-\cite{Shen:2011zc,Heinz:2011kt}
+The primary MCMC calibration results are presented in FIGS.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln} for the Glauber and KLN models, respectively.
+These are visualizations of the posterior probability distributions of the true parameters $\xs$, including the distribution of each individual parameter and all correlations.
+The diagonal histograms show the marginal distributions for each parameter (all other parameters integrated out);
+the lower-triangle plots are two-dimensional histograms of joint distributions between pairs of parameters, where darker color denotes higher probability density;
+and the upper triangle has contour plots of the same joint distributions, where the contour lines enclose the 68\%, 95\%, and 99\% confidence regions.
+A wealth of information may be gained from these posterior visualizations; the following highlights some important features.
 
-Figures~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln}.
-Table~\ref{tab:posterior}.
+Focusing on the Glauber results in FIG.~\ref{fig:cal_post_glb}, we see the shear viscosity $\eta/s$ (fourth diagonal plot) has a narrow approximately-normal distribution located near the commonly quoted value 0.08.
+As expected, $\eta/s$ is tightly constrained by experimental flow data.
+Going across the fourth row, we observe nontrivial correlations among $\eta/s$ and other parameters, for example, $\eta/s$ and the hydrodynamic thermalization time $\tau_0$ are negatively correlated (fourth row, third column).
+As $\tau_0$ increases, the medium expands as a fluid for less time, so less flow develops, and viscosity must decrease to compensate.
+
+Both $\tau_0$ and normalization (third and first diagonals) have plateau-shaped distributions, but are strongly-correlated (third row, first column).
+This is because the hydrodynamic model is boost-invariant and lacks any pre-equilibrium dynamics, so $\tau_0$ is effectively an inverse normalization factor.
+The joint distribution shows a narrow acceptable band whose shape is governed by the inverse relationship.
+
+The wounded nucleon / binary collision parameter $\alpha$ (second diagonal) has a roughly-normal distribution located near the typical value 0.12.
+$\alpha$ is mainly related to the centrality scaling of multiplicity, but the wide distribution indicates that the model is not particularly sensitive to the precise value.
+
+Meanwhile, the shear stress relaxation time $\tau_\Pi$ (fifth diagonal) has an almost flat distribution and its joint distributions show no correlations.
+Evidently, this parameter does not influence flow coefficients or multiplicity.
+
+Moving to the KLN results in FIG.~\ref{fig:cal_post_kln}, we generally observe wider, less normal distributions than for Glauber.
+This suggests that KLN is somewhat less flexible than Glauber, so its overall behavior is relatively insensitive to the specific values of input parameters.
+
+As with Glauber, there is a strong inverse relationship between normalization and $\tau_0$, and $\tau_\Pi$ has no effect.
+The KLN parameter $\lambda$ appears to be unimportant.
+
+$\eta/s$ has a narrow, irregular distribution consistent with the common value 0.20.
+Figure~\ref{fig:post_compare} shows an expanded view and compares with the Glauber results.
+While the Glauber distribution is approximately normal and almost entirely below $\eta/s \sim 0.1$, the KLN distribution has a wider shape with steeper edges and barely overlaps Glauber.
+The origin of this shape will be discussed shortly.
+
+Table~\ref{tab:posterior} quantitatively summarizes the posterior distributions including basic statistics, confidence intervals, and comparisons to initial guesses for each parameter.
+These guesses arise from previous work using the same models \todo{(vague)} \cite{Shen:2011zc,Heinz:2011kt}.
+All the initial guesses fall within 95\% confidence intervals, and most are within 68\%.
+
 Figure~\ref{fig:post_draws}.
 
 \todo{
