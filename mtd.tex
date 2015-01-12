@@ -70,29 +70,29 @@
 
 \section{Introduction}
 
-Relativistic heavy-ion collisions produce a hot, dense phase of strongly-interacting matter commonly known as the quark-gluon plasma (QGP) which rapidly expands and freezes into discrete particles \cite{}.
+Relativistic heavy-ion collisions produce a hot, dense phase of strongly-interacting matter commonly known as the quark-gluon plasma (QGP) which rapidly expands and freezes into discrete particles \cite{Arsene:2004fa,Adcox:2004mh,Back:2004je,Adams:2005dq,Gyulassy:2004zy,Muller:2006ee,Muller:2012zq}.
 Since the QGP is not directly observable---only final-state hadrons are detected---present research seeks to quantify the fundamental properties of the QGP, such as its transport coefficients and the nature of the initial state, through comparisons of experimental measurements to computational model calculations.
 
 Computational models must take a set of input parameters including the physical properties of interest, simulate the full time-evolution of heavy-ion collisions, and produce output analogous to experimental measurements.
 The true values of the physical properties are extracted by calibrating the input parameters so that the model output optimally reproduces experimental data.
 This generic recipe is called ``model-to-data comparison''.
 
-Notably, previous studies have used viscous relativistic fluid dynamics to place constraints on the QGP shear viscosity to entropy density ratio $\eta/s$ by comparing anisotropic flow coefficients $v_n$ between model and experiment \cite{}.
-$\eta/s$ cannot be calculated directly from QCD, and while there is a conjectured lower bound $\eta/s~\geq~1/4\pi~\simeq~0.08$ from AdS/CFT holography \cite{}, model-to-data comparison is the most attractive option for determining the precise value.
+Notably, previous studies have used viscous relativistic fluid dynamics to place constraints on the QGP shear viscosity to entropy density ratio $\eta/s$ by comparing anisotropic flow coefficients $v_n$ between model and experiment.
+$\eta/s$ cannot be calculated directly from QCD, and while there is a conjectured lower bound $\eta/s~\geq~1/4\pi~\simeq~0.08$ from AdS/CFT holography \cite{Kovtun:2004de}, model-to-data comparison is the most attractive option for determining the precise value.
 These studies generally proceed by calculating fluid dynamical $v_n$ at several values of $\eta/s$, then choosing the value which most closely matches experimental $v_n$.
-A variety of complimentary results have constrained $\eta/s$ to an approximate range of 0.08--0.20 \cite{}.
+A variety of complimentary results have constrained $\eta/s$ to an approximate range of 0.08--0.20 \cite{Luzum:2008cw,Song:2010mg,Schenke:2010rr}.
 
 However, $\eta/s$ is not the only model input parameter:
 many other parameters remain unconstrained, e.g.~the hydrodynamic thermalization time $\tau_0$, equation of state, and initial conditions; and models often have non-physical nuisance parameters that nonetheless should be tuned to optimal values.
 $v_n$ is not the only output:
 basic observables like the charged-particle multiplicity and transverse-momentum distributions must also be simulated accurately.
 Input parameters are in general correlated among each other and each affects multiple outputs, so they cannot be constrained independently.
-Due to these practical limitations, most studies to date have focused on a single input parameter, fixed secondary parameters to default values, and calibrated to a minimal set of observables \cite{}.
+Due to these practical limitations, most studies to date have focused on a single input parameter, fixed secondary parameters to default values, and calibrated to a minimal set of observables.
 This leads to nebulous results with poorly-defined constraints, non-quantitative uncertainties, and no treatment of correlations.
 
 \todo{
-  Cite R.~Soltz \emph{et.~al.}\ somehow \cite{Soltz:2012rk}.
-  They do a more systematic study but do not use an emulator.
+  Cite \cite{Luzum:2012wu} and \cite{Soltz:2012rk}.
+  They do more systematic studies but do not use an emulator.
 }
 
 Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex multivariate input-output parameter space, but MCMC requires a very large number of model evaluations: $\mathcal O(10^6)$ or more.
@@ -616,10 +616,13 @@ Use \trento\ \cite{Moreland:2014oya}.
 \section*{Acknowledgments}
 
 We would like to thank Scott Pratt and Paul Sorensen for helpful discussions and valuable feedback.
-Several software packages were invaluable for this project:
+This work would not have been possible without the foundations laid by the MADAI collaboration, funded through NSF grant no.~PHY-0941373, and the Statistical and Applied Mathematical Sciences Institute (SAMSI) program on massive datasets, funded through NSF grant no.~\todo{number}.
+SAB is supported by the U.S. Department of Energy Grant no.~DE-FG02-05ER41367; JEB acknowledges support through grants NSF no.~PHY-0941373 and DOE no.~DE-FG02-05ER41367.
+\todo{More\ldots}
+This research was completed using over five million CPU hours provided by the Open Science Grid \cite{Pordes:2007zzb,Sfiligoi:2010zz}, which is supported by the National Science Foundation and the U.S.\ Department of Energy's Office of Science.
+Several software packages were invaluable:
 the Python MCMC toolkit \texttt{emcee} \cite{FM:2013mc} and Gaussian process library \texttt{george} \cite{Ambikasaran:2014gp}, and the general-purpose tool \texttt{GNU Parallel} \cite{Tange:2011pa}.
-JEB is supported through NSF grant no.~PHY-0941373.
-\todo{This is surely incomplete.  Can we cite github repositories? (this paper's own repo, model-to-data library, hic library, OSG tools)}
+\todo{Github repositories?}
 
 
 \appendix
