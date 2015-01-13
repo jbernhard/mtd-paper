@@ -268,7 +268,7 @@ A standard choice is the squared-exponential function
   \sigma(\x, \x') = \exp\biggl( -\frac{|\x - \x'|^2}{2\ell^2} \biggr),
 \end{equation}
 where $\ell$ is a characteristic length scale.
-Notice that nearby points are strongly correlated ($\sigma \approx 1$) while distant points are independent ($\sigma \rightarrow 0$).
+Notice that nearby points are strongly correlated ($\sigma \approx 1$) while distant points approach independence ($\sigma \rightarrow 0$).
 This implies that the GP is smooth, i.e.\ nearby input points produce similar outputs.
 
 Just as we can sample random numbers from a distribution, we can draw random functions from a GP.
@@ -307,16 +307,16 @@ This is accomplished without assuming a parametric form for the model---we must 
 \colfig[b]{design}{
   The Latin hypercube experiment design projected into the $(\eta/s, \tau_0)$ dimensions.
   All other parameters also vary across the design, so the points that appear very close in the projection are not necessarily close in the full-dimensional space.
-  The edge histograms show the distributions flattened into one dimension; note that they are approximately uniform.
+  The edge histograms show the distributions flattened into one dimension; note that they are space-filling and approximately uniform.
 }
 
 \widefig{prior_draws}{
-  Prior model calculations using Glauber (top, blue) and KLN (bottom, green) initial conditions.
+  Model calculations using Glauber (top, blue) and KLN (bottom, green) initial conditions.
+  Each plot has 254 lines corresponding to the 254 Latin-hypercube design points.
   From left to right:
   average charged-particle multiplicity $\avg\nch$,
   elliptic flow two-particle cumulant $\vnk 2 2$,
   and triangular flow two-particle cumulant $\vnk 3 2$.
-  Each plot has 254 lines corresponding to the 254 design points.
   Data points are experimental measurements from ALICE \cite{Abelev:2014mda}.
 }
 
@@ -343,8 +343,8 @@ where
 We choose intentionally large ranges for each parameter, summarized in table~\ref{tab:design}.
 
 The number $m$ of design points and their distribution in parameter space is also critical.
-Perhaps the most obvious choice is a uniform grid, e.g.\ $k$ evenly-spaced points in each dimension.
-Unfortunately, this leads to a total number of design points $m = n^k$ which even for a modest $k = 10$ and $n = 5$ is intractably large, $\mathcal O(10^7)$.
+Perhaps the most obvious choice is a uniform grid (factorial design), e.g.\ $k$ evenly-spaced points in each dimension.
+Unfortunately, this leads to a total number of design points $m = k^n$ which even for a modest $k = 10$ and $n = 5$ is intractably large.
 
 \begin{table}[b]
   \caption{
@@ -545,6 +545,7 @@ at each MCMC-sampled $\xs$ point, the emulator predicts the principal components
   \label{eq:likelihood}
 \end{equation}
 where $\zexp$ is the principal component transform of the experimental data $\yexp$ and $\Sigma_z$ is the covariance (uncertainty) matrix.
+\todo{Where does the likelihood come from?}
 There are a number of sources of uncertainty including experimental statistical and systematic error, model statistical and systematic error, and emulator uncertainty.
 In the present study, we do not attempt to precisely account for each contribution, for this would inevitably require dubious assumptions about systematic error correlations and the unknown error of the model.
 We assume a simple fractional error on the principal components, i.e.\ the covariance matrix is
