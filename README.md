@@ -1,5 +1,3 @@
 # Model-to-data comparison paper
 
-Working version.
-
-Run `make` to compile the PDF.  `latexmk` is required.
+When compiling, use option `-output-directory=build` for `pdflatex` or `latexmk` to write temporary files to the `build` directory.
