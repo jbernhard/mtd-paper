@@ -1,17 +1,57 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import functools
 import pickle
 
 import numpy as np
-# import matplotlib.pyplot as plt
-from scipy import interpolate
+import matplotlib.pyplot as plt
 
-
-Spline = functools.partial(interpolate.InterpolatedUnivariateSpline, k=3)
 
 experiment = 'alice'
+
+
+def rebin(X, Y, new_bins):
+    """
+    Rebin data into arbitrary centrality intervals.
+
+    X : (N+1,) old bin edges
+    Y : (N,) old bin counts
+    new_bins : (M, 2) pairs of new bin edges
+
+    """
+    Z = np.empty(len(new_bins))
+
+    for n, (a, b) in enumerate(new_bins):
+        values = []
+        weights = []
+        for low, high, y in zip(X[:-1], X[1:], Y):
+            if high < a:
+                continue
+            elif low < a and high > b:
+                # old bin superset of new bin
+                w = 1.
+                break
+            elif a <= low and high <= b:
+                # old bin subset of new bin
+                w = high - low
+            elif a > low and high <= b:
+                # overhanging low
+                w = high - a
+            elif a <= low and high > b:
+                # overhanging high
+                w = b-low
+            else:
+                raise RuntimeError("shouldn't get here")
+
+            values.append(y)
+            weights.append(w)
+
+            if high > b:
+                break
+
+        Z[n] = np.average(values, weights=weights)
+
+    return Z
 
 
 def main():
@@ -20,43 +60,62 @@ def main():
 
     cent_width *= 100
     cent_high *= 100
-    cent_mid = cent_high - .5*cent_width
-    mult_interp = Spline(cent_mid, mult)
 
-    # plt.plot(cent_high, mult, ls='steps-pre')
-    # plt.plot(cent_mid, mult, 'o')
-    # x = np.linspace(0, 95, 10000)
-    # plt.plot(x, mult_interp(x))
-    # plt.show()
+    cent_edges = np.insert(cent_width, 0, 0).cumsum()
+    cent_edges += cent_high[0] - cent_width[0]
+    cent_mid = .5*(cent_edges[1:] + cent_edges[:-1])
 
-    cent_bin_width = 5
-    cent_bins = np.array([[i, i+cent_bin_width] for i in range(0, 51, 10)])
-    cent_bins_mid = cent_bins.mean(axis=1)
+    plt.rc('xtick.major', size=2)
+    plt.rc('ytick.major', size=2)
+    plt.rc('lines', markersize=6)
 
-    cent_bins_mult = np.array([mult_interp.integral(*b)
-                               for b in cent_bins]) / cent_bin_width
+    fig, axes = plt.subplots(nrows=2, sharex='col', figsize=(8, 10))
 
-    keys = 'mean', 'stat', 'sys'
-    data = {
-        'cent': cent_bins_mid,
-        'mult': dict(zip(
-            keys,
-            (cent_bins_mult, 1e-8*cent_bins_mult, .06*cent_bins_mult)
-        ))
-    }
+    ax = axes[0]
+    ax.plot(cent_mid, mult, 'o')
+    ax.plot(cent_edges, np.append(mult, mult[-1]), ls='steps-post', color='.4')
+    ax.set_ylabel(r'$N_\mathrm{ch}$')
+
+    new_bins = np.array([[i, i+5] for i in range(0, 51, 10)])
+    data = dict(cent=new_bins.mean(axis=1))
+
+    new_bins_mult = rebin(cent_edges, mult, new_bins)
+    data['mult'] = dict(
+        mean=new_bins_mult,
+        stat=1e-8*new_bins_mult,
+        sys=.06*new_bins_mult
+    )
+
+    for (a, b), y in zip(new_bins, data['mult']['mean']):
+        ax.plot((a, b), (y, y), 'r', lw=2)
+
+    ax = axes[1]
 
     for n in 2, 3:
-        vn_mult, vn, vn_stat, vn_sys = np.loadtxt(
-            '{}_v{}-2.dat'.format(experiment, n), unpack=True
-        )
+        vn, vn_stat, vn_sys = np.loadtxt('{}_v{}-2.dat'.format(experiment, n),
+                                         usecols=(1, 2, 3))[::-1].T
 
-        data['v{}'.format(n)] = dict(zip(
-            keys,
-            (Spline(vn_mult, y)(cent_bins_mult) for y in (vn, vn_stat, vn_sys))
-        ))
+        data['v{}'.format(n)] = {
+            key: rebin(cent_edges, Y, new_bins)
+            for key, Y in (('mean', vn), ('stat', vn_stat), ('sys', vn_sys))
+        }
+
+        ax.plot(cent_mid, vn, 'o', label='$v_{}$'.format(n))
+        ax.plot(cent_edges, np.append(vn, vn[-1]), ls='steps-post', color='.4')
+
+        for (a, b), y in zip(new_bins, data['v{}'.format(n)]['mean']):
+            ax.plot((a, b), (y, y), 'r', lw=2)
 
     with open('{}.pkl'.format(experiment), 'wb') as f:
         pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+
+    ax.set_xlim(0, 80)
+    ax.set_xlabel('Centrality %')
+    ax.set_ylabel('$v_n\{2\}$')
+    ax.legend(loc='upper left')
+
+    fig.tight_layout(pad=1)
+    fig.savefig('{}.pdf'.format(experiment))
 
 
 if __name__ == "__main__":
