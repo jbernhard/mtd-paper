@@ -11,8 +11,9 @@ class DataPreprocessor:
     Read model data from text tables and save as binary.
 
     """
-    def __init__(self, ic, outliers=None):
+    def __init__(self, ic, exp, outliers=None):
         self.ic = ic
+        self.exp = exp
         self.outliers = outliers
 
     def read_table(self, name, skip_outliers=False):
@@ -34,17 +35,22 @@ class DataPreprocessor:
         Save data to a dict of numpy arrays.
 
         """
-        data = {name: self.read_table(name, skip_outliers=True)
-                for name in ('design', 'mult', 'v2', 'v3')}
+        data = {name: self.read_table('{}_{}'.format(name, self.exp),
+                                      skip_outliers=True)
+                for name in ('mult', 'v2', 'v3')}
+        data['design'] = self.read_table('design', skip_outliers=True)
         data['cent'] = self.read_table('cent')
         with open('{}.pkl'.format(self.ic), 'wb') as f:
             pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
 
 def main():
-    DataPreprocessor('glb', outliers=(0, 3)).save()
-    DataPreprocessor('kln', outliers=(0, 3)).save()
-    DataPreprocessor('glb-validation').save()
+    exp = 'alice'
+    outliers = 0, 3
+
+    DataPreprocessor('glb', exp, outliers=outliers).save()
+    DataPreprocessor('kln', exp, outliers=outliers).save()
+    DataPreprocessor('glb-validation', exp).save()
 
 
 if __name__ == "__main__":
