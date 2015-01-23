@@ -10,6 +10,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
+import scipy.optimize as opt
 import george
 import mtd
 
@@ -162,46 +163,6 @@ def set_loc(ax, xy=None, nbins=5, steps=(1, 2, 3, 4, 10), prune=None):
         axis.set_major_locator(
             tick.MaxNLocator(nbins=nbins, steps=steps, prune=prune)
         )
-
-
-@plotfn
-def train(ic, data):
-    samplers = data.training_samplers
-    color = data.cmap(.7)
-    hyperlabels = (
-        ['GP variance'] +
-        [r'$\ell$ {}'.format('Norm' if p == 'Normalization' else p)
-         for p in data.labels] +
-        ['Noise']
-    )
-
-    npc = len(samplers)
-    nhyper = len(hyperlabels)
-
-    fig, axes = plt.subplots(nrows=npc, ncols=nhyper,
-                             sharex='col', sharey='row',
-                             figsize=(textwidth, .08*textwidth*aspect*nhyper))
-
-    for n, (row, sampler) in enumerate(zip(axes, samplers)):
-        for ax, chain, label in zip(row, sampler.flatchain.T, hyperlabels):
-            if ax.is_first_col():
-                ax.set_xlim(0, 3)
-                ax.set_xticks(np.arange(4))
-                ax.set_ylabel('PC {}'.format(n))
-            else:
-                ax.set_xlim(0, 1)
-                ax.set_xticks((0., .5, 1.))
-                ax.set_xticklabels(('0', '0.5', '1'))
-            if ax.is_last_row():
-                ax.set_xlabel(label)
-
-            ax.xaxis.set_tick_params(length=2)
-            ax.set_yticks([])
-
-            ax.hist(chain, bins=20, range=ax.get_xlim(), histtype='step',
-                    color=color)
-
-    finish(h_pad=.2, w_pad=.2)
 
 
 def nice_range(x, perc=.1, rcut=1.08, dcut=.09):
@@ -482,6 +443,69 @@ def gp():
         ax.set_ylabel('$y$')
 
     finish()
+
+
+@plotfn
+def training():
+    fig, axes = plt.subplots(nrows=3, sharex='col',
+                             figsize=(columnwidth, 2.5*aspect*columnwidth))
+
+    np.random.seed(234325)
+
+    x = np.linspace(.06, .94, 50)
+    x += np.random.normal(scale=.1/x.size, size=x.size)
+    t = np.linspace(0, 1, 1000)
+    gp = george.GP(
+        george.kernels.ExpSquaredKernel(.5**2) +
+        george.kernels.WhiteKernel(.2**2)
+    )
+    gp.compute(x)
+    y = gp.sample()
+    y -= y.mean()
+
+    actual_pars = np.copy(gp.kernel.pars)
+
+    def nll(vector):
+        gp.kernel.vector = vector
+        ll = gp.lnlikelihood(y, quiet=True)
+        grad = gp.grad_lnlikelihood(y, quiet=True)
+        return -ll, -grad
+
+    opt.minimize(nll, gp.kernel.vector, jac=True)
+    ml_pars = np.copy(gp.kernel.pars)
+
+    names_pars = (
+        ('Overfit', (.02**2, .001**2)),
+        ('Oversmooth', (3.**2, .3**2)),
+        ('Max. likelihood', ml_pars),
+        ('Actual', actual_pars),
+    )
+    fmt_str = r'{}: $\ell = {:.3g}$, $\sigma_n = {:.3g}$'
+    color = '#77C0DC'
+
+    for ax, (name, pars) in zip(axes, names_pars):
+        gp.kernel.pars = pars
+        mu, cov = gp.predict(y, t)
+        std = np.sqrt(cov.diagonal())
+        ax.fill_between(t, mu+2*std, mu-2*std,
+                        facecolor=color, edgecolor='none', alpha=.18)
+        ax.plot(t, mu, color=color)
+
+        ax.plot(x, y, 'o', ms=2.3, color=offblack)
+
+        ax.text(.5, 2.25, fmt_str.format(name, *np.sqrt(pars)),
+                ha='center', va='top')
+        ax.set_ylim(-2.4, 2.4)
+        ax.set_ylabel('$y$')
+
+    name, pars = names_pars[-1]
+    ax.text(.5, -2.25, fmt_str.format(name, *np.sqrt(pars)),
+            ha='center', va='bottom')
+
+    ax.set_xlim(0, 1)
+    ax.set_xlabel('$x$')
+
+    finish(pad=.2, h_pad=.01)
 
 
 @plotfn
