@@ -122,16 +122,26 @@ def main():
     data = DataHandler(ic, exp, weights=(1.2, 1.0, 0.6))
     ndim = data.ndim
 
-    # GP kernel and conjugate prior for hyperparameters
+    # GP kernel: squared-exponential with noise
     kernel = (
         1. *
         mtd.kernels.ExpSquaredKernel(np.full(ndim, .5), ndim=ndim) +
         mtd.kernels.WhiteKernel(1e-8, ndim=ndim)
     )
-    training_prior = (
-        mtd.priors.VariancePrior() +
-        ndim * mtd.priors.LengthScalePrior(b=0.3) +
-        mtd.priors.NoisePrior()
+
+    # prior for kernel hyperparameters
+    # used to sample random starting points for MLE training
+    prior = (
+        mtd.priors.InvGammaPrior() +
+        mtd.priors.LogPrior(low=.3, high=3.) * ndim +
+        mtd.priors.LogPrior(low=.001, high=1.)
+    )
+
+    # hyperparameter boundaries
+    bounds = (
+        [(None, None)] +
+        [np.log((.1, 10.))] * ndim +  # sane range for length scales
+        [(None, None)]
     )
 
     print('starting GPs')
@@ -143,15 +153,13 @@ def main():
 
     results['pca'] = mgp.pca
 
-    mgp.train(training_prior,
-              nwalkers=300, nsteps=500, nburnsteps=200,
-              verbose=True)
-    results['training_samplers'] = mgp.training_samplers
-    results['kernel_pars'] = tuple(mgp.get_kernel_pars(n) for n in range(npc))
+    mgp.train(prior, nstarts=100, verbose=True, bounds=bounds)
+    results['training_results'] = mgp.training_results
+    results['kernel_pars'] = np.array([mgp.get_kernel_pars(n)
+                                       for n in range(npc)])
 
-    # cal_prior = mtd.priors.FlatPrior() * ndim
     mgp.calibrate(data.cal_data, yerr=.06,
-                  nwalkers=600, nsteps=5000, nburnsteps=2000,
+                  nwalkers=500, nsteps=20000, nburnsteps=2000,
                   verbose=True)
     results['cal_chain'] = mgp.cal_flatchain
     results['cal_samples'] = data.unpack(mgp.cal_samples)
