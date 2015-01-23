@@ -483,6 +483,7 @@ Effectively, the noise term relaxes the requirement that the GP must pass exactl
 We use a squared-exponential covariance function with a noise term:
 \begin{equation}
   \sigma(\x, \x') = \sigma_\text{GP}^2 \exp\Biggl[ -\sum_{k=1}^n \frac{(x_k - x'_k)^2}{2\ell_k^2} \Biggr] + \sigma_n^2\delta_{\x\x'},
+  \label{eq:full_cov}
 \end{equation}
 where $\sigma_\text{GP}^2$ is the overall variance of the GP and $\ell_k$ is the characteristic length scale for dimension $k$.
 These \emph{hyperparameters} $(\sigma_\text{GP}$, $\sigma_n$, $\ell_k)$ are not known a priori and must be estimated from the training data, however, in the present case predictions appear to be relatively insensitive to the precise choice of hyperparameters, as will be demonstrated promptly.
@@ -662,10 +663,32 @@ the Python MCMC toolkit \texttt{emcee} \cite{FM:2013mc} and Gaussian process lib
 
 \section{\label{app:train}Emulator training}
 
+\newcommand{\vectheta}{\boldsymbol\theta}
+
+FIG.~\ref{fig:training}.
+Table~\ref{tab:hyperpars}.
+
+\begin{equation}
+  \log P(\y|X,\vectheta) = -\frac{1}{2} \y\tran \Sigma_y^{-1} \y - \frac{1}{2} \log |\Sigma_y| - \frac{n}{2} \log 2\pi.
+\end{equation}
+
+Equation~\eqref{eq:full_cov}
+\begin{equation*}
+  \sigma(\x, \x') = \sigma_\text{GP}^2 \exp\Biggl[ -\sum_{k=1}^n \frac{(x_k - x'_k)^2}{2\ell_k^2} \Biggr] + \sigma_n^2\delta_{\x\x'}.
+\end{equation*}
+
 \colfig{training}{
   Effect of varying the hyperparameters.
     \todo{Incomplete.}
 }
+
+\begin{table}
+  \caption{
+    \label{tab:hyperpars}
+    Maximum-likelihood estimates of hyperparameters.
+  }
+  %\input{fig/table_hyperpars}
+\end{table}
 
 
 
