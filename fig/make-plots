@@ -4,6 +4,7 @@
 import collections
 import functools
 import inspect
+import os
 import pickle
 import sys
 
@@ -649,8 +650,15 @@ def pc_var():
     finish()
 
 
-def table():
-    with open('posterior_table.tex', 'w') as f:
+def tables():
+    try:
+        os.mkdir('../tables', mode=0o755)
+    except OSError:
+        pass
+
+    fmt_str = '{:#.3g}'
+
+    with open('../tables/posterior.tex', 'w') as f:
         write = functools.partial(print, file=f)
         write(r'\begin{ruledtabular}')
         write(r'\begin{tabular}{lllllccc}')
@@ -660,7 +668,6 @@ def table():
             write(r'  \hline')
             write(r'  \multirow{' + str(len(data.labels)) +
                   r'}{*}{\rotatebox{90}{' + data.display_name + r'\ \ }}')
-            fmt_str = '{:#.3g}'
             for label, guess, samples in zip(
                     data.labels, data.initial_params, data.cal_chain.T):
                 if label == 'Normalization':
@@ -680,7 +687,38 @@ def table():
         write(r'\end{tabular}')
         write(r'\end{ruledtabular}')
 
-plotfns['table'] = table
+    with open('../tables/hyperpars.tex', 'w') as f:
+        write = functools.partial(print, file=f)
+        npc = ic_data['glb'].pca.npc
+        columns = 'll' + ''.join('c' for _ in range(npc))
+        write(r'\begin{ruledtabular}')
+        write(r'\begin{tabular}{' + columns + '}')
+        write(r'  & & \multicolumn{' + str(npc) +
+              r'}{c}{Principal component} \\')
+        write(r'  & & ' +
+              ' & '.join(str(i+1) for i in range(npc)) +
+              r' \\')
+        for data in ic_data.values():
+            labels = [r'$\sigma_\mathrm{GP}$']
+            for l in data.labels:
+                if l == 'Normalization':
+                    l = 'Norm'
+                labels += [r'$\ell$ ' + l]
+            labels += [r'$\sigma_n$']
+
+            write(r'  \hline')
+            write(r'  \multirow{' + str(len(labels)) +
+                  r'}{*}{\rotatebox{90}{' + data.display_name + r'\ \ \ }}')
+
+            for label, pars in zip(labels, np.sqrt(data.kernel_pars.T)):
+                write('  & ' + label + ' & ' +
+                      ' & '.join(fmt_str.format(p) for p in pars) +
+                      r' \\')
+
+        write(r'\end{tabular}')
+        write(r'\end{ruledtabular}')
+
+plotfns['tables'] = tables
 
 
 def main():
