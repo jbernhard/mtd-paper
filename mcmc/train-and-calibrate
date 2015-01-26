@@ -123,6 +123,7 @@ def main():
     ndim = data.ndim
 
     # GP kernel: squared-exponential with noise
+    # ExpSquaredKernel pars are the _squares_ of the length scales
     kernel = (
         1. *
         mtd.kernels.ExpSquaredKernel(np.full(ndim, .5), ndim=ndim) +
@@ -133,14 +134,14 @@ def main():
     # used to sample random starting points for MLE training
     prior = (
         mtd.priors.InvGammaPrior() +
-        mtd.priors.LogPrior(low=.3, high=3.) * ndim +
+        mtd.priors.LogPrior(low=.5**2, high=3.**2) * ndim +
         mtd.priors.LogPrior(low=.001, high=1.)
     )
 
-    # hyperparameter boundaries
+    # hyperparameter boundaries [on log of pars]
     bounds = (
         [(None, None)] +
-        [np.log((.1, 10.))] * ndim +  # sane range for length scales
+        [2.*np.log((.3, 10.))] * ndim +  # sane range for length scales
         [(None, None)]
     )
 
