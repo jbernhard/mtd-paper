@@ -440,6 +440,13 @@ GPs are conditioned on the design $X$ according to Eq.~\eqref{eq:cond} and predi
   Y_* = \frac{1}{\sqrt m} Z_* U\tran.
 \end{equation}
 
+\widefig{validation}{
+  Validation of the Gaussian process emulator for the Glauber model.
+  Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\% (green), 20--25\% (orange), and 40-45\% (purple).
+  The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
+  The diagonal grey line represents $y = x$.
+}
+
 There is an important caveat for principal components:
 the original data $Y$ must have a multivariate normal distribution for the transformed PCs $Z$ to be uncorrelated.
 There is no guarantee that a particular model will produce normally-distributed outputs so this must be verified on a case-by-case basis.
@@ -455,13 +462,6 @@ For the present event-by-event model we perform the following steps:
   \item Calculate the PC transformed data $Z$ using $q = 5$ PCs, which accounts for over 99\% of the variance as shown in FIG.~\ref{fig:pc_var}.
 \end{enumerate}
 These steps are inverted to transform PCs back to physical space.
-
-\widefig{validation}{
-  Validation of the Gaussian process emulator for the Glauber model.
-  Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\% (green), 20--25\% (orange), and 40-45\% (purple).
-  The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
-  The diagonal grey line represents $y = x$.
-}
 
 In practice, the covariance method for computing principal components is prone to numerical error, so a more robust algorithm using the singular value decomposition (SVD) is preferred.
 The SVD of the data $Y$ is
@@ -569,6 +569,17 @@ We first run approximately $10^6$ MCMC steps to allow the chain to equilibrate--
 
 \subsection{Results}
 
+\widefig{cal_post_glb}{
+  Posterior marginal and joint distributions of the calibration parameters for the Glauber model.
+  On the diagonal are histograms of MCMC samples for the respective parameters,
+  on the lower triangle are two-dimensional histograms of MCMC samples showing the correlation between pairs of parameters,
+  and on the upper triangle are approximate contours for 68\%, 95\%, and 99\% confidence regions along with a dot indicating the median.
+}
+
+\widefig{cal_post_kln}{
+  Same as FIG.~\ref{fig:cal_post_glb} for the KLN model.
+}
+
 The primary MCMC calibration results are presented in FIGs.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln} for the Glauber and KLN models, respectively.
 These are visualizations of the posterior probability distributions of the true parameters $\xs$, including the distribution of each individual parameter and all correlations.
 The diagonal histograms show the marginal distributions for each parameter (all other parameters integrated out);
@@ -576,6 +587,12 @@ the lower-triangle plots are two-dimensional histograms of joint distributions b
 and the upper triangle has contour plots of the same joint distributions, where the contour lines enclose the 68\%, 95\%, and 99\% confidence regions.
 
 A wealth of information may be gained from these posterior visualizations; the following highlights some important features.
+
+\widefig{post_draws}{
+  Random realizations of the calibrated posterior for Glauber (top, blue) and KLN (bottom, green) initial conditions.
+  Similar to FIG.~\ref{fig:prior_draws},
+  except the lines are posterior emulator predictions instead of explicit prior calculations.
+}
 
 Focusing on the Glauber results in FIG.~\ref{fig:cal_post_glb}, we see the shear viscosity $\eta/s$ (fourth diagonal plot) has a narrow approximately-normal distribution located near the commonly quoted value 0.08.
 As expected, $\eta/s$ is tightly constrained by experimental flow data.
@@ -588,6 +605,12 @@ The joint distribution shows a narrow acceptable band whose shape is governed by
 
 The wounded nucleon / binary collision parameter $\alpha$ (second diagonal) has a roughly-normal distribution located near the typical value 0.12.
 It is mainly related to the slope of multiplicity vs.\ centrality and hence has a nontrivial correlation with normalization and $\tau_0$, e.g.\ we can decrease the normalization to the lower end of its distribution provided we also increase $\alpha$ to compensate.
+
+\colfig[b]{post_compare}{
+  Comparison of posterior distributions of $\eta/s$ for Glauber (blue) and KLN (green).
+  These are the same histograms as in FIGS.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln}, expanded and placed on the same axis.
+  The vertical grey lines indicate the canonical values 0.08 for Glauber and 0.20 for KLN \cite{}.
+}
 
 Meanwhile, the shear stress relaxation time $\tau_\Pi$ (fifth diagonal) has an almost flat distribution and its joint distributions show no correlations.
 Evidently, this parameter does not influence flow coefficients or multiplicity.
@@ -603,6 +626,15 @@ The origin of this shape will be discussed shortly.
 As with Glauber, there is a strong inverse relationship between normalization and $\tau_0$, and $\tau_\Pi$ has no effect.
 The KLN parameter $\lambda$ has a flat marginal distribution, but there are strongly excluded regions in the joint distributions with normalization and $\tau_0$.
 This appears to be the same effect as observed with Glauber $\alpha$, except the dependence on $\lambda$ is significantly weaker.
+
+\begin{table*}
+  \caption{
+    \label{tab:posterior}
+    Quantitative summary of posterior distributions.
+    For each parameter, the initially guessed value \todo{[cite somehow]}, mean, median, and confidence intervals are given.
+  }
+  \input{tables/posterior}
+\end{table*}
 
 The posteriors may be validated by drawing samples from the calibrated distributions and visualizing the corresponding emulator predictions:
 if the model is properly calibrated, the posterior samples will be close to experimental measurements.
@@ -620,38 +652,6 @@ This compromise between $v_2$ and $v_3$ causes the plateau-like distribution for
 Table~\ref{tab:posterior} quantitatively summarizes the posterior distributions including basic statistics, confidence intervals, and comparisons to initial guesses for each parameter.
 These guesses arise from previous work using the same models \todo{(vague)} \cite{Shen:2011zc,Heinz:2011kt}.
 All the initial guesses fall within 95\% confidence intervals, and most are within 68\%.
-
-\widefig{cal_post_glb}{
-  Posterior marginal and joint distributions of the calibration parameters for the Glauber model.
-  On the diagonal are histograms of MCMC samples for the respective parameters,
-  on the lower triangle are two-dimensional histograms of MCMC samples showing the correlation between pairs of parameters,
-  and on the upper triangle are approximate contours for 68\%, 95\%, and 99\% confidence regions along with a dot indicating the median.
-}
-
-\widefig{cal_post_kln}{
-  Same as FIG.~\ref{fig:cal_post_glb} for the KLN model.
-}
-
-\colfig{post_compare}{
-  Comparison of posterior distributions of $\eta/s$ for Glauber (blue) and KLN (green).
-  These are the same histograms as in FIGS.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln}, expanded and placed on the same axis.
-  The vertical grey lines indicate the canonical values 0.08 for Glauber and 0.20 for KLN \cite{}.
-}
-
-\begin{table*}
-  \caption{
-    \label{tab:posterior}
-    Quantitative summary of posterior distributions.
-    For each parameter, the initially guessed value \todo{[cite somehow]}, mean, median, and confidence intervals are given.
-  }
-  \input{tables/posterior}
-\end{table*}
-
-\widefig{post_draws}{
-  Random realizations of the calibrated posterior for Glauber (top, blue) and KLN (bottom, green) initial conditions.
-  Similar to FIG.~\ref{fig:prior_draws},
-  except the lines are posterior emulator predictions instead of explicit prior calculations.
-}
 
 
 
@@ -711,7 +711,7 @@ Equation~\eqref{eq:full_cov}
     \todo{Incomplete.}
 }
 
-\begin{table}
+\begin{table}[b]
   \caption{
     \label{tab:hyperpars}
     Maximum-likelihood estimates of hyperparameters.
