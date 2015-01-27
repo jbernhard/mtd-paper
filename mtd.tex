@@ -694,30 +694,76 @@ the Python MCMC toolkit \texttt{emcee} \cite{FM:2013mc} and Gaussian process lib
 
 \newcommand{\vectheta}{\boldsymbol\theta}
 
-FIG.~\ref{fig:training}.
-Table~\ref{tab:hyperpars}.
-
-\begin{equation}
-  \log P(\y|X,\vectheta) = -\frac{1}{2} \y\tran \Sigma_y^{-1} \y - \frac{1}{2} \log |\Sigma_y| - \frac{n}{2} \log 2\pi.
-\end{equation}
-
-Equation~\eqref{eq:full_cov}
+Gaussian process emulators are non-parametric models (they do not assume a functional form) but they do require an assumed covariance function.
+One typically chooses a parameterized functional form based on physical considerations, for example the squared-exponential function
 \begin{equation*}
-  \sigma(\x, \x') = \sigma_\text{GP}^2 \exp\Biggl[ -\sum_{k=1}^n \frac{(x_k - x'_k)^2}{2\ell_k^2} \Biggr] + \sigma_n^2\delta_{\x\x'}.
+  \sigma(\x, \x') = \exp\biggl( -\frac{|\x - \x'|^2}{2\ell^2} \biggr)
 \end{equation*}
+generates smoothly-varying processes and is therefore compatible with many models.
+If the model is known to oscillate, one would choose a periodic covariance function.
+Most models have statistical noise which one accounts for by adding a diagonal noise term to the covariance function:
+\begin{equation*}
+  \sigma(\x, \x') \rightarrow \sigma(\x, \x') + \sigma_n^2\delta_{\x\x'},
+\end{equation*}
+where $\sigma_n^2$ is the variance of the noise and $\delta_{\x\x'}$ is a Kronecker delta.
+
+Covariance functions often have free parameters known as \emph{hyperparameters}, e.g.\ the squared-exponential correlation length $\ell$,
+which are not known a priori and must be estimated from training data.
+The selection of hyperparameters is known as \emph{training} and may be accomplished by maximizing the likelihood function \cite{Rasmussen:2006gp}
+\begin{equation}
+  \log P(\y|X,\vectheta) = -\frac{1}{2} \y\tran \Sigma_y^{-1} \y - \frac{1}{2} \log |\Sigma_y| - \frac{m}{2} \log 2\pi,
+  \label{eq:train_like}
+\end{equation}
+where $\y$ is the vector of training outputs, $X$ is the matrix of training input points, $\vectheta$ is the vector of hyperparameters, and $\Sigma_y$ is the covariance matrix from applying the covariance function to the training data.
+Hence, the likelihood is the probability of observing the data given the model.
+The first term in the likelihood is the fit to data, the second term is a complexity penalty, and the third term is a normalization constant.
 
 \colfig{training}{
   Effect of varying the hyperparameters.
-    \todo{Incomplete.}
+  Each panel shows a Gaussian process conditioned on fabricated training data using the covariance function Eq.~\eqref{eq:1dcov}, where the line is the mean and the band is a $2\sigma$ confidence interval.
+  The covariance function hyperparameters are different in each plot as indicated by the annotations.
+  The data points are identical in each plot and were generated from a Gaussian process with hyperparameters annotated at the bottom.
 }
 
-\begin{table}[b]
+This is best demonstrated by an example.
+The one-dimensional training data in FIG.~\ref{fig:training} was generated from a Gaussian process with covariance function
+\begin{equation}
+  \sigma(x, x') = \exp\biggl( -\frac{|x - x'|^2}{2\ell^2} \biggr) + \sigma_n^2\delta_{xx'}
+  \label{eq:1dcov}
+\end{equation}
+and hyperparameters $\vectheta = (\ell, \sigma_n) = (0.5, 0.2)$; now let us pretend we don't know the true values of $\vectheta$ and attempt to train a Gaussian process on the data.
+In the top panel of the figure, we use a short length scale $\ell$ with small noise $\sigma_n$, so the GP interpolates each point exactly; however it rapidly wiggles and is almost certainly ``overfit''.
+This choice of hyperparameters has a large complexity penalty and therefore a low likelihood.
+In the other extreme, we use a long length scale with large noise (middle panel), leading to a nearly linear GP that attributes most of the variance to noise.
+Here the likelihood is also low due to the poor fit to data.
+The most likely scenario is the compromise in the bottom panel, in which we estimate the hyperparameters by numerically maximizing the likelihood.
+Now, the trained GP smoothly interpolates the curvature of the training data while leaving some of the variance as noise, consistent with the actual GP.
+
+In the present study, we use the covariance function given in Eq.~\eqref{eq:full_cov} and restated here:
+\begin{equation*}
+  \sigma(\x, \x') = \sigma_\text{GP}^2 \exp\Biggl[ -\sum_{k=1}^n \frac{(x_k - x'_k)^2}{2\ell_k^2} \Biggr] + \sigma_n^2\delta_{\x\x'}.
+\end{equation*}
+The hyperparameter $\sigma^2_\text{GP}$ is the overall variance of the Gaussian process and the $\ell_k$ are the independent length scales for each design parameter.
+We estimate the hyperparameters by numerically maximizing the likelihood \eqref{eq:train_like} using a nonlinear conjugate gradient algorithm.
+Since the likelihood may have non-optimal local extrema, we repeat the optimization algorithm many times (minimum 100) from different random starting points.
+
+Table~\ref{tab:hyperpars} lists the maximum-likelihood estimates of the hyperparameters for each principal component in standardized units---input parameters scaled to $[0, 1]$ and principal components scaled to unit variance.
+We constrain the length scales to $[0.3, 10]$ for numerical robustness.
+
+In this work we fix the hyperparameters to the maximum-likelihood estimates during calibration.
+This neglects uncertainty in the hyperparameters themselves, although the present event-by-event model is well-behaved and the sample size is large, so varying the hyperparameters weakly affects the actual emulator predictions.
+But ideally, one would consider \emph{all} predictions consistent with the data---not only the most likely---by sampling the hyperparameter posteriors using MCMC.
+This significantly increases computational cost, since the GPs must be re-conditioned for every set of hyperparameters, and conditioning requires computation of the inverse covariance matrix, an $\mathcal O(n^3)$ operation.
+We forgo this refinement until a future study.
+
+\begin{table}
   \caption{
     \label{tab:hyperpars}
-    Maximum-likelihood estimates of hyperparameters.
+    Maximum-likelihood estimates of the covariance function hyperparameters.
   }
   \input{tables/hyperpars}
 \end{table}
+
 
 
 
