@@ -610,8 +610,8 @@ if the model is properly calibrated, the posterior samples will be close to expe
 Figure~\ref{fig:post_draws} confirms---for the most part---that the posteriors are indeed tightly clustered around the data points.
 Visualizations such as this will always have some uncertainty since samples are drawn from the full posterior, however, FIG.~\ref{fig:post_draws} has markedly narrower clusters than FIG.~\ref{fig:prior_draws}, in which the input parameters varied across their full ranges and were not tuned to match experiment.
 
-As shown in the top row of FIG.~\ref{fig:post_draws}, the Glauber model is nearly able fit the centrality dependence of all the present observables ($\avg\nch$, $\vnk 2 2$, $\vnk 3 2$).
-The $v_3$ samples have a somewhat larger variance than the others, in part due to the underlying noise in the model calculations and also because $v_3$ is explicitly given a lower weight (recall that $\avg\nch$ : $\vnk 2 2$ : $\vnk 2 3$ are weighted 1.2 : 1.0 : 0.6).
+As shown in the top row of FIG.~\ref{fig:post_draws}, the Glauber model nearly fits the centrality dependence of all the present observables ($\avg\nch$, $\vnk 2 2$, $\vnk 3 2$).
+The $v_3$ samples have a somewhat larger variance than the others, in part due to the underlying noise in the model calculations and also because $v_3$ is explicitly given a lower weight (recall that $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 2 3$ are weighted 1.2~:~1.0~:~0.6).
 
 The KLN results in the bottom row tell a somewhat different story, as they cannot fit all observables simultaneously.
 While the fit to $\avg\nch$ is excellent, the ratio of $v_2$ to $v_3$ is simply too large and the model has no choice but to compromise between the two, which is consistent with previous KLN results \cite{}.
@@ -658,7 +658,23 @@ All the initial guesses fall within 95\% confidence intervals, and most are with
 
 \section{Conclusion}
 
-Use \trento\ \cite{Moreland:2014oya}.
+We apply modern Bayesian methodology to systematically compare an event-by-event heavy-ion collision model to experimental data.
+We choose a set of salient model parameters including the shear viscosity $\eta/s$, evaluate the model over wide ranges of each parameter, and interpolate the results with a Gaussian process emulator.
+Then, we use the emulator to calibrate the model to optimally reproduce experimental data and thereby extract probability distributions for the true values of all model parameters simultaneously, including all correlations.
+
+When properly calibrated, the Monte Carlo Glauber model provides a good simultaneous fit to experimental multiplicity and flow data, while the Monte Carlo KLN model fails to simultaneously fit elliptic and triangular flow.
+The $\eta/s$ distributions for the Glauber and KLN models are consistent with the commonly quoted values 0.08 and 0.20, respectively, and in general the calibrated distributions reinforce and expand upon the field's existing knowledge of these models.
+
+This study represents a significant step forward in state-of-the-art model-to-data comparison and establishes a framework for future analysis.
+Since the method does not reduce each parameter to a ``best-fit'' value but instead furnishes full probability distributions, it may be used to rigorously quantify uncertainties, examine correlations among parameters, and evaluate the efficacy of physical models, among other possibilities.
+It is easily extensible to arbitrary numbers of parameters and physical observables and to different models.
+
+Indeed, we plan to apply the methodology to a variety of other models, including the new initial condition model \trento---a flexible effective model which is ideal for this type of analysis \cite{Moreland:2014oya}---and a 3+1D viscous hydrodynamics model with finite baryon chemical potential in combination with recent data from the RHIC beam energy scan.
+By considering data from multiple beam energies, we can probe the temperature dependence of $\eta/s$.
+
+We will include additional physical properties such as the size and shape of nucleons in the initial state, the hydrodynamic equation of state, and the switching temperature from hydrodynamics to microscopic transport; and compare to more observables, e.g.\ identified particle spectra and differential flow.
+
+Finally, we anticipate upgrades to the methodology itself, notably more rigorous treatment of uncertainties and quantification of input-output correlations (analysis of variance).
 
 
 \section*{Acknowledgments}
