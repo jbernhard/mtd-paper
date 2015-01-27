@@ -449,7 +449,8 @@ For the present event-by-event model we perform the following steps:
     While the flow cumulants are approximately normal without modification, we take the square root of multiplicity $\sqrt{\avg\nch}$ to obtain a normal distribution.
   \item Divide each observable by its corresponding experimental value from ALICE \cite{Abelev:2014mda}.
     This converts everything to unitless quantities of order one.
-  \item \todo{Weights?  The current results have $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 3 2$ weighted 1.2~:~1.0~:~0.6.}
+  \item Multiply each observable by a manually specified weight factor, ratios 1.2~:~1.0~:~0.6 for observables $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 3 2$.
+    These weights are based on the relative importance of each quantity.
   \item Concatenate the unitless data into a $254 \times 18$ matrix $Y$ and subtract the mean.
   \item Calculate the PC transformed data $Z$ using $q = 5$ PCs, which accounts for over 99\% of the variance as shown in FIG.~\ref{fig:pc_var}.
 \end{enumerate}
@@ -503,7 +504,6 @@ Figure~\ref{fig:validation} validates that the emulator does indeed faithfully p
 Recall that the emulator provides probability distributions of finite width, so it need not predict every validation point exactly---in fact, in the ideal case the residuals would have a normal distribution with mean zero.
 Most of the uncertainty visible in FIG.~\ref{fig:validation} is actually due to the statistical noise in the flow cumulants, particularly for $\vnk 3 2$.
 The emulator accurately depicts the noise present in the underlying data.
-\todo{Additional figure showing the distribution of emulator errors?}
 
 
 \section{Calibration}
@@ -544,15 +544,14 @@ For a large number of steps the samples of the random walk equilibrate to the po
 We use the affine-invariant ensemble sampler for MCMC \cite{Goodman:2010en,FM:2013mc}, an alternative algorithm which uses a large ensemble of interdependent walkers.
 Ensemble sampling notably has a much shorter autocorrelation time than Metropolis-Hastings sampling and hence converges  more quickly to the equilibrium distribution. 
 
+The MCMC algorithm samples proposal points $\xs$ and calculates the posterior at each point using Bayes' theorem.
 We place a non-informative flat prior on $\xs$, that is, the prior probability is constant within the design range (table~\ref{tab:design}) and zero outside.
-The likelihood is evaluated in principal component space:
-at each MCMC-sampled $\xs$ point, the emulator predicts the principal components $\z(\xs)$, and the likelihood is
+The emulator predicts the principal components $\z(\xs)$, and assuming normally-distributed errors the likelihood in PC space is
 \begin{equation}
   P(\z|\xs) \propto \exp\biggl\{ -\frac{1}{2} [\z(\xs) - \zexp]\tran \Sigma_z^{-1} [\z(\xs) - \zexp] \biggr\},
   \label{eq:likelihood}
 \end{equation}
-where $\zexp$ is the principal component transform of the experimental data $\yexp$ and $\Sigma_z$ is the covariance (uncertainty) matrix.
-\todo{Where does the likelihood come from?}
+where $\zexp$ is the PC transform of the experimental data $\yexp$ and $\Sigma_z$ is the covariance (uncertainty) matrix.
 There are a number of sources of uncertainty including experimental statistical and systematic error, model statistical and systematic error, and emulator uncertainty.
 In the present study, we do not attempt to precisely account for each contribution, for this would inevitably require dubious assumptions about systematic error correlations and the unknown error of the model.
 We assume a simple fractional error on the principal components, i.e.\ the covariance matrix is
