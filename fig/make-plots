@@ -662,7 +662,7 @@ def tables():
         write = functools.partial(print, file=f)
         write(r'\begin{ruledtabular}')
         write(r'\begin{tabular}{lllllccc}')
-        write(r'  & Parameter & Initial guess & Mean & Median & '
+        write(r'  & Parameter & Prior estimate & Mean & Median & '
               r'68\% C.I. & 95\% C.I. & 99\% C.I. \\')
         for data in ic_data.values():
             write(r'  \hline')

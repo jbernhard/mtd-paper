@@ -107,7 +107,7 @@ The emulator acts as a fast surrogate to the full model:
 it predicts model output at arbitrary points in parameter space with negligible computational cost.
 Parameters are calibrated by sampling the emulator with standard MCMC techniques.
 
-Emulators have been successfully used to study a wide range of physical systems, including galaxy formation \cite{Gomez:2012ak} and heavy-ion collisions \cite{Novak:2013bqa}.
+Emulators have been successfully used to study a wide range of physical systems, including galaxy formation \cite{Gomez:2012ak} and heavy-ion collisions \cite{Novak:2013bqa,Pratt:2014cza,Pratt:2015zsa}.
 Reference \cite{Novak:2013bqa} calibrated a hydrodynamic model to identified particle spectra from the Relativistic Heavy Ion Collider (RHIC) and extracted constraints on $\eta/s$ and several initial state parameters.
 However, this study used an event-averaged initial condition model, limiting its ability to investigate event-by-event fluctuations.
 
@@ -338,17 +338,14 @@ where
   \item I.C.\ param is a parameter specific to each initial condition model.
     For the Glauber model the parameter is $\alpha$, which controls how entropy is distributed to wounded nucleons and binary collisions;
     for the KLN model it is $\lambda$, a dimensionless exponent in the saturation scale parameterization.
-    Both parameters are related to the centrality dependence of multiplicity.
+    Both are related to the centrality dependence of multiplicity.
   \item $\tau_0$ is the QGP thermalization time and the starting time for hydrodynamic evolution.
   \item $\eta/s$ is the shear viscosity to entropy density ratio of the QGP.
   \item $\tau_\pi$ is the shear stress relaxation time, which dictates how quickly the hydro medium relaxes to the Navier-Stokes limit.
     The relaxation time is a function of the shear viscosity and temperature so we cannot tune it explicitly; instead we define the coefficient $k_\pi$ in the relation $\tau_\pi = 6k_\pi\eta/(sT)$.
 \end{itemize}
 We choose intentionally large ranges for each parameter, summarized in table~\ref{tab:design}.
-
-The number $m$ of design points and their distribution in parameter space is also critical.
-Perhaps the most obvious choice is a uniform grid (factorial design), e.g.\ $k$ evenly-spaced points in each dimension.
-Unfortunately, this leads to a total number of design points $m = k^n$ which even for a modest $k = 10$ and $n = 5$ is intractably large.
+In this work, we fix auxiliary parameters such as the nucleon size and the hydro to micro switching temperature to reasonable defaults; however, the method can handle arbitrary numbers of parameters provided the sample size is sufficiently large.
 
 \begin{table}[b]
   \caption{
@@ -369,7 +366,11 @@ Unfortunately, this leads to a total number of design points $m = k^n$ which eve
   \end{ruledtabular}
 \end{table}
 
-A popular algorithm for generating efficient design points is Latin hypercube (LH) sampling \cite{Tang:1993lh}.
+The number $m$ of design points and their distribution in parameter space is also critical.
+Perhaps the most obvious choice is a uniform grid (factorial design), e.g.\ $k$ evenly-spaced points in each dimension.
+Unfortunately, this leads to a total number of design points $m = k^n$ which even for a modest $k = 10$ and $n = 5$ is intractably large.
+
+A popular algorithm for generating efficient design points is maximin Latin hypercube (LH) sampling \cite{Morris:1995lh}.
 This method produces space-filling randomized designs with several desirable properties:
 \begin{itemize}
   \item The \emph{minimum} distance between points is \emph{maximized}, thus avoiding large gaps and tight clusters.
@@ -380,8 +381,13 @@ A LH design with relatively few points $m \sim 20n$ provides an efficient scaffo
 
 We use a 256 point LH design across the $n = 5$ input parameters; FIG.~\ref{fig:design} shows a two-dimensional projection.
 At each design point, we have executed the event-by-event model $\mathcal O(10^3)$ times in each of six centrality bins 0--5\%, 10--15\%, \ldots, 50-55\%, for both the Glauber and KLN models, yielding $\mathcal O(10^7)$ events in total.
-Two design points that were very near to the edge of the design space resulted in non-physical results and have been discarded, so the operational design has $m = 254$ points.
-\todo{Mention the OSG?}
+Two design points that were very near to the edge of the design space gave non-physical results and have been discarded, so the operational design has $m = 254$ points.
+
+\colfig[b]{pc_scatter}{
+  Principal component decomposition of the observables $\sqrt{\avg\nch}$, $\vnk 2 2$ for the Glauber model in 20--25\% centrality.
+  Each data point represents a model calculation and the edge histograms show the approximate normal distribution of each observable.
+  Arrows represent the PC vectors with lengths proportional to the explained variance.
+}
 
 Figure~\ref{fig:prior_draws} shows the postprocessed observables $\avg\nch$, $\vnk 2 2$, $\vnk 3 2$ as a function of centrality for each point in the design.
 The results have a broad distribution which is a direct result of the wide ranges of input parameters.
@@ -391,10 +397,9 @@ Note that these results constitute the training data for the GP emulator, not an
 
 \subsection{Multivariate output}
 
-\colfig[b]{pc_scatter}{
-  Principal component decomposition of the observables $\sqrt{\avg\nch}$, $\vnk 2 2$ for the Glauber model in 20--25\% centrality.
-  Each data point represents a model calculation and the edge histograms show the approximate normal distribution of each observable.
-  Arrows represent the PC vectors with lengths proportional to the explained variance.
+\colfig{pc_var}{
+  Fraction of the variance $V(q)$ explained by the first $q$ principal components for Glauber (blue circles) and KLN (green triangles).
+  $q = 5$ accounts for approximately 99\% of the total variance, a significant reduction from the original 18 dimensions.
 }
 
 Gaussian processes are fundamentally scalar functions, but computer models often produce multivariate output.
@@ -402,10 +407,17 @@ In general, the model takes the $m \times n$ design matrix $X$ and computes an $
 The present event-by-event model has $p = 18$ outputs (three observables each in six centrality bins).
 
 An obvious workaround is to use independent GP emulators for each of the $p$ outputs, however, this would neglect correlations and quickly become unwieldy for higher-dimensional output.
-Instead, we construct orthogonal linear combinations of the outputs via principal component (PC) analysis and emulate each transformed PC.
+Instead, we decompose the outputs into orthogonal linear combinations called principal components (PCs) and emulate each transformed PC.
 The PCs are uncorrelated by construction and can also be used to reduce the dimensionality of the output space.
 
-To construct the PCs, we first subtract the mean of the output data $Y$ so that each column has mean zero, then compute the eigendecomposition of the sample covariance matrix $Y\tran Y$:
+\widefig{validation}{
+  Validation of the Gaussian process emulator for the Glauber model.
+  Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\% (green), 20--25\% (orange), and 40-45\% (purple).
+  The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
+  The diagonal grey line represents $y = x$.
+}
+
+To calculate the PCs, we first subtract the mean of the output data $Y$ so that each column has mean zero, then compute the eigendecomposition of the sample covariance matrix $Y\tran Y$:
 \begin{equation}
   Y\tran Y = U \Lambda U\tran,
   \label{eq:cov}
@@ -420,30 +432,18 @@ The eigenvalues $\lambda_i$ represent the variance accounted for by principal co
 \begin{equation}
   V(q) = \frac{\sum_{i=1}^q \lambda_i}{\sum_{i=1}^p \lambda_i}.
 \end{equation}
-Often, the first few PCs describe most of the variance, as shown in FIG.~\ref{fig:pc_var}.
+Often, the first few PCs describe most of the variance, as demonstrated for the present data in FIG.~\ref{fig:pc_var}.
 Hence we can construct a reduced-dimension transformation with minimal loss of precision by choosing $q < p$ so that $V(q)$ satisfies some threshold (e.g.~$V(q) \geq 0.99$) and taking only the first $q$ columns of $U$:
 \begin{equation}
   Z_q = \sqrt m \, YU_q,
 \end{equation}
 where $Z_q$ is now an $m \times q$ matrix.
 
-\colfig{pc_var}{
-  Fraction of the variance $V(q)$ explained by the first $q$ principal components for Glauber (blue circles) and KLN (green triangles).
-  $q = 5$ accounts for approximately 99\% of the total variance, a significant reduction from the original 18 dimensions.
-}
-
 We may now use $q$ independent GP emulators for each of the columns of $Z_q$.
 GPs are conditioned on the design $X$ according to Eq.~\eqref{eq:cond} and predict the PCs $Z_*$ at arbitrary test points $X_*$ which are then transformed back to physical space as
 \begin{equation}
   Y_* = \frac{1}{\sqrt m} Z_* U\tran.
 \end{equation}
-
-\widefig{validation}{
-  Validation of the Gaussian process emulator for the Glauber model.
-  Each plot shows emulator predictions against explicit calculations for the 64 validation design points and centrality bins 0--5\% (green), 20--25\% (orange), and 40-45\% (purple).
-  The $x$-value of each data point is the emulator prediction with 95\% error bars; the $y$-value is the explicit calculation.
-  The diagonal grey line represents $y = x$.
-}
 
 There is an important caveat for principal components:
 the original data $Y$ must have a multivariate normal distribution for the transformed PCs $Z$ to be uncorrelated.
@@ -474,7 +474,7 @@ Inserting \eqref{eq:svd} into \eqref{eq:cov} yields
 \end{equation}
 hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ and the right singular vectors $W$ are the eigenvectors $U$.
 
-\subsection{Emulator construction and validation}
+\subsection{Constructing and validating the emulator}
 
 We emulate the model by conditioning independent Gaussian processes on each of the principal components $Z_q$ and the input design $X$ according to Eq.~\eqref{eq:cond}.
 Model outputs inevitably include statistical noise, i.e.\ we cannot compute $y = f(\x)$ exactly, only $y = f(\x) + \epsilon$ where $\epsilon$ is Gaussian noise.
@@ -536,13 +536,24 @@ The remainder of this section applies the methodology from \cite{OHagan:2006ba,H
 
 \subsection{MCMC}
 
+\widefig{cal_post_glb}{
+  Posterior marginal and joint distributions of the calibration parameters for the Glauber model.
+  On the diagonal are histograms of MCMC samples for the respective parameters,
+  on the lower triangle are two-dimensional histograms of MCMC samples showing the correlation between pairs of parameters,
+  and on the upper triangle are approximate contours for 68\%, 95\%, and 99\% confidence regions along with a dot indicating the median.
+}
+
 The workhorse of any Bayesian calibration is Markov chain Monte Carlo (MCMC), a powerful and flexible method for directly sampling the posterior probability.
 Perhaps the most common version is the Metropolis-Hastings algorithm, which generates a random walk through parameter space by accepting or rejecting steps based on the posterior probability.
 For a large number of steps the samples of the random walk equilibrate to the posterior distribution.
-We use the affine-invariant ensemble sampler for MCMC \cite{Goodman:2010en,FM:2013mc}, an alternative algorithm which uses a large ensemble of interdependent walkers.
-Ensemble sampling notably has a much shorter autocorrelation time than Metropolis-Hastings sampling and hence converges  more quickly to the equilibrium distribution. 
+We use the affine-invariant ensemble sampler for MCMC \cite{Goodman:2010en,FM:2013mc}, an alternative algorithm that uses a large ensemble of interdependent walkers.
+Ensemble sampling notably has a much shorter autocorrelation time than Metropolis-Hastings sampling and hence converges more quickly to the equilibrium distribution.
 
-The MCMC algorithm samples proposal points $\xs$ and calculates the posterior at each point using Bayes' theorem.
+\widefig{cal_post_kln}{
+  Same as FIG.~\ref{fig:cal_post_glb} for the KLN model.
+}
+
+The MCMC algorithm samples proposal points $\xs$ and calculates the posterior at each point via Bayes' theorem.
 We place a non-informative flat prior on $\xs$, that is, the prior probability is constant within the design range (table~\ref{tab:design}) and zero outside.
 The emulator predicts the principal components $\z(\xs)$, and assuming normally-distributed errors the likelihood in PC space is
 \begin{equation}
@@ -563,19 +574,13 @@ The primary goal of this study is to develop and test a model-to-data comparison
 Given the flat prior on $\xs$, the posterior probability is equal to the likelihood \eqref{eq:likelihood} within the design range and zero outside.
 The MCMC algorithm draws samples directly from this distribution.
 We first run approximately $10^6$ MCMC steps to allow the chain to equilibrate---these ``burn-in'' samples are discarded---followed by approximately $10^7$ steps to generate the posterior distribution.
-\todo{Remember to update these numbers for the final version.}
 
 \subsection{Results}
 
-\widefig{cal_post_glb}{
-  Posterior marginal and joint distributions of the calibration parameters for the Glauber model.
-  On the diagonal are histograms of MCMC samples for the respective parameters,
-  on the lower triangle are two-dimensional histograms of MCMC samples showing the correlation between pairs of parameters,
-  and on the upper triangle are approximate contours for 68\%, 95\%, and 99\% confidence regions along with a dot indicating the median.
-}
-
-\widefig{cal_post_kln}{
-  Same as FIG.~\ref{fig:cal_post_glb} for the KLN model.
+\widefig{post_draws}{
+  Random realizations of the calibrated posterior for Glauber (top, blue) and KLN (bottom, green) initial conditions.
+  Similar to FIG.~\ref{fig:prior_draws},
+  except the lines are posterior emulator predictions instead of explicit prior calculations.
 }
 
 The primary MCMC calibration results are presented in FIGs.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln} for the Glauber and KLN models, respectively.
@@ -585,12 +590,6 @@ the lower-triangle plots are two-dimensional histograms of joint distributions b
 and the upper triangle has contour plots of the same joint distributions, where the contour lines enclose the 68\%, 95\%, and 99\% confidence regions.
 
 A wealth of information may be gained from these posterior visualizations; the following highlights some important features.
-
-\widefig{post_draws}{
-  Random realizations of the calibrated posterior for Glauber (top, blue) and KLN (bottom, green) initial conditions.
-  Similar to FIG.~\ref{fig:prior_draws},
-  except the lines are posterior emulator predictions instead of explicit prior calculations.
-}
 
 Focusing on the Glauber results in FIG.~\ref{fig:cal_post_glb}, we see the shear viscosity $\eta/s$ (fourth diagonal plot) has a narrow approximately-normal distribution located near the commonly quoted value 0.08.
 As expected, $\eta/s$ is tightly constrained by experimental flow data.
@@ -607,8 +606,17 @@ It is mainly related to the slope of multiplicity vs.\ centrality and hence has 
 \colfig[b]{post_compare}{
   Comparison of posterior distributions of $\eta/s$ for Glauber (blue) and KLN (green).
   These are the same histograms as in FIGS.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln}, expanded and placed on the same axis.
-  The vertical grey lines indicate the canonical values 0.08 for Glauber and 0.20 for KLN \cite{}.
+  The vertical grey lines indicate the canonical values 0.08 for Glauber and 0.20 for KLN \cite{Shen:2011zc,Heinz:2011kt}.
 }
+
+\begin{table*}
+  \caption{
+    \label{tab:posterior}
+    Quantitative summary of posterior distributions.
+    For each parameter, the prior estimate \cite{Shen:2011zc,Heinz:2011kt,Shen:2013pc}, mean, median, and confidence intervals are given.
+  }
+  \input{tables/posterior}
+\end{table*}
 
 Meanwhile, the shear stress relaxation time coefficient $k_\pi$ (fifth diagonal) has an almost flat distribution and its joint distributions show no correlations.
 Evidently, this parameter does not influence flow coefficients or multiplicity.
@@ -625,15 +633,6 @@ As with Glauber, there is a strong inverse relationship between normalization an
 The KLN parameter $\lambda$ has a flat marginal distribution, but there are strongly excluded regions in the joint distributions with normalization and $\tau_0$.
 This appears to be the same effect as observed with Glauber $\alpha$, except the dependence on $\lambda$ is significantly weaker.
 
-\begin{table*}
-  \caption{
-    \label{tab:posterior}
-    Quantitative summary of posterior distributions.
-    For each parameter, the initially guessed value \todo{[cite somehow]}, mean, median, and confidence intervals are given.
-  }
-  \input{tables/posterior}
-\end{table*}
-
 The posteriors may be validated by drawing samples from the calibrated distributions and visualizing the corresponding emulator predictions:
 if the model is properly calibrated, the posterior samples will be close to experimental measurements.
 Figure~\ref{fig:post_draws} confirms---for the most part---that the posteriors are indeed tightly clustered around the data points.
@@ -643,21 +642,20 @@ As shown in the top row of FIG.~\ref{fig:post_draws}, the Glauber model nearly f
 The $v_3$ samples have a somewhat larger variance than the others, in part due to the underlying noise in the model calculations and also because $v_3$ is explicitly given a lower weight (recall that $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 2 3$ are weighted 1.2~:~1.0~:~0.6).
 
 The KLN results in the bottom row tell a somewhat different story, as they cannot fit all observables simultaneously.
-While the fit to $\avg\nch$ is excellent, the ratio of $v_2$ to $v_3$ is simply too large and the model has no choice but to compromise between the two, which is consistent with previous KLN results \cite{}.
+While the fit to $\avg\nch$ is excellent, the ratio of $v_2$ to $v_3$ is simply too large and the model has no choice but to compromise between the two, which is consistent with previous KLN results \cite{Qiu:2011hf}.
 The posterior biases more towards $v_2$ than $v_3$ due to the explicit higher weight on $v_2$.
 This compromise between $v_2$ and $v_3$ causes the plateau-like distribution for $\eta/s$: rather than a strong peak, there is a range of values which all fit the data roughly equally.
 
-Table~\ref{tab:posterior} quantitatively summarizes the posterior distributions including basic statistics, confidence intervals, and comparisons to initial guesses for each parameter.
-These guesses arise from previous work using the same models \todo{(vague)} \cite{Shen:2011zc,Heinz:2011kt}.
-All the initial guesses fall within 95\% confidence intervals, and most are within 68\%.
+Table~\ref{tab:posterior} quantitatively summarizes the posterior distributions including basic statistics, confidence intervals, and comparisons to prior estimates for each parameter.
+All the prior estimates---from earlier work with the same models \cite{Shen:2011zc,Heinz:2011kt,Shen:2013pc}---fall within 95\% confidence intervals, and most are within 68\%.
 
 
 
 \section{Conclusion}
 
-We apply modern Bayesian methodology to systematically compare an event-by-event heavy-ion collision model to experimental data.
-We choose a set of salient model parameters including the shear viscosity $\eta/s$, evaluate the model over wide ranges of each parameter, and interpolate the results with a Gaussian process emulator.
-Then, we use the emulator to calibrate the model to optimally reproduce experimental data and thereby extract probability distributions for the true values of all model parameters simultaneously, including all correlations.
+We have applied modern Bayesian methodology to systematically compare an event-by-event heavy-ion collision model to experimental data.
+We chose a set of salient model parameters including the shear viscosity $\eta/s$, evaluated the model over wide ranges of each parameter, and interpolated the results with a Gaussian process emulator.
+Then, we used the emulator to calibrate the model to optimally reproduce experimental data and thereby extracted probability distributions for the true values of all model parameters simultaneously, including all correlations.
 
 When properly calibrated, the Monte Carlo Glauber model provides a good simultaneous fit to experimental multiplicity and flow data, while the Monte Carlo KLN model fails to simultaneously fit elliptic and triangular flow.
 The $\eta/s$ distributions for the Glauber and KLN models are consistent with the commonly quoted values 0.08 and 0.20, respectively, and in general the calibrated distributions reinforce and expand upon the field's existing knowledge of these models.
@@ -677,9 +675,10 @@ Finally, we anticipate upgrades to the methodology itself, notably more rigorous
 \section*{Acknowledgments}
 
 We would like to thank Scott Pratt and Paul Sorensen for helpful discussions and valuable feedback.
-This work would not have been possible without the foundations laid by the MADAI collaboration, funded through NSF grant no.~PHY-0941373, and the Statistical and Applied Mathematical Sciences Institute (SAMSI) program on massive datasets, funded through NSF grant no.~\todo{number}.
-SAB is supported by the U.S.\ Department of Energy Grant no.~DE-FG02-05ER41367; JEB acknowledges support through grants NSF no.~PHY-0941373 and DOE no.~DE-FG02-05ER41367.
-\todo{More\ldots}
+This work would not have been possible without the foundations laid by the MADAI collaboration, funded through NSF grant no.~PHY-0941373, and the Statistical and Applied Mathematical Sciences Institute (SAMSI) program on massive datasets, funded through NSF grant no.~DMS-1127914.
+SAB is supported by the U.S.\ Department of Energy Grant no.~DE-FG02-05ER41367;
+JEB by grants NSF no.~PHY-0941373 and DOE no.~DE-FG02-05ER41367;
+RLW by grants NSF no.~DMS-1228317 and NASA AISR no.~NNX09AK60G.
 This research was completed using over five million CPU hours provided by the Open Science Grid \cite{Pordes:2007zzb,Sfiligoi:2010zz}, which is supported by the National Science Foundation and the U.S.\ Department of Energy's Office of Science.
 Several software packages were invaluable:
 the Python MCMC toolkit \texttt{emcee} \cite{FM:2013mc} and Gaussian process library \texttt{george} \cite{Ambikasaran:2014gp}, and the general-purpose tool \texttt{GNU Parallel} \cite{Tange:2011pa}.
@@ -688,7 +687,7 @@ the Python MCMC toolkit \texttt{emcee} \cite{FM:2013mc} and Gaussian process lib
 
 \appendix
 
-\section{\label{app:train}Emulator training}
+\section{\label{app:train}Training the emulator}
 
 \newcommand{\vectheta}{\boldsymbol\theta}
 
@@ -754,7 +753,7 @@ But ideally, one would consider \emph{all} predictions consistent with the data-
 This significantly increases computational cost, since the GPs must be re-conditioned for every set of hyperparameters, and conditioning requires computation of the inverse covariance matrix, an $\mathcal O(n^3)$ operation.
 We forgo this refinement until a future study.
 
-\begin{table}
+\begin{table}[b]
   \caption{
     \label{tab:hyperpars}
     Maximum-likelihood estimates of the covariance function hyperparameters.
