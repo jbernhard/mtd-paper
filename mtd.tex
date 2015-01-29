@@ -76,30 +76,25 @@
 
 \section{Introduction}
 
-Relativistic heavy-ion collisions produce a hot, dense phase of strongly-interacting matter commonly known as the quark-gluon plasma (QGP) which rapidly expands and freezes into discrete particles \cite{Arsene:2004fa,Adcox:2004mh,Back:2004je,Adams:2005dq,Gyulassy:2004zy,Muller:2006ee,Muller:2012zq}.
+Relativistic heavy-ion collisions produce a hot, dense phase of strongly-interacting matter commonly known as the quark-gluon plasma (QGP) which rapidly expands and freezes into hadrons \cite{Arsene:2004fa,Adcox:2004mh,Back:2004je,Adams:2005dq,Gyulassy:2004zy,Muller:2006ee,Muller:2012zq}.
 Since the QGP is not directly observable---only final-state hadrons are detected---present research seeks to quantify the fundamental properties of the QGP, such as its transport coefficients and the nature of the initial state, through comparisons of experimental measurements to computational model calculations.
 
 Computational models must take a set of input parameters including the physical properties of interest, simulate the full time-evolution of heavy-ion collisions, and produce output analogous to experimental measurements.
 The true values of the physical properties are extracted by calibrating the input parameters so that the model output optimally reproduces experimental data.
 This generic recipe is called ``model-to-data comparison''.
 
-Notably, previous studies have used viscous relativistic fluid dynamics to place constraints on the QGP shear viscosity to entropy density ratio $\eta/s$ by comparing anisotropic flow coefficients $v_n$ between model and experiment.
-$\eta/s$ cannot be calculated directly from QCD, and while there is a conjectured lower bound $\eta/s~\geq~1/4\pi~\simeq~0.08$ from AdS/CFT holography \cite{Kovtun:2004de}, model-to-data comparison is the most attractive option for determining the precise value.
-These studies generally proceed by calculating fluid dynamical $v_n$ at several values of $\eta/s$, then choosing the value which most closely matches experimental $v_n$.
-A variety of complementary results have constrained $\eta/s$ to an approximate range of 0.08--0.20 \cite{Luzum:2008cw,Song:2010mg,Schenke:2010rr}.
+Notably, the QGP shear viscosity to entropy density ratio $\eta/s$ has been constrained by comparing anisotropic flow coefficients $v_n$ between model and experiment.
+Explicit calculation of $\eta/s$ directly from QCD is not yet feasible, and while there is a conjectured lower bound $\eta/s~\geq~1/4\pi~\simeq~0.08$ from AdS/CFT holography \cite{Kovtun:2004de}, model-to-data comparison is the most attractive option for determining the precise value and medium dependencies.
+To this end, previous studies used viscous relativistic fluid dynamics and hybrid transport models to compute $v_n$ at several values of $\eta/s$, then chose the value which most closely matched experimental $v_n$.
+A variety of complementary calculations have constrained $\eta/s$ to the approximate range 0.08--0.20 \cite{Luzum:2008cw,Song:2010mg,Schenke:2010rr}.
 
 However, $\eta/s$ is not the only model input parameter:
-many other parameters remain unconstrained, e.g.~the hydrodynamic thermalization time $\tau_0$, equation of state, and initial conditions; and models often have non-physical nuisance parameters that nonetheless should be tuned to optimal values.
-$v_n$ is not the only output:
-basic observables like the charged-particle multiplicity and transverse-momentum distributions must also be simulated accurately.
-Input parameters are in general correlated among each other and each affects multiple outputs, so they cannot be constrained independently.
-Due to these practical limitations, most studies to date have focused on a single input parameter, fixed secondary parameters to default values, and calibrated to a minimal set of observables.
-This leads to nebulous results with poorly-defined constraints, non-quantitative uncertainties, and no treatment of correlations.
+many other parameters remain poorly determined, e.g.~the hydrodynamic thermalization time $\tau_0$ and initial conditions; and models often have non-physical nuisance parameters that nonetheless should be tuned to optimal values.
+The flow coefficients $v_n$ are only a small subset of all QGP observables:
+models must also describe basic quantities like charged-particle multiplicity and transverse-momentum distributions.
 
-\todo{
-  Cite \cite{Luzum:2012wu} and \cite{Soltz:2012rk}.
-  They do more systematic studies but do not use an emulator.
-}
+Recent work \cite{Soltz:2012rk} moved toward a more global analysis of multiple model parameters and observables, but encountered practical limitations attempting to tune several free parameters in high-dimensional space.
+In general, input parameters correlate among each other and each affects multiple observables, so they cannot be constrained independently.
 
 Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex multivariate input-output parameter space, but MCMC requires a very large number of model evaluations: $\mathcal O(10^6)$ or more.
 Heavy-ion collision models may run for several hours, so a direct MCMC approach is intractable.
@@ -123,20 +118,22 @@ The analysis framework handles arbitrary numbers of inputs and outputs, systemat
 
 \section{Model}
 
-Prototypical heavy-ion collision models simulate QGP spacetime evolution in several stages:
-an initial condition model handles the very early pre-QGP stage, viscous relativistic hydrodynamics simulates the hot and dense QGP expansion, the system is converted into an ensemble of hadrons, and finally a Boltzmann transport model calculates hadronic scatterings and decays \cite{Bass:2000ib,Nonaka:2006yn,Song:2010mg}.
+State-of-the-art heavy-ion collision models simulate QGP spacetime evolution in several stages:
+an initial condition model describes the initial state and non-equilibrium dynamics until QGP formation, viscous relativistic hydrodynamics calculates the dynamical expansion of the hot and dense QGP medium including the phase transition to a hadron gas, then
+a particlization model converts the system into a microscopic ensemble of hadrons, and finally a Boltzmann transport model calculates hadronic rescattering and decays \cite{Bass:2000ib,Teaney:2001av,Hirano:2005xf,Nonaka:2006yn,Petersen:2008dd,Song:2010mg,Schenke:2010rr,Shen:2014vra}.
 
-We opt for a mature, well-tested set of event-by-event models \cite{Shen:2014vra}.
-This way, the outcome of the systematic model-to-data comparison will be directly comparable to known results using the same models.
+In this work, we opt for a mature, well-tested set of event-by-event models \cite{Shen:2014vra} with an established track record of describing diverse RHIC and LHC data \cite{Song:2010mg,Shen:2011zc,Song:2011hk}.
+This choice will permit direct comparison between existing results and the outcome of the following systematic model-to-data comparison.
+We emphasize, however, that the methodology in this paper can easily be applied to any set of models.
 
 \subsection{Initial conditions}
 
-Initial condition models simulate the collision's pre-equilibrium evolution until the hydrodynamic thermalization time at approximately 0.5 fm/c.
-Some models explicitly calculate pre-equilibrium dynamics \cite{}; others skip this time frame and generate initial conditions directly at the thermalization time.
+Initial condition models provide the outcome of the collision's pre-equilibrium evolution at the hydrodynamic thermalization time, approximately 0.5 fm/c.
+Some models explicitly calculate pre-equilibrium dynamics \cite{Schenke:2012wb} starting from the initial state of the collision; others skip this time frame and generate initial conditions directly at the thermalization time \cite{Drescher:2006pi,Miller:2007ri,Moreland:2014oya}.
 
-We select two of the oldest and most widely used models in the latter category:
+We select two of the most widely used models in the latter category:
 the Monte Carlo Glauber \cite{Miller:2007ri} and Monte Carlo KLN \cite{Drescher:2006pi} models.
-Although neither is state-of-the-art, both provide reasonable event-by-event initial conditions with well-understood behavior.
+Although more sophisticated models were recently introduced \cite{Schenke:2012wb,Moreland:2014oya}, both Glauber and KLN provide reasonable event-by-event initial conditions with well-understood behavior and a broad basis of published results.
 
 \subsection{Hydrodynamics}
 
@@ -154,41 +151,43 @@ An equation of state
 \begin{equation}
   P = P(\epsilon)
 \end{equation}
-closes the system of hydrodynamic equations and is usually provided by lattice QCD calculations.
+closes the system of hydrodynamic equations and is usually provided by a parameterization of lattice QCD calculations.
 
-We employ VISH2+1 \cite{Song:2007ux}, a stable, extensively tested implementation of boost-invariant viscous hydrodynamics \cite{Bjorken:1982qr}.
-VISH2+1 uses the popular s95-PCE equation of state \cite{Huovinen:2009yb}.
+We employ an improved version of VISH2+1 \cite{Song:2007ux}, a stable, extensively tested implementation of boost-invariant viscous hydrodynamics that was recently updated to handle fluctuating event-by-event initial conditions \cite{Shen:2014vra}.
+VISH2+1 uses the popular s95 partial chemical equilibrium equation of state \cite{Huovinen:2009yb}.
 
-\subsection{Freeze-out}
+\subsection{Particlization}
 
-As the medium expands and cools, it freezes into discrete hadrons with spectra given by the Cooper-Frye formula \cite{Cooper:1974mv}
+As the hydrodynamic medium expands and cools, it undergoes a transition from a deconfined QGP to a hot and dense hadronic system.
+At this point it's advantageous to switch to a microscopic transport model, for such models naturally account for the system's increasing viscosity, non-equilibrium break-up, and eventual freeze-out.
+Thus, a particlization model converts the fluid into a microscopic ensemble of hadrons once the fluid cools to a pre-specified temperature, typically just below the QCD transition temperature $T_c \sim 165$ MeV.
+The model generates particles by sampling the Cooper-Frye formula \cite{Cooper:1974mv}
 \begin{equation}
   E \frac{dN_i}{d^3p} = \int_\sigma f_i(x,p) \, p^\mu \, d^3\sigma_\mu,
-  \label{eq:cf}
 \end{equation}
-where $f_i$ is the distribution function for particle species $i$, $p^\mu$ is the four-momentum, and the integral is taken over an isothermal spacetime hypersurface $\sigma$ at the equation of state transition temperature $T \simeq 165$ MeV.
-Equation~\eqref{eq:cf} is randomly sampled as a probability density function to produce an ensemble of particles.
+where $f_i$ is the distribution function for particle species $i$, $p^\mu$ is the four-momentum, and the integral is taken over the isothermal spacetime hypersurface $\sigma$ defined by the transition temperature.
 
-We use a recent hypersurface sampler designed specifically for an event-by-event context \cite{Qiu:2013wca,Shen:2014vra}.
+We use a hypersurface sampler designed specifically for event-by-event hydro+micro calculations \cite{Qiu:2013wca,Shen:2014vra}.
 
-\subsection{Afterburner}
+\subsection{Hadronic phase}
 
-After freeze-out, the medium continues to expand as a hadron gas while particles scatter and decay.
-This stage is modeled by a hadronic ``afterburner'', which solves the Boltzmann equation
+After particlization, the medium continues to expand as an interacting hadron gas (e.g.\ scatterings and decays).
+A hadronic ``afterburner'' calculates these interactions through the Boltzmann equation
 \begin{equation}
   \frac{df_i(x,p)}{dt} = \mathcal C_i(x,p),
 \end{equation}
-where $f_i$ is the distribution function for particle species $i$ and $\mathcal C_i$ is the collision kernel which describes source terms.
+where $f_i$ is the distribution function and $\mathcal C_i$ is the collision kernel which contains all possible hadronic interactions for particle species $i$.
 Particles emerging from the afterburner are analogous to particles streaming into an experimental detector.
 
-We adopt the stalwart Ultra-relativistic Quantum Molecular Dynamics (UrQMD) model \cite{Bass:1998ca,Bleicher:1999xi} as an afterburner.
+We adopt Ultra-relativistic Quantum Molecular Dynamics (UrQMD) \cite{Bass:1998ca,Bleicher:1999xi} as an afterburner.
 
 \subsection{Postprocessing}
 
-The full event-by-model is executed $\mathcal O(10^4)$ times for a given set of input parameters.
+The full event-by-event model is executed $\mathcal O(10^4)$ times for each set of input parameters, yielding $\mathcal O(10^7)$ events in total.
 Events are binned into centrality intervals and the raw event data are postprocessed into physical observables for direct comparison with experiment.
-We calculate the centrality dependence of several standard standard observables:
+In this analysis we calculate the centrality dependence of several standard standard observables:
 the average charged-particle multiplicity $\avg\nch$ and multi-particle flow cumulants $\vnk n {2k}$.
+Note that the method trivially extends to arbitrary numbers and types of observables---all that's required is a model calculation and a corresponding experimental measurement.
 
 Flow cumulants $\vnk n {2k}$ are defined as the $2k$-particle correlation function of the $n$th-order azimuthal anisotropy.
 For example, the two-particle cumulant is
@@ -338,11 +337,10 @@ where
   \item Norm is the overall normalization factor, a multiplicative constant that determines how much entropy is deposited in the initial condition.
   \item I.C.\ param is a parameter specific to each initial condition model.
     For the Glauber model the parameter is $\alpha$, which controls how entropy is distributed to wounded nucleons and binary collisions;
-    for the KLN model it is $\lambda$, the exponent for the saturation scale.
+    for the KLN model it is $\lambda$, a dimensionless exponent in the saturation scale parameterization.
     Both parameters are related to the centrality dependence of multiplicity.
-    \todo{Explain more or introduce earlier?}
-  \item $\tau_0$ is the hydrodynamic thermalization time.
-  \item $\eta/s$ is the shear viscosity to entropy density ratio.
+  \item $\tau_0$ is the QGP thermalization time and the starting time for hydrodynamic evolution.
+  \item $\eta/s$ is the shear viscosity to entropy density ratio of the QGP.
   \item $\tau_\Pi$ is the shear stress relaxation time, which dictates how quickly the hydro medium relaxes to the Navier-Stokes limit.
     \todo{Verify this.}
 \end{itemize}
