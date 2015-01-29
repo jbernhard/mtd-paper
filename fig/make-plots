@@ -74,7 +74,7 @@ ic_data = collections.OrderedDict((
         display_name='Glauber',
         cmap=plt.cm.Blues,
         labels=('Normalization', r'$\alpha$',
-                r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
+                r'$\tau_0$', r'$\eta/s$', r'$k_\pi$'),
         initial_params=(56.8, 0.118, 0.6, 0.08, 0.5),
         param_ranges=((20., 60.), (.05, .3), (.2, 1.), (0., .3), (.2, 1.08))
     )),
@@ -82,7 +82,7 @@ ic_data = collections.OrderedDict((
         display_name='KLN',
         cmap=plt.cm.Greens,
         labels=('Normalization', r'$\lambda$',
-                r'$\tau_0$', r'$\eta/s$', r'$\tau_\Pi$'),
+                r'$\tau_0$', r'$\eta/s$', r'$k_\pi$'),
         initial_params=(9.92, 0.138, 0.6, 0.20, 0.5),
         param_ranges=((5., 15.), (.1, .3), (.2, 1.), (0., .3), (.2, 1.08))
     ))

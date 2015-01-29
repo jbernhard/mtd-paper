@@ -330,7 +330,7 @@ These points must be chosen with care.
 
 For the present study, we choose a set of $n = 5$ input parameters
 \begin{equation}
-  \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, \tau_\Pi)
+  \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, \tau_\pi)
 \end{equation}
 where
 \begin{itemize}
@@ -341,8 +341,8 @@ where
     Both parameters are related to the centrality dependence of multiplicity.
   \item $\tau_0$ is the QGP thermalization time and the starting time for hydrodynamic evolution.
   \item $\eta/s$ is the shear viscosity to entropy density ratio of the QGP.
-  \item $\tau_\Pi$ is the shear stress relaxation time, which dictates how quickly the hydro medium relaxes to the Navier-Stokes limit.
-    \todo{Verify this.}
+  \item $\tau_\pi$ is the shear stress relaxation time, which dictates how quickly the hydro medium relaxes to the Navier-Stokes limit.
+    The relaxation time is a function of the shear viscosity and temperature so we cannot tune it explicitly; instead we define the coefficient $k_\pi$ in the relation $\tau_\pi = 6k_\pi\eta/(sT)$.
 \end{itemize}
 We choose intentionally large ranges for each parameter, summarized in table~\ref{tab:design}.
 
@@ -359,12 +359,12 @@ Unfortunately, this leads to a total number of design points $m = k^n$ which eve
   \begin{tabular}{lll}
     \bf Parameter & \bf Description & \bf Range \\
     Glb Norm & Overall normalization & 20--60 \\
-    Glb $\alpha$ & Wounded nucleon / binary collision & 0.05--0.30 \\
+    Glb $\alpha$ & Wounded nucleon / binary coll. & 0.05--0.30 \\
     KLN Norm & Overall normalization & 5--15 \\
     KLN $\lambda$ & Saturation scale exponent & 0.1--0.3 \\
     $\tau_0$ & Thermalization time & 0.2--1.0 fm \\
     $\eta/s$ & Specific shear viscosity & 0--0.3 \\
-    $\tau_\Pi$ & Shear stress relaxation time & 0.2--1.1 fm \\
+    $k_\pi$ & Shear relaxation time coeff. & 0.2--1.1 \\
   \end{tabular}
   \end{ruledtabular}
 \end{table}
@@ -515,7 +515,7 @@ With the validated Gaussian process emulator in hand, it may be used as a fast s
 \emph{Calibration} means tuning the model input parameters so that the output optimally agrees with experimental data and in the process extracting probability distributions for each parameter.
 Recall the input parameters are
 \begin{equation*}
-  \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, \tau_\Pi).
+  \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, \tau_\pi).
 \end{equation*}
 Presumably there exists a \emph{true} set of parameters $\xs$; the task now is to find the probability distribution of $\xs$ given the training data $(X, Y)$ and experimental measurements $\yexp$.
 This distribution may be framed in terms of Bayes' theorem as
@@ -610,7 +610,7 @@ It is mainly related to the slope of multiplicity vs.\ centrality and hence has 
   The vertical grey lines indicate the canonical values 0.08 for Glauber and 0.20 for KLN \cite{}.
 }
 
-Meanwhile, the shear stress relaxation time $\tau_\Pi$ (fifth diagonal) has an almost flat distribution and its joint distributions show no correlations.
+Meanwhile, the shear stress relaxation time coefficient $k_\pi$ (fifth diagonal) has an almost flat distribution and its joint distributions show no correlations.
 Evidently, this parameter does not influence flow coefficients or multiplicity.
 
 Moving to the KLN results in FIG.~\ref{fig:cal_post_kln}, we generally observe wider, less normal distributions than for Glauber.
@@ -621,7 +621,7 @@ Figure~\ref{fig:post_compare} shows an expanded view and compares with Glauber;
 while the Glauber distribution is approximately normal and almost entirely below $\eta/s \sim 0.1$, the KLN distribution has a wider plateau-like shape completely above 0.1.
 The origin of this shape will be discussed shortly.
 
-As with Glauber, there is a strong inverse relationship between normalization and $\tau_0$, and $\tau_\Pi$ has no effect.
+As with Glauber, there is a strong inverse relationship between normalization and $\tau_0$, and $k_\Pi$ has no effect.
 The KLN parameter $\lambda$ has a flat marginal distribution, but there are strongly excluded regions in the joint distributions with normalization and $\tau_0$.
 This appears to be the same effect as observed with Glauber $\alpha$, except the dependence on $\lambda$ is significantly weaker.
 
