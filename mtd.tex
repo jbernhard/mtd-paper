@@ -35,6 +35,7 @@
 \newcommand{\vnk}[2]{v_#1\{#2\}}
 \newcommand{\tran}{^\intercal}
 \newcommand{\trento}{T\raisebox{-.5ex}{R}ENTo}
+\newcommand{\order}[1]{$\mathcal O(10^{#1})$}
 
 
 \begin{document}
@@ -65,7 +66,7 @@
 \begin{abstract}
   We systematically compare an event-by-event heavy-ion collision model to data from the Large Hadron Collider.
   Using a general Bayesian method, we probe multiple model parameters including fundamental QGP properties such as the specific shear viscosity $\eta/s$, calibrate the model to optimally reproduce experimental data, and extract quantitative constraints for all parameters simultaneously.
-  The method is universal and easily extensible to future studies.
+  The method is universal and easily extensible to other data and collision models.
 \end{abstract}
 
 \maketitle
@@ -83,7 +84,7 @@ This generic recipe is called ``model-to-data comparison''.
 Notably, the QGP shear viscosity to entropy density ratio $\eta/s$ has been constrained by comparing anisotropic flow coefficients $v_n$ between model and experiment.
 Explicit calculation of $\eta/s$ directly from QCD is not yet feasible, and while there is a conjectured lower bound $\eta/s~\geq~1/4\pi~\simeq~0.08$ from AdS/CFT holography \cite{Kovtun:2004de}, model-to-data comparison is the most attractive option for determining the precise value and medium dependencies.
 To this end, previous studies used viscous relativistic fluid dynamics and hybrid transport models to compute $v_n$ at several values of $\eta/s$, then chose the value which most closely matched experimental $v_n$.
-A variety of complementary calculations have constrained $\eta/s$ to the approximate range 0.08--0.20 \cite{Luzum:2008cw,Song:2010mg,Schenke:2010rr,Luzum:2012wu}.
+A variety of complementary calculations have constrained $\eta/s$ to an approximate range of 0.08--0.20 \cite{Luzum:2008cw,Song:2010mg,Schenke:2010rr,Luzum:2012wu}.
 
 However, $\eta/s$ is not the only model input parameter:
 many other parameters remain poorly determined, e.g.~the hydrodynamic thermalization time $\tau_0$ and initial conditions; and models often have non-physical nuisance parameters that nonetheless should be tuned to optimal values.
@@ -93,12 +94,12 @@ models must also describe basic quantities like charged-particle multiplicity an
 Recent work \cite{Soltz:2012rk} moved toward a more global analysis of multiple model parameters and observables, but encountered practical limitations attempting to simultaneously tune these free parameters.
 In general, input parameters correlate among each other and each affects multiple observables, so they cannot be constrained independently.
 
-Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex high-dimensional parameter space, but MCMC requires a very large number of model evaluations: $\mathcal O(10^6)$ or more.
+Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex high-dimensional parameter space, but MCMC requires a very large number of model evaluations: \order 6 or more.
 Heavy-ion collision models may run for several hours, so a direct MCMC approach is intractable.
 The situation is exacerbated with a full event-by-event model, since many thousands of events must be calculated \emph{at each point in parameter space} to capture event-by-event fluctuations.
 
 These limitations may be overcome through a modern Bayesian method for analyzing computationally expensive models \cite{OHagan:2006ba,Higdon:2008cmc,Higdon:2014tva}.
-A set of salient model parameters is chosen for calibration---the set should include any fundamental physical properties of interest---and the model is evaluated at a relatively small $\mathcal O(10^2)$ number of points in parameter space.
+A set of salient model parameters is chosen for calibration---the set should include any fundamental physical properties of interest---and the model is evaluated at a relatively small \order 2 number of points.
 Those points are then interpolated with a Gaussian process emulator \cite{Rasmussen:2006gp} to provide a continuous picture of parameter space.
 The emulator acts as a fast surrogate to the full model:
 it predicts model output at arbitrary points in parameter space with negligible computational cost.
@@ -109,7 +110,7 @@ Reference \cite{Novak:2013bqa} calibrated a hydrodynamic model to identified par
 However, this study used an event-averaged initial condition model, limiting its ability to investigate event-by-event fluctuations.
 
 In this work, we apply Bayesian methodology to a full event-by-event heavy-ion collision model.
-We calibrate to anisotropic flow data from the Large Hadron Collider (LHC) and constrain the shear viscosity $\eta/s$ along with other hydrodynamic and initial condition parameters.
+We calibrate to multiplicity and flow data from the Large Hadron Collider (LHC) and constrain the shear viscosity $\eta/s$ along with other hydrodynamic and initial condition parameters.
 The analysis framework handles arbitrary numbers of inputs and outputs, systematically calculates quantitative constraints on all inputs simultaneously, and quickly evaluates the efficacy of physical models.
 
 
@@ -180,7 +181,7 @@ We adopt Ultra-relativistic Quantum Molecular Dynamics (UrQMD) \cite{Bass:1998ca
 
 \subsection{Postprocessing}
 
-The full event-by-event model is executed $\mathcal O(10^4)$ times for each set of input parameters, yielding $\mathcal O(10^7)$ events in total.
+The full event-by-event model is executed \order 4 times for each set of input parameters, yielding \order 7 events in total.
 Events are binned into centrality intervals and the raw event data are postprocessed into physical observables for direct comparison with experiment.
 In this analysis we calculate the centrality dependence of several standard observables:
 the average charged-particle multiplicity $\avg\nch$ and multi-particle flow cumulants $\vnk n {2k}$.
@@ -323,7 +324,7 @@ where
   \item $\tau_0$ is the QGP thermalization time and the starting time for hydrodynamic evolution.
   \item $\eta/s$ is the shear viscosity to entropy density ratio of the QGP.
   \item $\tau_\pi$ is the shear stress relaxation time, which dictates how quickly the hydro medium relaxes to the Navier-Stokes limit.
-    The relaxation time is a function of the shear viscosity and temperature so we cannot tune it explicitly; instead we define the coefficient $k_\pi$ in the relation $\tau_\pi = 6k_\pi\eta/(sT)$.
+    Since the relaxation time is a function of the shear viscosity and temperature and thus cannot be tuned explicitly, we use the coefficient $k_\pi$ in the relation $\tau_\pi = 6k_\pi\eta/(sT)$ as a tunable parameter.
 \end{itemize}
 We set intentionally large ranges for each parameter, summarized in table~\ref{tab:design}.
 In this work, we fix auxiliary parameters such as the nucleon size and the hydro to micro switching temperature to reasonable defaults; however, the method can handle arbitrary numbers of parameters provided the sample size is sufficiently large.
@@ -377,7 +378,7 @@ A LH design with relatively few points $m \sim 20n$ provides an efficient scaffo
 }
 
 We use a 256 point LH design across the $n = 5$ input parameters; FIG.~\ref{fig:design} shows a two-dimensional projection.
-At each design point, we have executed the event-by-event model $\mathcal O(10^3)$ times in each of six centrality bins 0--5\%, 10--15\%, \ldots, 50-55\%, for both the Glauber and KLN models, yielding $\mathcal O(10^7)$ events in total.
+At each design point, we have executed the event-by-event model \order 3 times in each of six centrality bins 0--5\%, 10--15\%, \ldots, 50-55\%, for both the Glauber and KLN models, yielding \order 7 events in total.
 Two design points that were very near to the edge of the design space gave non-physical results and have been discarded, so the operational design has $m = 254$ points.
 
 Figure~\ref{fig:prior_draws} shows the postprocessed observables $\avg\nch$, $\vnk 2 2$, $\vnk 3 2$ as a function of centrality for each point in the design.
@@ -441,7 +442,7 @@ For the present event-by-event model we perform the following steps:
 \end{enumerate}
 These steps are inverted to transform PCs back to physical space.
 
-\colfig[t]{pc_scatter}{
+\colfig[b]{pc_scatter}{
   Principal component decomposition of the observables $\sqrt{\avg\nch}$, $\vnk 2 2$ for the Glauber model in 20--25\% centrality.
   Each data point represents a model calculation and the edge histograms show the approximate normal distribution of each observable.
   Arrows represent the PC vectors with lengths proportional to the explained variance.
@@ -513,7 +514,7 @@ With the validated Gaussian process emulator in hand, it may be used as a fast s
 \emph{Calibration} means tuning the model input parameters so that the output optimally agrees with experimental data and in the process extracting probability distributions for each parameter.
 Recall the input parameters are
 \begin{equation*}
-  \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, \tau_\pi).
+  \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, k_\pi).
 \end{equation*}
 Presumably there exists a \emph{true} set of parameters $\xs$; the task now is to find the probability distribution of $\xs$ given the training data $(X, Y)$ and experimental measurements $\yexp$.
 This distribution may be framed in terms of Bayes' theorem as
@@ -559,7 +560,7 @@ We evaluate the likelihood in principal component space:
   \label{eq:likelihood}
 \end{equation}
 where $\zexp$ is the PC transform of the experimental data, $\zs$ is the emulator prediction of the PCs at $\xs$, and $\Sigma_z$ is the covariance (uncertainty) matrix on the PCs assuming normally-distributed errors.
-Given the flat prior, the posterior is equal to the likelihood within the design range and zero outside.
+Given the flat prior, the posterior $P(\xs|\zexp)$ is equal to the likelihood within the design range and zero outside.
 
 There are a number of sources of uncertainty including experimental statistical and systematic error, model statistical and systematic error, and emulator uncertainty.
 In the present study, we do not attempt to precisely account for each contribution, for this would inevitably require dubious assumptions about systematic error correlations and the unknown error of the model.
@@ -573,13 +574,10 @@ The primary goal of this study is to develop and test a model-to-data comparison
 
 \widefig{post_draws}{
   Random realizations of the calibrated posterior for Glauber (top, blue) and KLN (bottom, green) initial conditions.
-  Similar to FIG.~\ref{fig:prior_draws},
-  except the lines are posterior emulator predictions instead of explicit prior calculations.
+  Similar to FIG.~\ref{fig:prior_draws} except the lines are posterior emulator predictions instead of explicit prior calculations.
 }
 
-Given the flat prior on $\xs$, the posterior probability is equal to the likelihood \eqref{eq:likelihood} within the design range and zero outside.
-The MCMC algorithm draws samples directly from this distribution.
-We first run approximately $10^6$ MCMC steps to allow the chain to equilibrate---these ``burn-in'' samples are discarded---followed by approximately $10^7$ steps to generate the posterior distribution.
+We run \order 6 MCMC steps to allow the chain to equilibrate, discard these ``burn-in'' samples, then run \order 7 steps to generate the posterior distribution.
 
 \subsection{Results}
 
@@ -666,7 +664,7 @@ This study represents a significant step forward in state-of-the-art model-to-da
 Since the method does not reduce each parameter to a ``best-fit'' value but instead furnishes full probability distributions, it may be used to rigorously quantify uncertainties, examine correlations among parameters, and evaluate the efficacy of physical models, among other possibilities.
 It is easily extensible to arbitrary numbers of parameters and physical observables and to different models.
 
-Indeed, we plan to apply the methodology to a variety of other models, including the new initial condition model \trento---a flexible effective model which is ideal for this type of analysis \cite{Moreland:2014oya}---and a 3+1D viscous hydrodynamics model with finite baryon chemical potential in combination with recent data from the RHIC beam energy scan.
+Indeed, we plan to apply the methodology to a variety of other models, including the new initial condition model \trento---a flexible effective model which is ideal for this type of analysis \cite{Moreland:2014oya}---and a 3+1D viscous hydrodynamics model with finite baryon chemical potential combined with recent data from the RHIC beam energy scan.
 By considering data from multiple beam energies, we can probe the temperature dependence of $\eta/s$.
 
 We will include additional physical properties such as the size and shape of nucleons in the initial state, the hydrodynamic equation of state, and the switching temperature from hydrodynamics to microscopic transport; and compare to more observables, e.g.\ identified particle spectra and differential flow.
@@ -676,13 +674,13 @@ Finally, we anticipate upgrades to the methodology itself, notably more rigorous
 
 \section*{Acknowledgments}
 
-We would like to thank Scott Pratt and Paul Sorensen for helpful discussions and valuable feedback.
+We would like to thank Scott Pratt, Ulrich Heinz, Chun Shen, and Paul Sorensen for helpful discussions and valuable feedback.
 This work would not have been possible without the foundations laid by the MADAI collaboration, funded through NSF grant no.~PHY-0941373, and the Statistical and Applied Mathematical Sciences Institute (SAMSI) program on massive datasets, funded through NSF grant no.~DMS-1127914.
 SAB is supported by the U.S.\ Department of Energy Grant no.~DE-FG02-05ER41367;
 JEB by grants NSF no.~PHY-0941373 and DOE no.~DE-FG02-05ER41367;
 RLW by grants NSF no.~DMS-1228317 and NASA AISR no.~NNX09AK60G.
 This research was completed using over five million CPU hours provided by the Open Science Grid \cite{Pordes:2007zzb,Sfiligoi:2010zz}, which is supported by the National Science Foundation and the U.S.\ Department of Energy's Office of Science.
-All code used in this research is publicly available \cite{Bernhard:2015mtd}.
+All code used in this project is publicly available \cite{Bernhard:2015mtd}.
 Several third-party software packages were invaluable:
 the Python MCMC toolkit \texttt{emcee} \cite{FM:2013mc} and Gaussian process library \texttt{george} \cite{Ambikasaran:2014gp}, and the general-purpose tool \texttt{GNU Parallel} \cite{Tange:2011pa}.
 
@@ -738,7 +736,7 @@ Now, the trained GP smoothly interpolates the curvature of the training data whi
   The data points are identical in each plot and were generated from a Gaussian process with hyperparameters annotated at the bottom.
 }
 
-In the present study, we use the covariance function given in Eq.~\eqref{eq:full_cov} and restated here:
+For the present study we use the covariance function given in Eq.~\eqref{eq:full_cov} and restated here:
 \begin{equation*}
   \sigma(\x, \x') = \sigma_\text{GP}^2 \exp\Biggl[ -\sum_{k=1}^n \frac{(x_k - x'_k)^2}{2\ell_k^2} \Biggr] + \sigma_n^2\delta_{\x\x'}.
 \end{equation*}
@@ -755,7 +753,7 @@ But ideally, one would consider \emph{all} predictions consistent with the data-
 This significantly increases computational cost, since the GPs must be re-conditioned for every set of hyperparameters, and conditioning requires computation of the inverse covariance matrix, an $\mathcal O(n^3)$ operation.
 We forgo this refinement until a future study.
 
-\begin{table}[b]
+\begin{table}[t]
   \caption{
     \label{tab:hyperpars}
     Maximum-likelihood estimates of the covariance function hyperparameters.
