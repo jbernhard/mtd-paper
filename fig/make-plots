@@ -75,7 +75,7 @@ ic_data = collections.OrderedDict((
         cmap=plt.cm.Blues,
         labels=('Normalization', r'$\alpha$',
                 r'$\tau_0$', r'$\eta/s$', r'$k_\pi$'),
-        initial_params=(56.8, 0.118, 0.6, 0.08, 0.5),
+        initial_params=(57, 0.12, 0.6, 0.08, 0.5),
         param_ranges=((20., 60.), (.05, .3), (.2, 1.), (0., .3), (.2, 1.08))
     )),
     ('kln', Results(
@@ -83,7 +83,7 @@ ic_data = collections.OrderedDict((
         cmap=plt.cm.Greens,
         labels=('Normalization', r'$\lambda$',
                 r'$\tau_0$', r'$\eta/s$', r'$k_\pi$'),
-        initial_params=(9.92, 0.138, 0.6, 0.20, 0.5),
+        initial_params=(9.9, 0.14, 0.6, 0.20, 0.5),
         param_ranges=((5., 15.), (.1, .3), (.2, 1.), (0., .3), (.2, 1.08))
     ))
 ))
@@ -228,12 +228,12 @@ def cal_post(ic, data):
         )
 
         ax = axes[ny][nx]
-        H, xedges, yedges = hist(bins=60)
+        H, xedges, yedges = hist(bins=100)
         H[H == 0] = None
         ax.pcolorfast(xedges, yedges, H.T, cmap=cmap)
 
         ax = axes[nx][ny]
-        H, xedges, yedges = hist(bins=25)
+        H, xedges, yedges = hist(bins=30)
         xmids = .5*(xedges[1:] + xedges[:-1])
         ymids = .5*(yedges[1:] + yedges[:-1])
         Hsorted = np.sort(H, axis=None)
@@ -364,6 +364,7 @@ def validation(ic='glb'):
 
     ncent = len(actual['cent'])
     colors = plt.cm.Set2(np.linspace(0, (ncent-1)/8, ncent))
+    symbols = 'o', '^', 's'
 
     fig, axes = plt.subplots(ncols=3,
                              figsize=(textwidth, .55*aspect*textwidth))
@@ -375,9 +376,10 @@ def validation(ic='glb'):
         mean, std = (predicted[obs][i].T[::2] for i in ('mean', 'std'))
         act = actual[obs].T
 
-        for c, m, e, a, color in zip(actual['cent'], mean, std, act, colors):
+        for c, m, e, a, fmt, color in zip(
+                actual['cent'], mean, std, act, symbols, colors):
             ax.errorbar(
-                m, a, xerr=2*e, fmt='o', ms=2.5, lw=.6, capsize=0,
+                m, a, xerr=2*e, fmt=fmt, ms=2.5, lw=.6, capsize=0,
                 color=color, alpha=.7,
                 label='–'.join(str(int(c+d)) for d in (-2.5, 2.5)) + '%',
                 zorder=(100.-int(c))
@@ -417,6 +419,7 @@ def gp():
     )
     gp.compute(x)
     y = gp.sample()
+    y -= .5*(y.max() + y.min())
 
     mean_kw = dict(color='.42', dashes=(3.5, 1.5))
     err_kw = dict(color='.93')
@@ -664,7 +667,7 @@ def tables():
         write(r'\begin{tabular}{lllllccc}')
         write(r'  & Parameter & Prior estimate & Mean & Median & '
               r'68\% C.I. & 95\% C.I. & 99\% C.I. \\')
-        for data in ic_data.values():
+        for ic, data in ic_data.items():
             write(r'  \hline')
             write(r'  \multirow{' + str(len(data.labels)) +
                   r'}{*}{\rotatebox{90}{' + data.display_name + r'\ \ }}')
@@ -673,9 +676,11 @@ def tables():
                 if label == 'Normalization':
                     label = 'Norm.'
                 strings = [label, str(guess)]
+                if ic == 'kln' and label == r'$\eta/s$':
+                    strings[-1] += '0'
 
-                for n in np.mean(samples), np.median(samples):
-                    strings += [fmt_str.format(n)]
+                strings += [fmt_str.format(q(samples))
+                            for q in (np.mean, np.median)]
 
                 for p in 68, 95, 99:
                     strings += ['--'.join((
