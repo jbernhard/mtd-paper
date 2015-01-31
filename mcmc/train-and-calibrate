@@ -160,7 +160,7 @@ def main():
                                        for n in range(npc)])
 
     mgp.calibrate(data.cal_data, yerr=.06,
-                  nwalkers=500, nsteps=20000, nburnsteps=2000,
+                  nwalkers=500, nsteps=30000, nburnsteps=3000,
                   verbose=True)
     results['cal_chain'] = mgp.cal_flatchain
     results['cal_samples'] = data.unpack(mgp.cal_samples)
