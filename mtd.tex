@@ -1,7 +1,11 @@
 \documentclass[aps,prc,reprint,superscriptaddress,amsmath]{revtex4-1}
 
 \usepackage{amssymb}
-\usepackage[bookmarksopen=true]{hyperref}
+\usepackage{hyperref}
+\hypersetup{
+  bookmarksopen=true,
+  pdftitle={Quantifying properties of hot and dense QCD matter through systematic model-to-data comparison}
+}
 \usepackage{graphicx}
 \graphicspath{{fig/}}
 \usepackage{multirow}
@@ -41,7 +45,7 @@
 \begin{document}
 
 
-\title{Quantifying properties of hot and dense QCD matter through systematic model-to-data comparison}
+\title{Quantifying properties of hot and dense QCD matter \\ through systematic model-to-data comparison}
 
 \author{Jonah E.\ Bernhard}
 \affiliation{Department of Physics, Duke University, Durham, NC 27708}
@@ -100,7 +104,7 @@ The situation is exacerbated with a full event-by-event model, since many thousa
 
 These limitations may be overcome through a modern Bayesian method for analyzing computationally expensive models \cite{OHagan:2006ba,Higdon:2008cmc,Higdon:2014tva}.
 A set of salient model parameters is chosen for calibration---the set should include any fundamental physical properties of interest---and the model is evaluated at a relatively small \order 2 number of points.
-Those points are then interpolated with a Gaussian process emulator \cite{Rasmussen:2006gp} to provide a continuous picture of parameter space.
+Those points are then interpolated with a Gaussian process emulator \cite{Rasmussen:2006gp} to provide a continuous picture of the parameter space.
 The emulator acts as a fast surrogate to the full model:
 it predicts model output at arbitrary points in parameter space with negligible computational cost.
 Parameters are calibrated by sampling the emulator with standard MCMC techniques.
@@ -197,7 +201,7 @@ The two-particle cumulant is also approximately equal to the root-mean-square of
 \begin{equation}
   \vnk n 2 \simeq \sqrt{\avg{v_n^2}}.
 \end{equation}
-We compute two-particle cumulants for elliptic and triangular flow $\vnk 2 2$, $\vnk 3 2$ with the direct $Q$-cumulant method \cite{Bilandzic:2010jr}.
+We compute two-particle cumulants for elliptic and triangular flow $\vnk 2 2$, $\vnk 3 2$ using the direct $Q$-cumulant method \cite{Bilandzic:2010jr}.
 Higher-order cumulants are currently out of reach due to insufficient quantities of events.
 
 Postprocessed observables are compared to corresponding experimental results recently measured by the ALICE experiment at the LHC \cite{Abelev:2014mda}.
@@ -358,18 +362,18 @@ Unfortunately, this leads to a total number of design points $m = k^n$ which eve
   The edge histograms show the distributions flattened into one dimension; note that they are space-filling and approximately uniform.
 }
 
-A popular algorithm for generating efficient design points is maximin Latin hypercube (LH) sampling \cite{Morris:1995lh}.
+A popular algorithm for generating efficient design points is maximin Latin hypercube sampling \cite{Morris:1995lh}.
 This method produces space-filling randomized designs with several desirable properties:
 \begin{itemize}
   \item The \emph{minimum} distance between points is \emph{maximized}, thus avoiding large gaps and tight clusters.
   \item Projections of the design into lower dimensions are uniformly distributed.
 \end{itemize}
 Figure~\ref{fig:design} illustrates these traits.
-A LH design with relatively few points $m \sim 20n$ provides an efficient scaffolding of parameter space for interpolation by a GP emulator.
+A Latin hypercube design with relatively few points $m \sim 20n$ provides an efficient scaffolding of parameter space for interpolation by a GP emulator.
 
 \widefig{prior_draws}{
   Model calculations from Glauber (top, blue) and KLN (bottom, green) initial conditions.
-  Each plot has 254 lines corresponding to the 254 Latin-hypercube design points.
+  Each plot has 254 lines corresponding to the 254 Latin hypercube design points.
   From left to right:
   average charged-particle multiplicity $\avg\nch$,
   elliptic flow two-particle cumulant $\vnk 2 2$,
@@ -377,7 +381,7 @@ A LH design with relatively few points $m \sim 20n$ provides an efficient scaffo
   Data points are experimental measurements from ALICE \cite{Abelev:2014mda}.
 }
 
-We use a 256 point LH design across the $n = 5$ input parameters; FIG.~\ref{fig:design} shows a two-dimensional projection.
+We use a 256 point Latin hypercube design across the $n = 5$ input parameters; FIG.~\ref{fig:design} shows a two-dimensional projection.
 At each design point, we have executed the event-by-event model \order 3 times in each of six centrality bins 0--5\%, 10--15\%, \ldots, 50-55\%, for both the Glauber and KLN models, yielding \order 7 events in total.
 Two design points that were very near to the edge of the design space gave non-physical results and have been discarded, so the operational design has $m = 254$ points.
 
@@ -396,6 +400,7 @@ The present event-by-event model has $p = 18$ outputs (three observables each in
 An obvious workaround is to use independent GP emulators for each of the $p$ outputs, however, this would neglect correlations and quickly become unwieldy for higher-dimensional output.
 Instead, we decompose the outputs into orthogonal linear combinations called principal components (PCs) and emulate each transformed PC.
 The PCs are uncorrelated by construction and can also be used to reduce the dimensionality of the output space.
+Figure~\ref{fig:pc_scatter} shows an example PC decomposition.
 
 To calculate the PCs, we first subtract the mean of the output data $Y$ so that each column has mean zero, then compute the eigendecomposition of the sample covariance matrix $Y\tran Y$:
 \begin{equation}
@@ -408,7 +413,7 @@ $U$ now defines a linear transformation which ``rotates'' the output data $Y$ in
   Z = \sqrt m \, YU,
 \end{equation}
 where $Z$ is an $m \times p$ matrix (same shape as $Y$) of the transformed PCs.
-The eigenvalues $\lambda_i$ represent the variance accounted for by principal component $i$; since they are sorted in non-increasing order, the \emph{fraction} of the variance accounted for by the first $q \leq p$ PCs is
+The eigenvalues $\lambda_i$ represent the variance explained by principal component $i$; since they are sorted in non-increasing order, the \emph{fraction} of the variance explained by the first $q \leq p$ PCs is
 \begin{equation}
   V(q) = \frac{\sum_{i=1}^q \lambda_i}{\sum_{i=1}^p \lambda_i}.
 \end{equation}
@@ -431,16 +436,16 @@ There is no guarantee that a particular model will produce normally-distributed 
 For the present event-by-event model we perform the following steps:
 \begin{enumerate}
   \item Assess the normality of each observable $\avg\nch$, $\vnk 2 2$, $\vnk 3 2$.
-    While the flow cumulants are approximately normal without modification, we take the square root of multiplicity $\sqrt{\avg\nch}$ to obtain a normal distribution.
+    While the flow cumulants are approximately normal without modification, we take the square root of multiplicity $\sqrt{\avg\nch}$ to obtain a normal distribution, as shown in FIG.~\ref{fig:pc_scatter}.
   \item Divide each observable by its corresponding experimental value from ALICE \cite{Abelev:2014mda}.
     This converts everything to unitless quantities of order one.
   \item Multiply each observable by a manually specified weight factor, ratios 1.2~:~1.0~:~0.6 for observables $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 3 2$.
     These subjective weights reflect the relative ease of calculating each quantity from the event-by-event model, e.g.\ $\avg\nch$ has minimal statistical noise while $\vnk 3 2$ has nontrivial noise.
     Ultimately, the weights encourage the model to fit more strongly to more important observables.
   \item Concatenate the unitless, weighted data into a $254 \times 18$ matrix $Y$, where each row corresponds to a design point and each column to an observable and centrality bin.
-  \item Subtract the mean of each column and transform $Y$ into principal components $Z_q$ with $q = 5$ PCs, accounting for over 99\% of the variance as shown in FIG.~\ref{fig:pc_var}.
+  \item Subtract the mean of each column and transform $Y$ into principal components $Z_q$ with $q = 5$ PCs, retaining over 99\% of the variance as shown in FIG.~\ref{fig:pc_var}.
 \end{enumerate}
-These steps are inverted to transform PCs back to physical space.
+We invert these steps to transform PCs back to physical space.
 
 \colfig[b]{pc_scatter}{
   Principal component decomposition of the observables $\sqrt{\avg\nch}$, $\vnk 2 2$ for the Glauber model in 20--25\% centrality.
@@ -463,7 +468,7 @@ hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ a
 
 \colfig[t]{pc_var}{
   Fraction of the variance $V(q)$ explained by the first $q$ principal components for Glauber (blue circles) and KLN (green triangles).
-  $q = 5$ accounts for approximately 99\% of the total variance, a significant reduction from the original 18 dimensions.
+  $q = 5$ explains approximately 99\% of the total variance, a significant reduction from the original 18 dimensions.
 }
 
 \subsection{Constructing and validating the emulator}
@@ -494,7 +499,7 @@ For details about the selection of hyperparameters see appendix \ref{app:train}.
 
 As with any interpolation scheme, the GP emulator must be validated to ensure it faithfully predicts model output.
 In other words, given an arbitrary test point $\x_*$, the GP prediction at $\x_*$ should agree (within its uncertainty) with an explicit computation at $\x_*$.
-To this end, we have generated a separate 64-point LH validation design $X_*$, evaluated the full event-by-event model at each validation point just as for the training design $X$, and predicted the model outputs at $X_*$ using the GP emulator.
+To this end, we have generated a separate 64-point Latin hypercube validation design $X_*$, evaluated the full event-by-event model at each validation point just as for the training design $X$, and predicted the model outputs at $X_*$ using the GP emulator.
 
 Figure~\ref{fig:validation} validates that the emulator does indeed faithfully predict the model.
 Recall that the emulator provides probability distributions of finite width, so it need not predict every validation point exactly---in fact, in the ideal case the residuals would have a normal distribution with mean zero.
@@ -705,7 +710,7 @@ Most models have statistical noise which one accounts for by adding a diagonal n
 where $\sigma_n^2$ is the variance of the noise and $\delta_{\x\x'}$ is a Kronecker delta.
 
 Covariance functions often have free parameters known as \emph{hyperparameters}, e.g.\ the squared-exponential correlation length $\ell$,
-which are not known a priori and must be estimated from training data.
+which are not known a priori and must be estimated from model data.
 The selection of hyperparameters is known as \emph{training} and may be accomplished by maximizing the likelihood function \cite{Rasmussen:2006gp}
 \begin{equation}
   \log P(\y|X,\vectheta) = -\frac{1}{2} \y\tran \Sigma_y^{-1} \y - \frac{1}{2} \log |\Sigma_y| - \frac{m}{2} \log 2\pi,
