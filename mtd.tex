@@ -9,6 +9,7 @@
 \usepackage{graphicx}
 \graphicspath{{fig/}}
 \usepackage{multirow}
+\usepackage{color}
 
 \newcommand{\colfig}[3][t]{
   \begin{figure}[#1]
@@ -78,25 +79,30 @@
 
 \section{Introduction}
 
-Relativistic heavy-ion collisions produce a hot, dense phase of strongly-interacting matter commonly known as the quark-gluon plasma (QGP) which rapidly expands and freezes into hadrons \cite{Arsene:2004fa,Adcox:2004mh,Back:2004je,Adams:2005dq,Gyulassy:2004zy,Muller:2006ee,Muller:2012zq}.
+Relativistic heavy-ion collisions produce a hot, dense phase of strongly-interacting matter commonly known as the quark-gluon plasma (QGP), which rapidly expands and freezes into hadrons \cite{Arsene:2004fa,Adcox:2004mh,Back:2004je,Adams:2005dq,Gyulassy:2004zy,Muller:2006ee,Muller:2012zq}.
 Since the QGP is not directly observable---only final-state hadrons are detected---present research seeks to quantify the fundamental properties of the QGP, such as its transport coefficients and the nature of the initial state, through comparisons of experimental measurements to computational model calculations.
 
-Computational models must take a set of input parameters including the physical properties of interest, simulate the full time-evolution of heavy-ion collisions, and produce output analogous to experimental measurements.
+Computational models must take a set of input parameters including the physical properties of interest, simulate the full time-evolution of heavy-ion collisions, and produce outputs analogous to experimental measurements.
 The true values of the physical properties are extracted by calibrating the input parameters so that the model output optimally reproduces experimental data.
 This generic recipe is called ``model-to-data comparison''.
 
 Notably, the QGP shear viscosity to entropy density ratio $\eta/s$ has been constrained by comparing anisotropic flow coefficients $v_n$ between model and experiment.
-Explicit calculation of $\eta/s$ directly from QCD is not yet feasible, and while there is a conjectured lower bound $\eta/s~\geq~1/4\pi~\simeq~0.08$ from AdS/CFT holography \cite{Kovtun:2004de}, model-to-data comparison is the most attractive option for determining the precise value and medium dependencies.
+Explicit calculation of $\eta/s$ directly from QCD is not yet feasible, and while there is a conjectured lower bound $\eta/s~\geq~1/4\pi~\simeq~0.08$ from AdS/CFT holography \cite{Kovtun:2004de}, model-to-data comparison is the most attractive option for determining the optimal input parameter value and corresponding uncertainty.
 To this end, previous studies used viscous relativistic fluid dynamics and hybrid transport models to compute $v_n$ at several values of $\eta/s$, then chose the value which most closely matched experimental $v_n$.
 A variety of complementary calculations have constrained $\eta/s$ to an approximate range of 0.08--0.20 \cite{Luzum:2008cw,Song:2010mg,Schenke:2010rr,Luzum:2012wu}.
 
 However, $\eta/s$ is not the only model input parameter:
 many other parameters remain poorly determined, e.g.~the hydrodynamic thermalization time $\tau_0$ and initial conditions; and models often have non-physical nuisance parameters that nonetheless should be tuned to optimal values.
 The flow coefficients $v_n$ are only a small subset of all QGP observables:
-models must also describe basic quantities like charged-particle multiplicity and transverse-momentum distributions.
+models must also describe basic quantities such as the charged-particle multiplicity and transverse-momentum distributions.
+
+\textcolor{red}{
+Define event-by-event model.
+Necessary to describe $v_3$ \cite{Petersen:2010cw}.
+}
 
 Recent work \cite{Soltz:2012rk} moved toward a more global analysis of multiple model parameters and observables, but encountered practical limitations attempting to simultaneously tune these free parameters.
-In general, input parameters correlate among each other and each affects multiple observables, so they cannot be constrained independently.
+In general, input parameters correlate among each other and contribute to multiple observables, so they cannot be constrained independently.
 
 Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex high-dimensional parameter space, but MCMC requires a very large number of model evaluations: \order 6 or more.
 Heavy-ion collision models may run for several hours, so a direct MCMC approach is intractable.
@@ -120,13 +126,16 @@ The analysis framework handles arbitrary numbers of inputs and outputs, systemat
 
 \section{Model}
 
-State-of-the-art heavy-ion collision models simulate QGP spacetime evolution in several stages:
-an initial condition model describes the initial state and non-equilibrium dynamics until QGP formation, viscous relativistic hydrodynamics calculates the dynamical expansion of the hot and dense QGP medium including the phase transition to a hadron gas, then
-a particlization model converts the system into a microscopic ensemble of hadrons, and finally a Boltzmann transport model calculates hadronic rescattering and decays \cite{Bass:2000ib,Teaney:2001av,Hirano:2005xf,Nonaka:2006yn,Petersen:2008dd,Song:2010mg,Schenke:2010rr,Shen:2014vra}.
-
+State-of-the-art heavy-ion collision models simulate QGP spacetime evolution in several stages \cite{Bass:2000ib,Teaney:2001av,Hirano:2005xf,Nonaka:2006yn,Petersen:2008dd,Song:2010mg,Schenke:2010rr,Shen:2014vra}:
+\begin{enumerate}
+  \item an initial condition model describes the initial state and non-equilibrium dynamics until QGP formation,
+  \item viscous relativistic hydrodynamics calculates the dynamical expansion of the hot and dense QGP medium including the phase transition to a hadron gas,
+  \item then a particlization model converts the system into a microscopic ensemble of hadrons,
+  \item and finally a Boltzmann transport model calculates hadronic rescattering and decays.
+\end{enumerate}
 In this work, we opt for a mature, well-tested set of event-by-event models \cite{Shen:2014vra} with an established track record of describing diverse RHIC and LHC data \cite{Song:2010mg,Shen:2011zc,Song:2011hk}.
 This choice will permit direct comparison between existing results and the outcome of the following systematic model-to-data comparison.
-We emphasize, however, that the methodology in this paper can easily be applied to any set of models.
+We emphasize, however, that the methodology in this paper can easily be applied to any set of models and corresponding data.
 
 \subsection{Initial conditions}
 
@@ -197,14 +206,14 @@ For example, the two-particle cumulant is
   \vnk n 2^2 \equiv \bigl\langle e^{in(\phi_i - \phi_j)} \bigr\rangle,
 \end{equation}
 where $\phi_i$ is the azimuthal angle of the transverse momentum of particle $i$ and the average is over all distinct pairs of particles $i,j$.
-The two-particle cumulant is also approximately equal to the root-mean-square of the full $v_n$ distribution:
+The two-particle cumulant is also approximately equal to the root-mean-square of the full $v_n$ distribution \cite{Borghini:2000sa}:
 \begin{equation}
   \vnk n 2 \simeq \sqrt{\avg{v_n^2}}.
 \end{equation}
 We compute two-particle cumulants for elliptic and triangular flow $\vnk 2 2$, $\vnk 3 2$ using the direct $Q$-cumulant method \cite{Bilandzic:2010jr}.
 Higher-order cumulants are currently out of reach due to insufficient quantities of events.
 
-Postprocessed observables are compared to corresponding experimental results recently measured by the ALICE experiment at the LHC \cite{Abelev:2014mda}.
+Postprocessed observables are compared to corresponding experimental results recently measured by the ALICE experiment at the LHC for Pb-Pb collisions at $\sqrt{s_\text{NN}} = 2.76$ TeV \cite{Abelev:2014mda}.
 All observables are subjected to the same kinematic cuts as the ALICE detector, namely charged particles with $|\eta| < 1$ and $0.2 < p_T < 3.0$ GeV.
 
 
@@ -280,7 +289,7 @@ This implies that the GP is smooth, i.e.\ nearby input points produce similar ou
 
 Just as we can sample random numbers from a distribution, we can draw random functions from a GP.
 We choose a set of test points $X_*$ (the reason for the subscript $*$ will become clear in a moment), calculate the covariance matrix $\Sigma = \sigma(X_*, X_*)$, and generate multivariate normal samples from $\N(\zero, \Sigma)$.
-We can then plot the input-output points as smooth curves, as in the top panel of FIG.~\ref{fig:gp}.
+We can then plot the input-output points as smooth curves, as in the top panel of Fig.~\ref{fig:gp}.
 
 \colfig{gp}{
   Top: random functions drawn from a Gaussian process using a squared-exponential covariance function with length scale $\ell = 1$.
@@ -302,10 +311,10 @@ Recalling the test points $X_*$, the predictive distribution for the correspondi
   \end{aligned}
   \label{eq:cond}
 \end{equation}
-See the bottom panel of FIG.~\ref{fig:gp} for an example of conditioning a GP on one-dimensional training data.
+See the bottom panel of Fig.~\ref{fig:gp} for an example of conditioning a GP on one-dimensional training data.
 
 We emphasize that the prediction $\y_*$ is not constant, but a \emph{probability distribution} for the model outputs at $X_*$.
-As demonstrated in FIG.~\ref{fig:gp}, the predictive distribution is narrow when near the training points and wide when far away, hence, it reflects the true state of knowledge of the interpolation.
+As demonstrated in Fig.~\ref{fig:gp}, the predictive distribution is narrow when near the training points and wide when far away, hence, it reflects the true state of knowledge of the interpolation.
 This is accomplished without assuming a parametric form for the model---we must only assume that the model is a GP with a specified covariance function.
 
 
@@ -326,7 +335,7 @@ where
     for the KLN model it is $\lambda$, a dimensionless exponent in the saturation scale parameterization.
     Both are related to the centrality dependence of multiplicity.
   \item $\tau_0$ is the QGP thermalization time and the starting time for hydrodynamic evolution.
-  \item $\eta/s$ is the shear viscosity to entropy density ratio of the QGP.
+  \item $\eta/s$ is the shear viscosity to entropy density ratio of the QGP, assumed to be fixed throughout the hydrodynamic evolution stage.
   \item $\tau_\pi$ is the shear stress relaxation time, which dictates how quickly the hydro medium relaxes to the Navier-Stokes limit.
     Since the relaxation time is a function of the shear viscosity and temperature and thus cannot be tuned explicitly, we use the coefficient $k_\pi$ in the relation $\tau_\pi = 6k_\pi\eta/(sT)$ as a tunable parameter.
 \end{itemize}
@@ -370,6 +379,7 @@ This method produces space-filling randomized designs with several desirable pro
 \end{itemize}
 Figure~\ref{fig:design} illustrates these traits.
 A Latin hypercube design with relatively few points $m \sim 20n$ provides an efficient scaffolding of parameter space for interpolation by a GP emulator.
+\textcolor{red}{explain number of points \cite{Loeppky:2009ss}}
 
 \widefig{prior_draws}{
   Model calculations from Glauber (top, blue) and KLN (bottom, green) initial conditions.
@@ -381,7 +391,7 @@ A Latin hypercube design with relatively few points $m \sim 20n$ provides an eff
   Data points are experimental measurements from ALICE \cite{Abelev:2014mda}.
 }
 
-We use a 256 point Latin hypercube design across the $n = 5$ input parameters; FIG.~\ref{fig:design} shows a two-dimensional projection.
+We use a 256 point Latin hypercube design across the $n = 5$ input parameters; Fig.~\ref{fig:design} shows a two-dimensional projection.
 At each design point, we have executed the event-by-event model \order 3 times in each of six centrality bins 0--5\%, 10--15\%, \ldots, 50-55\%, for both the Glauber and KLN models, yielding \order 7 events in total.
 Two design points that were very near to the edge of the design space gave non-physical results and have been discarded, so the operational design has $m = 254$ points.
 
@@ -417,7 +427,7 @@ The eigenvalues $\lambda_i$ represent the variance explained by principal compon
 \begin{equation}
   V(q) = \frac{\sum_{i=1}^q \lambda_i}{\sum_{i=1}^p \lambda_i}.
 \end{equation}
-Often, the first few PCs describe most of the variance, as demonstrated for the present data in FIG.~\ref{fig:pc_var}.
+Often, the first few PCs describe most of the variance, as demonstrated for the present data in Fig.~\ref{fig:pc_var}.
 Hence we can construct a reduced-dimension transformation with minimal loss of precision by choosing $q < p$ so that $V(q)$ satisfies some threshold (e.g.~$V(q) \geq 0.99$) and taking only the first $q$ columns of $U$:
 \begin{equation}
   Z_q = \sqrt m \, YU_q,
@@ -436,14 +446,14 @@ There is no guarantee that a particular model will produce normally-distributed 
 For the present event-by-event model we perform the following steps:
 \begin{enumerate}
   \item Assess the normality of each observable $\avg\nch$, $\vnk 2 2$, $\vnk 3 2$.
-    While the flow cumulants are approximately normal without modification, we take the square root of multiplicity $\sqrt{\avg\nch}$ to obtain a normal distribution, as shown in FIG.~\ref{fig:pc_scatter}.
+    While the flow cumulants are approximately normal without modification, we take the square root of multiplicity $\sqrt{\avg\nch}$ to obtain a normal distribution, as shown in Fig.~\ref{fig:pc_scatter}.
   \item Divide each observable by its corresponding experimental value from ALICE \cite{Abelev:2014mda}.
     This converts everything to unitless quantities of order one.
   \item Multiply each observable by a manually specified weight factor, ratios 1.2~:~1.0~:~0.6 for observables $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 3 2$.
     These subjective weights reflect the relative ease of calculating each quantity from the event-by-event model, e.g.\ $\avg\nch$ has minimal statistical noise while $\vnk 3 2$ has nontrivial noise.
     Ultimately, the weights encourage the model to fit more strongly to more important observables.
   \item Concatenate the unitless, weighted data into a $254 \times 18$ matrix $Y$, where each row corresponds to a design point and each column to an observable and centrality bin.
-  \item Subtract the mean of each column and transform $Y$ into principal components $Z_q$ with $q = 5$ PCs, retaining over 99\% of the variance as shown in FIG.~\ref{fig:pc_var}.
+  \item Subtract the mean of each column and transform $Y$ into principal components $Z_q$ with $q = 5$ PCs, retaining over 99\% of the variance as shown in Fig.~\ref{fig:pc_var}.
 \end{enumerate}
 We invert these steps to transform PCs back to physical space.
 
@@ -503,7 +513,7 @@ To this end, we have generated a separate 64-point Latin hypercube validation de
 
 Figure~\ref{fig:validation} validates that the emulator does indeed faithfully predict the model.
 Recall that the emulator provides probability distributions of finite width, so it need not predict every validation point exactly---in fact, in the ideal case the residuals would have a normal distribution with mean zero.
-Most of the uncertainty visible in FIG.~\ref{fig:validation} is actually due to the statistical noise in the flow cumulants, especially $\vnk 3 2$.
+Most of the uncertainty visible in Fig.~\ref{fig:validation} is actually due to the statistical noise in the flow cumulants, especially $\vnk 3 2$.
 The emulator accurately accounts for the noise present in the underlying data.
 
 
@@ -543,7 +553,7 @@ The remainder of this section applies the methodology from \cite{OHagan:2006ba,H
 \widefig{cal_post_glb}{
   Posterior marginal and joint distributions of the calibration parameters for the Glauber model.
   On the diagonal are histograms of MCMC samples for the respective parameters,
-  on the lower triangle are two-dimensional histograms of MCMC samples showing the correlation between pairs of parameters,
+  on the lower triangle are two-dimensional scatter histograms of MCMC samples showing the correlation between pairs of parameters,
   and on the upper triangle are approximate contours for 68\%, 95\%, and 99\% confidence regions along with a dot indicating the median.
 }
 
@@ -554,7 +564,7 @@ We use the affine-invariant ensemble sampler for MCMC \cite{Goodman:2010en,FM:20
 Ensemble sampling notably has a much shorter autocorrelation time than Metropolis-Hastings sampling and hence converges more quickly to the equilibrium distribution.
 
 \widefig{cal_post_kln}{
-  Same as FIG.~\ref{fig:cal_post_glb} for the KLN model.
+  Same as Fig.~\ref{fig:cal_post_glb} for the KLN model.
 }
 
 The MCMC algorithm samples proposal points $\xs$ and calculates the posterior probability at each point via Bayes' theorem.
@@ -579,22 +589,22 @@ The primary goal of this study is to develop and test a model-to-data comparison
 
 \widefig{post_draws}{
   Random realizations of the calibrated posterior for Glauber (top, blue) and KLN (bottom, green) initial conditions.
-  Similar to FIG.~\ref{fig:prior_draws} except the lines are posterior emulator predictions instead of explicit prior calculations.
+  Similar to Fig.~\ref{fig:prior_draws} except the lines are posterior emulator predictions instead of explicit prior calculations.
 }
 
 We run \order 6 MCMC steps to allow the chain to equilibrate, discard these ``burn-in'' samples, then run \order 7 steps to generate the posterior distribution.
 
 \subsection{Results}
 
-The primary MCMC calibration results are presented in FIGs.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln} for the Glauber and KLN models, respectively.
+The primary MCMC calibration results are presented in Figs.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln} for the Glauber and KLN models, respectively.
 These are visualizations of the posterior probability distributions of the true parameters $\xs$, including the distribution of each individual parameter and all correlations.
 The diagonal histograms show the marginal distributions for each parameter (all other parameters integrated out);
-the lower-triangle plots are two-dimensional histograms of joint distributions between pairs of parameters, where darker color denotes higher probability density;
+the lower-triangle plots are two-dimensional scatter histograms of joint distributions between pairs of parameters, where darker color denotes higher probability density;
 and the upper triangle has contour plots of the same joint distributions, where the contour lines enclose the 68\%, 95\%, and 99\% confidence regions.
 
 A wealth of information may be gained from these posterior visualizations; the following highlights some important features.
 
-Focusing on the Glauber results in FIG.~\ref{fig:cal_post_glb}, we see the shear viscosity $\eta/s$ (fourth diagonal plot) has a narrow approximately-normal distribution located near the commonly quoted value 0.08.
+Focusing on the Glauber results in Fig.~\ref{fig:cal_post_glb}, we see the shear viscosity $\eta/s$ (fourth diagonal plot) has a narrow approximately-normal distribution located near the commonly quoted value 0.08.
 As expected, $\eta/s$ is tightly constrained by experimental flow data.
 Going across the fourth row, we observe nontrivial correlations among $\eta/s$ and other parameters, for example, $\eta/s$ and the hydrodynamic thermalization time $\tau_0$ are negatively correlated (fourth row, third column).
 As $\tau_0$ increases, the medium expands as a fluid for less time, so less flow develops, and viscosity must decrease to compensate.
@@ -610,7 +620,7 @@ It is mainly related to the slope of multiplicity vs.\ centrality and hence has 
   \caption{
     \label{tab:posterior}
     Quantitative summary of posterior distributions.
-    For each parameter, the prior estimate \cite{Shen:2011zc,Heinz:2011kt,Shen:2013pc}, mean, median, and confidence intervals are given.
+    For each parameter, the previous estimate \cite{Shen:2011zc,Heinz:2011kt,Shen:2013pc}, mean, median, and confidence intervals are given.
   }
   \input{tables/posterior}
 \end{table*}
@@ -618,7 +628,7 @@ It is mainly related to the slope of multiplicity vs.\ centrality and hence has 
 Meanwhile, the shear stress relaxation time coefficient $k_\pi$ (fifth diagonal) has an almost flat distribution and its joint distributions show no correlations.
 Evidently, this parameter does not influence flow coefficients or multiplicity.
 
-Moving to the KLN results in FIG.~\ref{fig:cal_post_kln}, we generally observe wider, less normal distributions than for Glauber.
+The KLN results in Fig.~\ref{fig:cal_post_kln} generally exhibit wider, less normal distributions than Glauber.
 This suggests that KLN is somewhat less flexible than Glauber, so its overall behavior is relatively insensitive to the specific values of input parameters.
 
 The shear viscosity $\eta/s$ has a narrow, irregular distribution covering the common value 0.20.
@@ -627,17 +637,17 @@ The KLN parameter $\lambda$ has a flat marginal distribution, but there are stro
 This appears to be the same effect as observed with Glauber $\alpha$, except the dependence on $\lambda$ is significantly weaker.
 
 The posteriors may be validated by drawing samples from the calibrated distributions and visualizing the corresponding emulator predictions:
-if the model is properly calibrated, the posterior samples will be close to experimental measurements.
+if the model is correct and properly calibrated, the posterior samples will be close to experimental measurements.
 Figure~\ref{fig:post_draws} confirms---for the most part---that the posteriors are indeed tightly clustered around the data points.
-Visualizations such as this will always have some uncertainty since samples are drawn from the full posterior, however, FIG.~\ref{fig:post_draws} has markedly narrower clusters than FIG.~\ref{fig:prior_draws}, in which the input parameters varied across their full ranges and were not tuned to match experiment.
+Visualizations such as this will always have some uncertainty since samples are drawn from the full posterior, however, Fig.~\ref{fig:post_draws} has markedly narrower clusters than Fig.~\ref{fig:prior_draws}, in which the input parameters varied across their full ranges and were not tuned to match experiment.
 
 \colfig[b]{post_compare}{
   Comparison of posterior distributions of $\eta/s$ for Glauber (blue) and KLN (green).
-  These are the same histograms as in FIGS.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln}, expanded and placed on the same axis.
+  These are the same histograms as in Figs.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln}, expanded and placed on the same axis.
   The vertical grey lines indicate the common values 0.08 for Glauber and 0.20 for KLN \cite{Shen:2011zc,Heinz:2011kt}.
 }
 
-As shown in the top row of FIG.~\ref{fig:post_draws}, the Glauber model nearly fits the centrality dependence of all the present observables ($\avg\nch$, $\vnk 2 2$, $\vnk 3 2$).
+As shown in the top row of Fig.~\ref{fig:post_draws}, the Glauber model nearly fits the centrality dependence of all the present observables ($\avg\nch$, $\vnk 2 2$, $\vnk 3 2$).
 The $v_3$ samples have a somewhat larger variance than the others, in part due to the underlying noise in the model calculations and also because $v_3$ is explicitly given a lower weight (recall that $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 2 3$ are weighted 1.2~:~1.0~:~0.6).
 
 The KLN results in the bottom row tell a somewhat different story, as they cannot fit all observables simultaneously.
@@ -648,11 +658,11 @@ Figure~\ref{fig:post_compare} shows an expanded view of the $\eta/s$ marginal di
 The Glauber distribution is approximately normal with mean ${\sim}$0.06 and 95\% confidence interval ${\sim}$0.02--0.10, consistent with but mostly below 0.08.
 This is unsurprising and easily within the uncertainty of existing results.
 KLN has a wider plateau-like distribution with mean ${\sim}$0.16 and 95\% confidence interval ${\sim}$0.12--0.21.
-While the common estimate 0.20 was derived primarily from comparisons to $v_2$, we compromise between $v_2$ and $v_3$ and hence obtain a distribution shifted to somewhat smaller values.
-The compromise also causes the plateau shape: rather than a strong peak, there is a range of values which all fit the data roughly equally.
+While the common estimate 0.20 was derived primarily from comparisons to $v_2$, the additional constraint from $v_3$ shifts the distribution to somewhat smaller values and causes the plateau shape:
+rather than a strong peak, there is a range of values which all fit the data roughly equally.
 
-Table~\ref{tab:posterior} quantitatively summarizes the posterior distributions for each parameter including basic statistics, confidence intervals, and comparisons to prior estimates from earlier work with the same models \cite{Shen:2011zc,Heinz:2011kt,Shen:2013pc}.
-All prior estimates fall within 95\% confidence intervals, and most within 68\%.
+Table~\ref{tab:posterior} quantitatively summarizes the posterior distributions for each parameter including basic statistics, confidence intervals, and comparisons to previous estimates from earlier work with the same models \cite{Shen:2011zc,Heinz:2011kt,Shen:2013pc}.
+All previous estimates fall within 95\% confidence intervals, and most within 68\%.
 
 
 
@@ -721,7 +731,7 @@ Hence, the likelihood is the probability of observing the data given the model.
 The first term in the likelihood is the fit to data, the second term is a complexity penalty, and the third term is a normalization constant.
 
 This is best demonstrated by an example.
-The one-dimensional training data in FIG.~\ref{fig:training} were generated from a Gaussian process with covariance function
+The one-dimensional training data in Fig.~\ref{fig:training} were generated from a Gaussian process with covariance function
 \begin{equation}
   \sigma(x, x') = \exp\biggl( -\frac{|x - x'|^2}{2\ell^2} \biggr) + \sigma_n^2\delta_{xx'}
   \label{eq:1dcov}
