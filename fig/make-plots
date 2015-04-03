@@ -726,6 +726,51 @@ def tables():
         write(r'\end{tabular}')
         write(r'\end{ruledtabular}')
 
+    with open('../tables/principal_components.tex', 'w') as f:
+        write = functools.partial(print, file=f)
+
+        npc = ic_data['glb'].pca.npc
+        cent = ic_data['glb'].cent
+        ncent = cent.size
+
+        write(r'\begin{ruledtabular}')
+        write(r'\begin{tabular}{' + 'll' + 'c'*(2*npc) + '}')
+        write(r'  & & ' +
+              ' & '.join('\multicolumn{' + str(npc) + '}{c}{' +
+                         data.display_name + ' principal components}'
+                         for data in ic_data.values()) +
+              r' \\')
+        write(r'  & & ' +
+              ' & '.join(
+                  ' & '.join(str(i+1) for i in range(npc))
+                  for _ in range(2)) +
+              r' \\')
+
+        for n, obs in enumerate(observables):
+            write(r'  \hline')
+            write(r'  \multirow{' + str(ncent) +
+                  r'}{*}{\rotatebox{90}{' + obs[1] + r'\ \ \ }}')
+
+            for m, c in enumerate(cent):
+                write('  & ' + '--'.join(str(int(c+d)) for d in (-2.5, 2.5)) +
+                      r'\% & ' +
+                      ' & '.join(
+                          ' & '.join('${:#.2g}$'.format(i)
+                                     for i in data.pca.pc[:npc, n*ncent+m])
+                          for data in ic_data.values()
+                      ) +
+                      r' \\')
+
+        write(r'  \hline')
+        write(r'  \multicolumn{2}{c}{Weight} & ' +
+              ' & '.join(
+                  ' & '.join(fmt_str.format(i) for i in data.pca.weights[:npc])
+                  for data in ic_data.values()) +
+              r' \\')
+
+        write(r'\end{tabular}')
+        write(r'\end{ruledtabular}')
+
 plotfns['tables'] = tables
 
 

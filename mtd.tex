@@ -401,7 +401,7 @@ There is some statistical error present in $\vnk 3 2$ due to insufficient quanti
 
 Note that these results constitute the training data for the GP emulator, not any kind of best-fit.
 
-\subsection{Multivariate output}
+\subsection{\label{sec:multiout}Multivariate output}
 
 Gaussian processes are fundamentally scalar functions, but computer models often produce multivariate output.
 In general, the model takes the $m \times n$ design matrix $X$ and computes an $m \times p$ output matrix $Y$.
@@ -431,6 +431,7 @@ Often, the first few PCs describe most of the variance, as demonstrated for the 
 Hence we can construct a reduced-dimension transformation with minimal loss of precision by choosing $q < p$ so that $V(q)$ satisfies some threshold (e.g.~$V(q) \geq 0.99$) and taking only the first $q$ columns of $U$:
 \begin{equation}
   Z_q = \sqrt m \, YU_q,
+  \label{eq:pcreddim}
 \end{equation}
 where $Z_q$ is now an $m \times q$ matrix.
 
@@ -454,6 +455,7 @@ For the present event-by-event model we perform the following steps:
     Ultimately, the weights encourage the model to fit more strongly to more important observables.
   \item Concatenate the unitless, weighted data into a $254 \times 18$ matrix $Y$, where each row corresponds to a design point and each column to an observable and centrality bin.
   \item Subtract the mean of each column and transform $Y$ into principal components $Z_q$ with $q = 5$ PCs, retaining over 99\% of the variance as shown in Fig.~\ref{fig:pc_var}.
+    For the exact principal components see table \ref{tab:pc} at the end of the appendix.
 \end{enumerate}
 We invert these steps to transform PCs back to physical space.
 
@@ -702,6 +704,7 @@ the Python MCMC toolkit \texttt{emcee} \cite{FM:2013mc} and Gaussian process lib
 
 \appendix
 
+
 \section{\label{app:train}Training the emulator}
 
 \newcommand{\vectheta}{\boldsymbol\theta}
@@ -775,6 +778,22 @@ We forgo this refinement until a future study.
   }
   \input{tables/hyperpars}
 \end{table}
+
+
+\begin{table*}
+  \caption{
+    \label{tab:pc}
+    Principal component coefficients.
+    Each row contains the coefficients for the indicated observable;
+    each column contains the coefficients for the indicated PC.
+    The bottom row contains the PC weights (explained fraction of the total variance).
+    A given PC is computed as a linear combination of the observables with coefficients in the corresponding column.
+    Note that the PC transform was computed \emph{after} several preprocessing steps as described in section~\ref{sec:multiout}.
+    The overall sign of each column is unimportant; only the relative sign and magnitude is meaningful.
+    Essentially, the $18 \times 5$ blocks for Glauber and KLN are the matrices $U_q$ in Eq.~\eqref{eq:pcreddim} which transform the preprocessed data $Y$ into PCs $Z_q$.
+  }
+  \input{tables/principal_components}
+\end{table*}
 
 
 
