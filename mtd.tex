@@ -486,7 +486,7 @@ hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ a
 \widefig{validation}{
   Validation of the Gaussian process emulator for the Glauber model.
   Each plot shows emulator predictions against explicit calculations for the 64 validation design points in centrality bins 0--5\% (green circles), 20--25\% (orange triangles), and 40-45\% (purple squares).
-  The $x$-value of each data point is the emulator prediction with 95\% error bars, the $y$-value is the explicit calculation, and the diagonal grey line represents $y = x$.
+  The $x$-value of each data point is the emulator prediction with $2\sigma$ (95\%) horizontal error bars, the $y$-value is the explicit calculation with $2\sigma$ (95\%) vertical error bars, and the diagonal grey line represents $y = x$.
 }
 
 We emulate the model by conditioning independent Gaussian processes on each of the principal components $Z_q$ and the input design $X$ according to Eq.~\eqref{eq:cond}.

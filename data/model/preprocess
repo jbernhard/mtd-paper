@@ -11,17 +11,18 @@ class DataPreprocessor:
     Read model data from text tables and save as binary.
 
     """
-    def __init__(self, ic, exp, outliers=None):
+    def __init__(self, ic, exp, outliers=None, error=False):
         self.ic = ic
         self.exp = exp
         self.outliers = outliers
+        self.error = error
 
     def read_table(self, name, skip_outliers=False):
         """
         Read a tabular data file, optionally skipping outlier rows.
 
         """
-        with open('{}_{}.dat'.format(self.ic, name)) as f:
+        with open('{0}/{0}_{1}.dat'.format(self.ic, name)) as f:
             if self.outliers is not None and skip_outliers:
                 x = [l.split() for n, l in enumerate(f)
                      if n not in self.outliers]
@@ -35,9 +36,12 @@ class DataPreprocessor:
         Save data to a dict of numpy arrays.
 
         """
+        observables = ['mult', 'v2', 'v3']
+        if self.error:
+            observables += [obs + '_err' for obs in observables]
         data = {name: self.read_table('{}_{}'.format(name, self.exp),
                                       skip_outliers=True)
-                for name in ('mult', 'v2', 'v3')}
+                for name in observables}
         data['design'] = self.read_table('design', skip_outliers=True)
         data['cent'] = self.read_table('cent')
         with open('{}.pkl'.format(self.ic), 'wb') as f:
@@ -50,7 +54,7 @@ def main():
 
     DataPreprocessor('glb', exp, outliers=outliers).save()
     DataPreprocessor('kln', exp, outliers=outliers).save()
-    DataPreprocessor('glb-validation', exp).save()
+    DataPreprocessor('glb-validation', exp, error=True).save()
 
 
 if __name__ == "__main__":

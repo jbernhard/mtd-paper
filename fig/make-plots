@@ -360,9 +360,9 @@ def validation(ic='glb'):
     predicted = ic_data[ic].validation
 
     with open('../data/model/{}-validation.pkl'.format(ic), 'rb') as f:
-        actual = pickle.load(f)
+        validation_data = pickle.load(f)
 
-    ncent = len(actual['cent'])
+    ncent = len(validation_data['cent'])
     colors = plt.cm.Set2(np.linspace(0, (ncent-1)/8, ncent))
     symbols = 'o', '^', 's'
 
@@ -373,23 +373,26 @@ def validation(ic='glb'):
     xyticks = np.r_[0:5000:3j], np.r_[0:.12:4j], np.r_[0:.04:3j]
 
     for ax, (obs, label), lim, ticks in zip(axes, observables, xylim, xyticks):
-        mean, std = (predicted[obs][i].T[::2] for i in ('mean', 'std'))
-        act = actual[obs].T
-
-        for c, m, e, a, fmt, color in zip(
-                actual['cent'], mean, std, act, symbols, colors):
+        for cent, pred, pred_err, val, val_err, fmt, color in zip(
+                validation_data['cent'],
+                predicted[obs]['mean'].T[::2],
+                predicted[obs]['std'].T[::2],
+                validation_data[obs].T,
+                validation_data[obs + '_err'].T,
+                symbols,
+                colors):
             ax.errorbar(
-                m, a, xerr=2*e, fmt=fmt, ms=2.5, lw=.6, capsize=0,
-                color=color, alpha=.7,
-                label='–'.join(str(int(c+d)) for d in (-2.5, 2.5)) + '%',
-                zorder=(100.-int(c))
+                pred, val, xerr=2*pred_err, yerr=2*val_err,
+                fmt=fmt, ms=2.5, lw=.6, capsize=0, color=color, alpha=.7,
+                label='–'.join(str(int(cent+d)) for d in (-2.5, 2.5)) + '%',
+                zorder=(-int(cent))
             )
 
         ax.set_aspect('equal')
         ax.set_xlim(0, lim)
         ax.set_ylim(0, lim)
         ax.plot(ax.get_xlim(), ax.get_ylim(),
-                lw=.5, color='.5', alpha=.5, zorder=-10)
+                lw=.5, color='.5', alpha=.6, zorder=1)
 
         ax.set_xticks(ticks)
         ax.set_yticks(ticks[1:])
