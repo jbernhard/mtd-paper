@@ -656,6 +656,45 @@ def pc_var():
     finish()
 
 
+@plotfn
+def pc_matrix():
+    fig, axes = plt.subplots(ncols=2, sharey='row',
+                             figsize=(columnwidth, 1.15*columnwidth))
+
+    for data, ax in zip(ic_data.values(), axes):
+        M = np.copy(data.pca.pc[:data.pca.npc].T[::-1])
+        nfeatures, npc = M.shape
+        for col in M.T:
+            if np.count_nonzero(col <= 0) > col.size/2:
+                col *= -1
+
+        ax.pcolormesh(M, vmin=-1, vmax=1, cmap=plt.cm.coolwarm,
+                      edgecolors='white', linewidths=.8)
+
+        for (y, x), m in np.ndenumerate(M):
+            ax.text(x+.5, y+.5, '{:.2f}'.format(m),
+                    color=offblack, fontsize=textiny,
+                    ha='center', va='center')
+
+        ax.set_xlabel('Principal component')
+        ax.set_xticks(np.arange(npc) + .5)
+        ax.set_xticklabels(np.arange(1, npc+1))
+
+        if ax.is_first_col():
+            ax.set_yticks(np.arange(nfeatures) + .5)
+            ax.set_yticklabels(list(reversed([
+                '{} {:02d}–{:02d}'.format(obs, cent, cent+5)
+                for obs in (r'$N_\mathrm{ch}$', r'$v_2$', r'$v_3$')
+                for cent in range(0, 51, 10)])))
+
+        ax.set_title(data.display_name)
+
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+    finish(w_pad=.35)
+
+
 def tables():
     try:
         os.mkdir('../tables', mode=0o755)
@@ -757,8 +796,7 @@ def tables():
                       ' & '.join(
                           ' & '.join('${:#.2g}$'.format(i)
                                      for i in data.pca.pc[:npc, n*ncent+m])
-                          for data in ic_data.values()
-                      ) +
+                          for data in ic_data.values()) +
                       r' \\')
 
         write(r'  \hline')

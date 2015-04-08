@@ -455,7 +455,7 @@ For the present event-by-event model we perform the following steps:
     Ultimately, the weights encourage the model to fit more strongly to more important observables.
   \item Concatenate the unitless, weighted data into a $254 \times 18$ matrix $Y$, where each row corresponds to a design point and each column to an observable and centrality bin.
   \item Subtract the mean of each column and transform $Y$ into principal components $Z_q$ with $q = 5$ PCs, retaining over 99\% of the variance as shown in Fig.~\ref{fig:pc_var}.
-    For the exact principal components see table \ref{tab:pc} at the end of the appendix.
+    The PC transformation matrices $U_q$, shown in Fig.~\ref{fig:pc_matrix}, reflect the natural correlations among observables, for example all observables are correlated in the first PC (${\sim}$75\% of total variance), while $N_\text{ch}$ is anti-correlated with the $v_n$ in the second PC (${\sim}$20\% of total variance).
 \end{enumerate}
 We invert these steps to transform PCs back to physical space.
 
@@ -481,6 +481,11 @@ hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ a
 \colfig[t]{pc_var}{
   Fraction of the variance $V(q)$ explained by the first $q$ principal components for Glauber (blue circles) and KLN (green triangles).
   $q = 5$ explains approximately 99\% of the total variance, a significant reduction from the original 18 dimensions.
+}
+
+\colfig[b]{pc_matrix}{
+  Visualization of the principal component transformation matrices $U_q$ for Glauber (left) and KLN (right).
+  The numerical values of each matrix element are annotated and color-coded, where darker red indicates more positive values, darker blue indicates more negative, and grey indicates zero.
 }
 
 \subsection{Constructing and validating the emulator}
@@ -779,21 +784,6 @@ We forgo this refinement until a future study.
   \input{tables/hyperpars}
 \end{table}
 
-
-\begin{table*}
-  \caption{
-    \label{tab:pc}
-    Principal component coefficients.
-    Each row contains the coefficients for the indicated observable;
-    each column contains the coefficients for the indicated PC.
-    The bottom row contains the PC weights (explained fraction of the total variance).
-    A given PC is computed as a linear combination of the observables with coefficients in the corresponding column.
-    Note that the PC transform was computed \emph{after} several preprocessing steps as described in section~\ref{sec:multiout}.
-    The overall sign of each column is unimportant; only the relative sign and magnitude is meaningful.
-    Essentially, the $18 \times 5$ blocks for Glauber and KLN are the matrices $U_q$ in Eq.~\eqref{eq:pcreddim} which transform the preprocessed data $Y$ into PCs $Z_q$.
-  }
-  \input{tables/principal_components}
-\end{table*}
 
 
 
