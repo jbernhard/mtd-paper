@@ -96,24 +96,21 @@ many other parameters remain poorly determined, e.g.~the hydrodynamic thermaliza
 The flow coefficients $v_n$ are only a small subset of all QGP observables:
 models must also describe basic quantities such as the charged-particle multiplicity and transverse-momentum distributions.
 
-\textcolor{red}{
-Define event-by-event model.
-Necessary to describe $v_3$ \cite{Petersen:2010cw}.
-}
-
 Recent work \cite{Soltz:2012rk} moved toward a more global analysis of multiple model parameters and observables, but encountered practical limitations attempting to simultaneously tune these free parameters.
 In general, input parameters correlate among each other and contribute to multiple observables, so they cannot be constrained independently.
 
-Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex high-dimensional parameter space, but MCMC requires a very large number of model evaluations: \order 6 or more.
+Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex high-dimensional parameter space, but MCMC often requires thousands or millions of model evaluations to accumulate sufficient statistics.
 Heavy-ion collision models may run for several hours, so a direct MCMC approach is intractable.
-The situation is exacerbated with a full event-by-event model, since many thousands of events must be calculated \emph{at each point in parameter space} to capture event-by-event fluctuations.
+The situation is exacerbated when studying event-by-event fluctuations as opposed to average quantities:
+while event-averaged models save computation time by using a smooth initial condition and single hydrodynamic calculation, event-by-event models have realistic, fluctuated initial conditions, each of which requires its own hydrodynamic treatment.
+Many thousands of complete events are necessary \emph{at each point in parameter space} to capture event-by-event fluctuations.
 
 These limitations may be overcome through a modern Bayesian method for analyzing computationally expensive models \cite{OHagan:2006ba,Higdon:2008cmc,Higdon:2014tva}.
 A set of salient model parameters is chosen for calibration---the set should include any fundamental physical properties of interest---and the model is evaluated at a relatively small \order 2 number of points.
 Those points are then interpolated with a Gaussian process emulator \cite{Rasmussen:2006gp} to provide a continuous picture of the parameter space.
 The emulator acts as a fast surrogate to the full model:
 it predicts model output at arbitrary points in parameter space with negligible computational cost.
-Parameters are calibrated by sampling the emulator with standard MCMC techniques.
+This effectively removes most practical barriers and enables parameter calibration through standard techniques such as MCMC.
 
 Emulators have been successfully used to study a wide range of physical systems, including galaxy formation \cite{Gomez:2012ak} and heavy-ion collisions \cite{Novak:2013bqa,Pratt:2014cza,Pratt:2015zsa}.
 Reference \cite{Novak:2013bqa} calibrated a hydrodynamic model to identified particle spectra from the Relativistic Heavy Ion Collider (RHIC) and extracted constraints on $\eta/s$ and several initial state parameters.
@@ -165,7 +162,7 @@ An equation of state
 closes the system of hydrodynamic equations and is usually provided by a parameterization of lattice QCD calculations.
 
 We employ an improved version of VISH2+1 \cite{Song:2007ux}, a stable, extensively tested implementation of boost-invariant viscous hydrodynamics that was recently updated to handle fluctuating event-by-event initial conditions \cite{Shen:2014vra}.
-VISH2+1 uses the popular s95 partial chemical equilibrium equation of state \cite{Huovinen:2009yb}.
+VISH2+1 uses the prevalent s95 partial chemical equilibrium equation of state \cite{Huovinen:2009yb}.
 
 \subsection{Particlization}
 
@@ -178,7 +175,7 @@ The model generates particles by sampling the Cooper-Frye formula \cite{Cooper:1
 \end{equation}
 where $f_i$ is the distribution function for particle species $i$, $p^\mu$ is the four-momentum, and the integral is taken over the isothermal spacetime hypersurface $\sigma$ defined by the switching temperature.
 
-We use a hypersurface sampler designed specifically for event-by-event hydro+micro calculations \cite{Qiu:2013wca,Shen:2014vra}.
+We use a recent hypersurface sampler designed to couple with VISH2+1 \cite{Qiu:2013wca,Shen:2014vra}.
 
 \subsection{Hadronic phase}
 
@@ -275,7 +272,13 @@ is the $m$-dimensional mean vector from applying the mean function to each input
     \sigma(\x_m, \x_1) & \cdots & \sigma(\x_m, \x_m) \\
   \end{pmatrix}
 \end{equation}
-is the $m \times m$ covariance matrix from applying the covariance function to each pair of inputs..
+is the $m \times m$ covariance matrix from applying the covariance function to each pair of inputs.
+
+\colfig{gp}{
+  Top: random functions drawn from a Gaussian process using a squared-exponential covariance function with length scale $\ell = 1$.
+  Bottom: functions drawn from a GP conditioned on the training points indicated by dots.
+  In both plots, the dashed line represents the GP mean and the grey band is twice the GP standard deviation (roughly 95\% confidence interval).
+}
 
 In practice, the mean function is often set to zero, since the mean of a distribution can always be subtracted off.
 The covariance function must be carefully chosen, for it controls the degree of similarity between pairs of points.
@@ -290,12 +293,6 @@ This implies that the GP is smooth, i.e.\ nearby input points produce similar ou
 Just as we can sample random numbers from a distribution, we can draw random functions from a GP.
 We choose a set of test points $X_*$ (the reason for the subscript $*$ will become clear in a moment), calculate the covariance matrix $\Sigma = \sigma(X_*, X_*)$, and generate multivariate normal samples from $\N(\zero, \Sigma)$.
 We can then plot the input-output points as smooth curves, as in the top panel of Fig.~\ref{fig:gp}.
-
-\colfig{gp}{
-  Top: random functions drawn from a Gaussian process using a squared-exponential covariance function with length scale $\ell = 1$.
-  Bottom: functions drawn from a GP conditioned on the training points indicated by dots.
-  In both plots, the dashed line represents the GP mean and the grey band is twice the GP standard deviation (roughly 95\% confidence interval).
-}
 
 Of course, simply generating random functions is not particularly useful---we want to use a GP to interpolate a computer model.
 Suppose we have a model which takes a vector of input parameters $\x$ and produces an output $y$ according to some unknown GP $f(\x)$; for example, $f$ could be a hydrodynamic model with input parameters $\x = (\tau_0, \eta/s)$ and the output could be elliptic flow $v_2$.
@@ -320,8 +317,8 @@ This is accomplished without assuming a parametric form for the model---we must 
 
 \subsection{Computer experiment design}
 
-The full event-by-event model is to be evaluated on a set of training points $X = \{\x_1, \ldots, \x_m\}$, where each $\x_i$ is an $n$-dimensional vector of input parameters, so $X$ may be viewed as an $m \times n$ design matrix.
-These points must be chosen with care.
+The full event-by-event model is to be evaluated on a set of $m$ training points $X = \{\x_1, \ldots, \x_m\}$, where each $\x_i$ is an $n$-dimensional vector of input parameters, so $X$ may be viewed as an $m \times n$ design matrix.
+This subsection details the choice of input parameters and their distribution in parameter space.
 
 For the present study, we choose a set of $n = 5$ input parameters
 \begin{equation}
@@ -340,7 +337,9 @@ where
     Since the relaxation time is a function of the shear viscosity and temperature and thus cannot be tuned explicitly, we use the coefficient $k_\pi$ in the relation $\tau_\pi = 6k_\pi\eta/(sT)$ as a tunable parameter.
 \end{itemize}
 We set intentionally large ranges for each parameter, summarized in table~\ref{tab:design}.
-In this work, we fix auxiliary parameters such as the nucleon size and the hydro to micro switching temperature to reasonable defaults; however, the method can handle arbitrary numbers of parameters provided the sample size is sufficiently large.
+In this work, we fix several auxiliary parameters to reasonable defaults:
+nucleons are assumed to be disks with size determined by the inelastic nucleon-nucleon cross section $\sigma_\text{NN}$, and the hydro to micro switching temperature is set to 165 MeV, just below the equation of state transition temperature.
+However, the method can handle arbitrary numbers of parameters provided the sample size is sufficiently large.
 
 \begin{table}[b]
   \caption{
@@ -361,9 +360,9 @@ In this work, we fix auxiliary parameters such as the nucleon size and the hydro
   \end{ruledtabular}
 \end{table}
 
-The number $m$ of design points and their distribution in parameter space is also critical.
-Perhaps the most obvious choice is a uniform grid (factorial design), e.g.\ $k$ evenly-spaced points in each dimension.
-Unfortunately, this leads to a total number of design points $m = k^n$ which even for a modest $k = 10$ and $n = 5$ is intractably large.
+The training points $X = \{\x_1, \ldots, \x_m\}$ must be chosen to simultaneously optimize emulator accuracy and computation time.
+Perhaps the most obvious design strategy is a uniform grid (factorial design), e.g.\ $k$ evenly-spaced points in each dimension.
+Unfortunately, this leads to a total sample size $m = k^n$ which even for a modest $k = 10$ and $n = 5$ is intractably large.
 
 \colfig[t]{design}{
   The Latin hypercube experiment design projected into the $(\eta/s, \tau_0)$ dimensions.
@@ -378,8 +377,8 @@ This method produces space-filling randomized designs with several desirable pro
   \item Projections of the design into lower dimensions are uniformly distributed.
 \end{itemize}
 Figure~\ref{fig:design} illustrates these traits.
-A Latin hypercube design with relatively few points $m \sim 20n$ provides an efficient scaffolding of parameter space for interpolation by a GP emulator.
-\textcolor{red}{explain number of points \cite{Loeppky:2009ss}}
+A Latin hypercube design with a relatively small sample size provides an efficient scaffolding of parameter space for interpolation by a GP emulator.
+As a general rule of thumb, a sample size $m \sim 10n$ yields acceptable interpolation accuracy \cite{Loeppky:2009ss} and is a common choice for an initial experiment with limited computation time, however there is no harm in a larger sample.
 
 \widefig{prior_draws}{
   Model calculations from Glauber (top, blue) and KLN (bottom, green) initial conditions.
@@ -431,7 +430,6 @@ Often, the first few PCs describe most of the variance, as demonstrated for the 
 Hence we can construct a reduced-dimension transformation with minimal loss of precision by choosing $q < p$ so that $V(q)$ satisfies some threshold (e.g.~$V(q) \geq 0.99$) and taking only the first $q$ columns of $U$:
 \begin{equation}
   Z_q = \sqrt m \, YU_q,
-  \label{eq:pcreddim}
 \end{equation}
 where $Z_q$ is now an $m \times q$ matrix.
 
@@ -440,6 +438,12 @@ GPs are conditioned on the design $X$ according to Eq.~\eqref{eq:cond} and predi
 \begin{equation}
   Y_* = \frac{1}{\sqrt m} Z_* U\tran.
 \end{equation}
+
+\colfig[b]{pc_scatter}{
+  Principal component decomposition of the observables $\sqrt{\avg\nch}$, $\vnk 2 2$ for the Glauber model in 20--25\% centrality.
+  Each data point represents a model calculation and the edge histograms show the approximate normal distribution of each observable.
+  Arrows represent the PC vectors with lengths proportional to the explained variance.
+}
 
 There is an important caveat for principal components:
 the original data $Y$ must have a multivariate normal distribution for the transformed PCs $Z$ to be uncorrelated.
@@ -451,18 +455,17 @@ For the present event-by-event model we perform the following steps:
   \item Divide each observable by its corresponding experimental value from ALICE \cite{Abelev:2014mda}.
     This converts everything to unitless quantities of order one.
   \item Multiply each observable by a manually specified weight factor, ratios 1.2~:~1.0~:~0.6 for observables $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 3 2$.
-    These subjective weights reflect the relative ease of calculating each quantity from the event-by-event model, e.g.\ $\avg\nch$ has minimal statistical noise while $\vnk 3 2$ has nontrivial noise.
-    Ultimately, the weights encourage the model to fit more strongly to more important observables.
+    These subjective weights encourage the model to fit more strongly to more fundamental observables, e.g.\ we prefer a model that describes $\nch$ and $v_2$ at the expense of $v_3$ rather than fitting $v_3$ with incorrect $\nch$.
+    The weights will be discussed further in the results section \ref{sec:results}.
   \item Concatenate the unitless, weighted data into a $254 \times 18$ matrix $Y$, where each row corresponds to a design point and each column to an observable and centrality bin.
   \item Subtract the mean of each column and transform $Y$ into principal components $Z_q$ with $q = 5$ PCs, retaining over 99\% of the variance as shown in Fig.~\ref{fig:pc_var}.
     The PC transformation matrices $U_q$, shown in Fig.~\ref{fig:pc_matrix}, reflect the natural correlations among observables, for example all observables are correlated in the first PC (${\sim}$75\% of total variance), while $N_\text{ch}$ is anti-correlated with the $v_n$ in the second PC (${\sim}$20\% of total variance).
 \end{enumerate}
 We invert these steps to transform PCs back to physical space.
 
-\colfig[b]{pc_scatter}{
-  Principal component decomposition of the observables $\sqrt{\avg\nch}$, $\vnk 2 2$ for the Glauber model in 20--25\% centrality.
-  Each data point represents a model calculation and the edge histograms show the approximate normal distribution of each observable.
-  Arrows represent the PC vectors with lengths proportional to the explained variance.
+\colfig[t]{pc_var}{
+  Fraction of the variance $V(q)$ explained by the first $q$ principal components for Glauber (blue circles) and KLN (green triangles).
+  $q = 5$ explains approximately 99\% of the total variance, a significant reduction from the original 18 dimensions.
 }
 
 In practice, the covariance method for computing principal components is prone to numerical error, so a more robust algorithm using the singular value decomposition (SVD) is preferred.
@@ -477,11 +480,6 @@ Inserting \eqref{eq:svd} into \eqref{eq:cov} yields
   Y\tran Y = W D^2 W\tran = U \Lambda U\tran,
 \end{equation}
 hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ and the right singular vectors $W$ are the eigenvectors $U$.
-
-\colfig[t]{pc_var}{
-  Fraction of the variance $V(q)$ explained by the first $q$ principal components for Glauber (blue circles) and KLN (green triangles).
-  $q = 5$ explains approximately 99\% of the total variance, a significant reduction from the original 18 dimensions.
-}
 
 \colfig[b]{pc_matrix}{
   Visualization of the principal component transformation matrices $U_q$ for Glauber (left) and KLN (right).
@@ -590,7 +588,7 @@ We assume a simple fractional error on the principal components, i.e.\ the covar
 \begin{equation}
   \Sigma_z = \text{diag}(\sigma^2_z\,\zexp),
 \end{equation}
-where $\sigma^2_z$ is a manually set constant ($\sigma_z = 0.06$ for the present study).
+where $\sigma^2_z$ is a manually set constant, $\sigma_z = 0.06$ for the present study, to account for the typical experimental error of 3--5\% \cite{Abelev:2014mda} plus some additional uncertainty.
 While this is itself a rough assumption, it is perhaps no worse than the alternative, since experimental systematic errors are typically estimated percentages themselves and the principal component transformation automatically includes natural correlations among observables.
 The primary goal of this study is to develop and test a model-to-data comparison framework; details such as the precise treatment of uncertainties can be improved later.
 
@@ -601,7 +599,7 @@ The primary goal of this study is to develop and test a model-to-data comparison
 
 We run \order 6 MCMC steps to allow the chain to equilibrate, discard these ``burn-in'' samples, then run \order 7 steps to generate the posterior distribution.
 
-\subsection{Results}
+\subsection{\label{sec:results}Results}
 
 The primary MCMC calibration results are presented in Figs.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln} for the Glauber and KLN models, respectively.
 These are visualizations of the posterior probability distributions of the true parameters $\xs$, including the distribution of each individual parameter and all correlations.
@@ -623,15 +621,6 @@ The joint distribution shows a narrow acceptable band whose shape is governed by
 The wounded nucleon / binary collision parameter $\alpha$ (second diagonal) has a roughly-normal distribution located near the typical value 0.12.
 It is mainly related to the slope of multiplicity vs.\ centrality and hence has a nontrivial correlation with normalization and $\tau_0$, e.g.\ we can decrease the normalization to the lower end of its distribution provided we also increase $\alpha$ to compensate.
 
-\begin{table*}
-  \caption{
-    \label{tab:posterior}
-    Quantitative summary of posterior distributions.
-    For each parameter, the previous estimate \cite{Shen:2011zc,Heinz:2011kt,Shen:2013pc}, mean, median, and confidence intervals are given.
-  }
-  \input{tables/posterior}
-\end{table*}
-
 Meanwhile, the shear stress relaxation time coefficient $k_\pi$ (fifth diagonal) has an almost flat distribution and its joint distributions show no correlations.
 Evidently, this parameter does not influence flow coefficients or multiplicity.
 
@@ -643,16 +632,25 @@ As with Glauber, $\eta/s$ has a negative correlation with $\tau_0$, there is a s
 The KLN parameter $\lambda$ has a flat marginal distribution, but there are strongly excluded regions in the joint distributions with normalization and $\tau_0$.
 This appears to be the same effect as observed with Glauber $\alpha$, except the dependence on $\lambda$ is significantly weaker.
 
-The posteriors may be validated by drawing samples from the calibrated distributions and visualizing the corresponding emulator predictions:
-if the model is correct and properly calibrated, the posterior samples will be close to experimental measurements.
-Figure~\ref{fig:post_draws} confirms---for the most part---that the posteriors are indeed tightly clustered around the data points.
-Visualizations such as this will always have some uncertainty since samples are drawn from the full posterior, however, Fig.~\ref{fig:post_draws} has markedly narrower clusters than Fig.~\ref{fig:prior_draws}, in which the input parameters varied across their full ranges and were not tuned to match experiment.
-
 \colfig[b]{post_compare}{
   Comparison of posterior distributions of $\eta/s$ for Glauber (blue) and KLN (green).
   These are the same histograms as in Figs.~\ref{fig:cal_post_glb} and \ref{fig:cal_post_kln}, expanded and placed on the same axis.
   The vertical grey lines indicate the common values 0.08 for Glauber and 0.20 for KLN \cite{Shen:2011zc,Heinz:2011kt}.
 }
+
+The posteriors may be validated by drawing samples from the calibrated distributions and visualizing the corresponding emulator predictions:
+if the model is correct and properly calibrated, the posterior samples will be close to experimental measurements.
+Figure~\ref{fig:post_draws} confirms---for the most part---that the posteriors are indeed tightly clustered around the data points.
+Visualizations such as this will always have some uncertainty since samples are drawn from the full posterior, however, Fig.~\ref{fig:post_draws} has markedly narrower clusters than Fig.~\ref{fig:prior_draws}, in which the input parameters varied across their full ranges and were not tuned to match experiment.
+
+\begin{table*}
+  \caption{
+    \label{tab:posterior}
+    Quantitative summary of posterior distributions.
+    For each parameter, the previous estimate \cite{Shen:2011zc,Heinz:2011kt,Shen:2013pc}, mean, median, and confidence intervals are given.
+  }
+  \input{tables/posterior}
+\end{table*}
 
 As shown in the top row of Fig.~\ref{fig:post_draws}, the Glauber model nearly fits the centrality dependence of all the present observables ($\avg\nch$, $\vnk 2 2$, $\vnk 3 2$).
 The $v_3$ samples have a somewhat larger variance than the others, in part due to the underlying noise in the model calculations and also because $v_3$ is explicitly given a lower weight (recall that $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 2 3$ are weighted 1.2~:~1.0~:~0.6).
@@ -738,6 +736,13 @@ where $\y$ is the vector of training outputs, $X$ is the matrix of training inpu
 Hence, the likelihood is the probability of observing the data given the model.
 The first term in the likelihood is the fit to data, the second term is a complexity penalty, and the third term is a normalization constant.
 
+\colfig{training}{
+  Effect of varying the hyperparameters.
+  Each panel shows a Gaussian process conditioned on fabricated training data using the covariance function Eq.~\eqref{eq:1dcov}, where the line is the mean and the band is a $2\sigma$ confidence interval.
+  The covariance function hyperparameters are different in each plot as indicated by the annotations.
+  The data points are identical in each plot and were generated from a Gaussian process with hyperparameters annotated at the bottom.
+}
+
 This is best demonstrated by an example.
 The one-dimensional training data in Fig.~\ref{fig:training} were generated from a Gaussian process with covariance function
 \begin{equation}
@@ -752,13 +757,6 @@ Here the likelihood is also low due to the poor fit to data.
 The most likely scenario is the compromise in the bottom panel, in which we estimate the hyperparameters by numerically maximizing the likelihood.
 Now, the trained GP smoothly interpolates the curvature of the training data while leaving some of the variance as noise, true to the actual GP.
 
-\colfig{training}{
-  Effect of varying the hyperparameters.
-  Each panel shows a Gaussian process conditioned on fabricated training data using the covariance function Eq.~\eqref{eq:1dcov}, where the line is the mean and the band is a $2\sigma$ confidence interval.
-  The covariance function hyperparameters are different in each plot as indicated by the annotations.
-  The data points are identical in each plot and were generated from a Gaussian process with hyperparameters annotated at the bottom.
-}
-
 For the present study we use the covariance function given in Eq.~\eqref{eq:full_cov} and restated here:
 \begin{equation*}
   \sigma(\x, \x') = \sigma_\text{GP}^2 \exp\Biggl[ -\sum_{k=1}^n \frac{(x_k - x'_k)^2}{2\ell_k^2} \Biggr] + \sigma_n^2\delta_{\x\x'}.
@@ -770,13 +768,7 @@ Since the likelihood may have non-optimal local extrema, we repeat the optimizat
 Table~\ref{tab:hyperpars} lists the maximum-likelihood estimates of the hyperparameters for each principal component in standardized units---input parameters scaled to $[0, 1]$ and principal components scaled to unit variance.
 We constrain the length scales to $[0.3, 10]$ for numerical robustness.
 
-In this work we fix the hyperparameters to the maximum-likelihood estimates during calibration.
-This neglects uncertainty in the hyperparameters themselves, although the present event-by-event model is well-behaved and the sample size is large, so varying the hyperparameters weakly affects the actual emulator predictions.
-But ideally, one would consider \emph{all} predictions consistent with the data---not only the most likely---by MCMC-sampling the hyperparameter posteriors.
-This significantly increases computational cost, since the GPs must be re-conditioned for every set of hyperparameters, and conditioning requires computation of the inverse covariance matrix, an $\mathcal O(n^3)$ operation.
-We forgo this refinement until a future study.
-
-\begin{table}[t]
+\begin{table}
   \caption{
     \label{tab:hyperpars}
     Maximum-likelihood estimates of the covariance function hyperparameters.
@@ -784,6 +776,11 @@ We forgo this refinement until a future study.
   \input{tables/hyperpars}
 \end{table}
 
+In this work we fix the hyperparameters to the maximum-likelihood estimates during calibration.
+This neglects uncertainty in the hyperparameters themselves, although the present event-by-event model is well-behaved and the sample size is large, so varying the hyperparameters weakly affects the actual emulator predictions.
+But ideally, one would consider \emph{all} predictions consistent with the data---not only the most likely---by MCMC-sampling the hyperparameter posteriors.
+This significantly increases computational cost, since the GPs must be re-conditioned for every set of hyperparameters, and conditioning requires computation of the inverse covariance matrix, an $\mathcal O(n^3)$ operation.
+We forgo this refinement until a future study.
 
 
 
