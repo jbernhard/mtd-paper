@@ -166,27 +166,6 @@ def set_loc(ax, xy=None, nbins=5, steps=(1, 2, 3, 4, 10), prune=None):
         )
 
 
-def nice_range(x, perc=.1, rcut=1.08, dcut=.09):
-    xmin = x.min()
-    xmax = x.max()
-    xlow = np.percentile(x, perc)
-    xhigh = np.percentile(x, 100.-perc)
-
-    if xmin/xmax < .05:
-        a = 0.
-    elif xlow/xmin > rcut and (xlow-xmin) > (xmax-xmin)*dcut:
-        a = xlow
-    else:
-        a = xmin
-
-    if xmax/xhigh > rcut and (xmax-xhigh) > (xmax-xmin)*dcut:
-        b = xhigh
-    else:
-        b = xmax
-
-    return a, b
-
-
 @plotfn
 def cal_post(ic, data):
     chain = data.cal_chain.T
@@ -201,7 +180,6 @@ def cal_post(ic, data):
     nxy = chain.shape[0]
     assert nxy == len(labels)
 
-    # ranges = tuple(nice_range(x) for x in chain)
     ranges = data.param_ranges
 
     fig, axes = plt.subplots(nrows=nxy, ncols=nxy,
