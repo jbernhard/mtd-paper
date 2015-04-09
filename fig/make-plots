@@ -6,6 +6,7 @@ import functools
 import inspect
 import os
 import pickle
+import string
 import sys
 
 import numpy as np
@@ -30,8 +31,8 @@ plt.rcParams.update({
     'legend.fontsize': texsmall,
     'axes.labelsize': texsmall,
     'axes.titlesize': texsmall,
-    'xtick.labelsize': textiny,
-    'ytick.labelsize': textiny,
+    'xtick.labelsize': texsmall,
+    'ytick.labelsize': texsmall,
     'lines.linewidth': .9,
     'lines.markeredgewidth': .1,
     'patch.linewidth': .9,
@@ -56,6 +57,8 @@ plt.rcParams.update({
     'legend.frameon': False,
     'pdf.fonttype': 42
 })
+
+sublabels = ['({})'.format(letter) for letter in string.ascii_letters]
 
 
 class Results(dict):
@@ -294,6 +297,10 @@ def prior_draws():
                 ax.set_xlabel('Centrality %')
                 ax.set_xlim(0, x.max() + .5)
 
+    for sl, ax in zip(sublabels, axes.flat):
+        ax.annotate(sl, (.18 if ax.is_first_col() else .05, .95),
+                    xycoords='axes fraction', ha='left', va='top')
+
     finish(w_pad=.4)
 
 
@@ -329,6 +336,10 @@ def post_draws():
             else:
                 ax.set_xlabel('Centrality %')
                 ax.set_xlim(0, x.max() + .5)
+
+    for sl, ax in zip(sublabels, axes.flat):
+        ax.annotate(sl, (.13 if ax.is_first_col() else .05, .95),
+                    xycoords='axes fraction', ha='left', va='top')
 
     finish(w_pad=.4)
 
@@ -379,7 +390,11 @@ def validation(ic='glb'):
 
         if ax.is_first_col():
             ax.set_ylabel('Observed')
-            ax.legend(loc='upper left', handletextpad=.1)
+            ax.legend(loc='lower right', handletextpad=.1)
+
+    for sl, ax in zip(sublabels, axes.flat):
+        ax.annotate(sl, (.05, .95), xycoords='axes fraction',
+                    ha='left', va='top')
 
     finish(pad=.8, w_pad=-.2)
 
@@ -427,6 +442,9 @@ def gp():
         ax.set_ylim(-2.3, 2.3)
         ax.set_ylabel('$y$')
 
+    for sl, ax in zip(sublabels, axes.flat):
+        ax.annotate(sl, (.1, 1.9), ha='left', va='top')
+
     finish()
 
 
@@ -468,7 +486,7 @@ def training():
     fmt_str = r'{}: $\ell = {:.3g}$, $\sigma_n = {:.3g}$'
     color = '#77C0DC'
 
-    for ax, (name, pars) in zip(axes, names_pars):
+    for ax, sl, (name, pars) in zip(axes, sublabels, names_pars):
         gp.kernel.pars = pars
         mu, cov = gp.predict(y, t)
         std = np.sqrt(cov.diagonal())
@@ -478,7 +496,7 @@ def training():
 
         ax.plot(x, y, 'o', ms=2.3, color=offblack)
 
-        ax.text(.5, 2.25, fmt_str.format(name, *np.sqrt(pars)),
+        ax.text(.5, 2.25, ' '.join((sl, fmt_str.format(name, *np.sqrt(pars)))),
                 ha='center', va='top')
         ax.set_ylim(-2.4, 2.4)
         ax.set_ylabel('$y$')
@@ -639,7 +657,7 @@ def pc_matrix():
     fig, axes = plt.subplots(ncols=2, sharey='row',
                              figsize=(columnwidth, 1.15*columnwidth))
 
-    for data, ax in zip(ic_data.values(), axes):
+    for data, sl, ax in zip(ic_data.values(), sublabels, axes):
         M = np.copy(data.pca.pc[:data.pca.npc].T[::-1])
         nfeatures, npc = M.shape
         for col in M.T:
@@ -665,7 +683,7 @@ def pc_matrix():
                 for obs in (r'$N_\mathrm{ch}$', r'$v_2$', r'$v_3$')
                 for cent in range(0, 51, 10)])))
 
-        ax.set_title(data.display_name)
+        ax.set_title(' '.join((sl, data.display_name)))
 
         for spine in ax.spines.values():
             spine.set_visible(False)
