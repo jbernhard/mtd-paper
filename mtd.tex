@@ -99,7 +99,7 @@ models must also describe basic quantities such as the charged-particle multipli
 Recent work \cite{Soltz:2012rk} moved toward a more global analysis of multiple model parameters and observables, but encountered practical limitations attempting to simultaneously tune these free parameters.
 In general, input parameters correlate among each other and contribute to multiple observables, so they cannot be constrained independently.
 
-Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex high-dimensional parameter space, but MCMC often requires thousands or millions of model evaluations to accumulate sufficient statistics.
+Algorithms such as Markov chain Monte Carlo (MCMC) can rigorously explore this type of complex high-dimensional parameter space, but require a very large number of model evaluations---often thousands or millions, depending on the problem at hand.
 Heavy-ion collision models may run for several hours, so a direct MCMC approach is intractable.
 The situation is exacerbated when studying event-by-event fluctuations as opposed to average quantities:
 while event-averaged models save computation time by using a smooth initial condition and single hydrodynamic calculation, event-by-event models have realistic, fluctuated initial conditions, each of which requires its own hydrodynamic treatment.
