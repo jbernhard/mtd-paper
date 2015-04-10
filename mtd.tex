@@ -50,6 +50,7 @@
 
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{booktabs}
 \usepackage{tikz}
 
 \newcommand{\avg}[1]{\langle #1 \rangle}
@@ -173,10 +174,12 @@
       PRC \textbf{89}, 034917 (2014), arXiv:1303.5769 [nucl-th].
     \item R.~A.~Soltz, I.~Garishvili, M.~Cheng, B.~Abelev, A.~Glenn, J.~Newby, L.~A.~Linden Levy, and S.~Pratt, \\
       PRC {\bf 87}, 044901 (2013), arXiv:1208.0897 [nucl-th].
+    \item  S.~Pratt, E.~Sangaline, P.~Sorensen,  and H.~Wang,
+      arXiv:1501.04042 [nucl-th].
   \end{itemize}
 
   \tikz[overlay,remember picture]
-    \node[xshift=-3ex,yshift=4ex] at (current page.center)
+    \node[xshift=-3ex,yshift=6ex] at (current page.center)
     {$\color{theme}\Large\boldsymbol\longrightarrow$};
 \end{frame}
 
@@ -190,9 +193,9 @@
         \item physical properties
         \item model nuisance parameters
       \end{itemize}
-    \item Run model at a small $\mathcal O(10^1$--$10^2)$ set of parameter points
-    \item Interpolate with a Gaussian process emulator \\
-      $\rightarrow$ fast surrogate to actual model
+    \item Run model at small $\mathcal O(10^1$--$10^2)$ set of parameter points
+    \item Interpolate with Gaussian process emulator \\
+      $\rightarrow$ fast stand-in for actual model
     \item Systematically explore parameter space with Markov chain Monte Carlo (MCMC)
     \item Calibrate model emulator to optimally reproduce data \\
       $\rightarrow$ extract probability distributions for each parameter
@@ -214,14 +217,62 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}{Calibration parameters}
+  \smallskip
+  \begin{equation*}
+    \color{theme}
+    \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, k_\pi)
+  \end{equation*}
+
+  \begin{tabular}{lll}
+    \toprule
+    Parameter & Description & Range \\
+    \midrule
+    Glb Norm & Overall normalization & 20--60 \\
+    Glb $\alpha$ & Wounded nucleon / binary coll. & 0.05--0.30 \\
+    KLN Norm & Overall normalization & 5--15 \\
+    KLN $\lambda$ & Saturation scale exponent & 0.1--0.3 \\
+    $\tau_0$ & Thermalization time & 0.2--1.0 fm \\
+    $\eta/s$ & Specific shear viscosity & 0--0.3 \\
+    $k_\pi$ & Shear relax $\tau_\pi = 6k_\pi\eta/(sT)$ & 0.2--1.1 \\
+    \bottomrule
+  \end{tabular}
+
+  \medskip
+  Fixed parameters:
+  \begin{itemize}
+    \item Disk nucleons, size determined by $\sigma_\text{NN}$
+    \item $T_\text{switch} = 165$ MeV
+  \end{itemize}
+\end{frame}
+
 
 \begin{frame}{Computer experiment design}
-  \centering
-  \includegraphics{design}
+  \begin{columns}
+    \column{.5\textwidth}
+    Maximin Latin hypercube
+    \begin{itemize}
+      \item Random, space-filling points
+      \item \emph{Maximizes} the \emph{minimum} distance between points \\
+        $\rightarrow$ avoids gaps and clusters
+      \item Uniform projections into lower dimensions
+    \end{itemize}
+    \smallskip
+    This work:
+    \begin{itemize}
+      \item 256 points across 5 dimensions
+      \item 6 centrality bins
+      \item \order 7 events in total
+    \end{itemize}
+
+    \column{.5\textwidth}
+    \includegraphics{design}
+  \end{columns}
 \end{frame}
 
 
 \begin{frame}{Training data}
+  \bigskip
   \centering
   Model calculations for each design point \\
   \bigskip
@@ -233,8 +284,37 @@
 \end{frame}
 
 
+\begin{frame}{Gaussian processes}
+  \tikz\node[fill=theme!25, text width=.94\textwidth, inner sep=.03\textwidth] {
+    A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+  };
+  \smallskip
+  \begin{columns}[c]
+    \column{.6\textwidth}
+    \begin{itemize}
+      \item Stochastic function: $\x \rightarrow y$ \\
+        \begin{itemize}
+          \item $\x$ = $n$-dimensional input vector
+          \item $y$ = normally distributed output
+        \end{itemize}
+      \item Specified by
+        \begin{itemize}
+          \item Mean function $\mu(\x)$
+          \item Covariance function $\sigma(\x, \x')$ \\
+            e.g.:
+            \begin{equation*}
+              \sigma(\x, \x') = \exp\biggl( -\frac{|\x - \x'|^2}{2\ell^2} \biggr)
+            \end{equation*}
+        \end{itemize}
+    \end{itemize}
+    \column{.4\textwidth}
+    \hspace*{-.15\textwidth}
+    \includegraphics[width=1.2\textwidth, trim=0cm 0cm 5.1cm .4cm, clip]{gp}
+  \end{columns}
+\end{frame}
+
+
 \begin{frame}{Gaussian process emulator}
-  \vspace{1ex}
   \begin{itemize}
     \item Non-parametric interpolation
     \item Predicts \emph{probability distributions}
@@ -243,45 +323,102 @@
       \end{itemize}
     \item Fast ``surrogate'' to actual model
   \end{itemize}
-  \medskip
+  \bigskip
   \centering
   \includegraphics{gp}
-  \flushright
-  \footnotesize
-  \begin{tabular}{ll}
-    dashed line = GP mean &
-    colored lines = random samples \\
-    grey band = $2\sigma$ confidence interval &
-    dots = training points
-  \end{tabular}
 \end{frame}
 
 
 \begin{frame}{Multivariate output}
-  \centering
-  \includegraphics{pc_var} \\
-  \includegraphics{pc_scatter}
+  3 observables $\times$ 6 centralities = 18 outputs \\
+  Training data $Y$ = 256 $\times$ 18 matrix
+  \smallskip
+  \begin{columns}[c]
+    \column{.5\textwidth}
+    \begin{itemize}
+      \item Independent emulators?
+        \begin{itemize}
+          \item What if 100 outputs?
+          \item Neglects correlations
+        \end{itemize}
+      \item Principal components
+        \begin{itemize}
+          \item Eigenvectors of sample covariance matrix
+            \begin{align*}
+              Y\tran Y &= U \Lambda U\tran \\
+              Z &= \sqrt m \, YU
+            \end{align*}
+          \item Orthogonal and uncorrelated
+        \end{itemize}
+    \end{itemize}
+    \centering
+    $\rightarrow$ Emulate each PC
+    \column{.5\textwidth}
+    \centering
+    \only<1>{\includegraphics{pc_scatter}}
+    \only<2>{
+      Dimensionality reduction: \\[1ex]
+      \includegraphics{pc_var}
+    }
+  \end{columns}
 \end{frame}
 
 
 \begin{frame}{Validation}
-  \centering
+  \begin{itemize}
+    \item Independent 64-point design
+    \item Run model at each point
+    \item Predict output with emulator
+  \end{itemize}
+  \medskip
   \includegraphics{validation}
 \end{frame}
 
 
-\begin{frame}{Bayes' theorem}
+\begin{frame}{Calibration}
+  Input parameters:
+  \begin{equation*}
+    \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, k_\pi)
+  \end{equation*}
+  \hspace{1em}$\rightarrow$ assume exists \emph{true} parameters $\xs$, find probability dist. \\[2ex]
+  \textbf{Bayes' theorem:}
   \begin{equation*}
     P(\xs|X,Y,\yexp) \propto P(X,Y,\yexp|\xs) P(\xs)
   \end{equation*}
+  \vspace{-3ex}
   \begin{itemize}
     \item $P(\xs)$ = prior \\
       $\rightarrow$ initial knowledge of $\xs$
     \item $P(X,Y,\yexp|\xs)$ = likelihood \\
       $\rightarrow$ prob.\ of observing $(X, Y, \yexp)$ given proposed $\xs$
+      \color{theme!80!black}
     \item $P(\xs|X,Y,\yexp)$ = posterior \\
       $\rightarrow$ prob.\ of $\xs$ given observations $(X, Y, \yexp)$
   \end{itemize}
+\end{frame}
+
+
+\begin{frame}{MCMC}
+  Markov chain Monte Carlo
+  \begin{itemize}
+    \item Directly samples posterior probability
+    \item Random walk through parameter space
+    \item Large number of samples \\
+      $\rightarrow$ chain equilibrates to posterior
+  \end{itemize}
+  \medskip
+  Likelihood:
+  \begin{equation*}
+    P(\zexp|\xs) \propto \exp\biggl[ -\frac{(\zs - \zexp)^2}{2\sigma_z^2} \biggr]
+  \end{equation*}
+  \vspace{-1em}
+  \begin{itemize}
+    \item $\zexp$ = PC transformed experimental data
+    \item $\zs$ = PC emulator prediction at $\xs$
+    \item $\sigma_z$ = fractional uncertainty = 0.06
+  \end{itemize}
+  \smallskip
+  Posterior = likelihood within design range, zero outside
 \end{frame}
 
 
@@ -295,7 +432,7 @@
 
 
 \begin{frame}{}
-  \vspace{1ex}
+  \vspace{.5ex}
   \centering
   \includegraphics{cal_post_glb}
   \tikz[remember picture, overlay]
@@ -305,7 +442,7 @@
 
 
 \begin{frame}{}
-  \vspace{1ex}
+  \vspace{.5ex}
   \centering
   \includegraphics{cal_post_kln}
   \tikz[remember picture, overlay]
@@ -316,12 +453,13 @@
 
 \begin{frame}{Posterior samples}
   \centering
+  \bigskip
   \only<1>{
-    Model calculations over full design space \\[4ex]
+    Model calculations over full design space \\[3ex]
     \includegraphics{prior_draws}
   }
   \only<2>{
-    Emulator predictions from calibrated posterior \\[4ex]
+    Emulator predictions from calibrated posterior \\[3ex]
     \includegraphics{post_draws}
   }
 \end{frame}
@@ -347,7 +485,15 @@
 \section{Conclusion}
 
 \begin{frame}{Summary \& outlook}
-
+  \begin{itemize}
+    \item Quantitative, systematic parameter extraction and model evaluation
+    \item Glauber approximately describes $\nch$, $v_2$, $v_3$
+    \item KLN cannot simultaneously fit $v_2$, $v_3$
+      \bigskip
+    \item New models: \trento; 3+1D hydro at RHIC
+    \item More input parameters and observables
+    \item Improve treatment of uncertainty
+  \end{itemize}
 \end{frame}
 
 

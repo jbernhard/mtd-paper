@@ -4,7 +4,6 @@
 import collections
 import functools
 import inspect
-import os
 import pickle
 import sys
 
@@ -25,10 +24,13 @@ offblack = '#262626'
 
 plt.rcdefaults()
 plt.rcParams.update({
-    'font.family': ['CMU Sans Serif'],
+    'font.family': 'sans-serif',
+    'font.sans-serif': ['CMU Sans Serif'],
     'mathtext.fontset': 'custom',
+    'mathtext.default': 'it',
     'mathtext.rm': 'sans',
     'mathtext.it': 'sans:italic',
+    'mathtext.cal': 'sans',
     'font.size': texsmall,
     'legend.fontsize': texsmall,
     'axes.labelsize': texsmall,
@@ -185,53 +187,55 @@ def cal_post(ic, data):
 
     ranges = data.param_ranges
 
-    fig, axes = plt.subplots(nrows=nxy, ncols=nxy,
-                             sharex='col', sharey='row',
-                             figsize=(textheight, textheight))
+    with plt.rc_context({'xtick.labelsize': 5, 'ytick.labelsize': 5}):
+        fig, axes = plt.subplots(nrows=nxy, ncols=nxy,
+                                 sharex='col', sharey='row',
+                                 figsize=(1.03*textheight, 1.03*textheight))
 
-    for ax, x, (xmin, xmax) in zip(axes.diagonal(), chain, ranges):
-        counts, edges = np.histogram(
-            x, bins=100, range=(xmin, xmax), density=True
-        )
-        middles = .5 * (edges[1:] + edges[:-1])
-        counts *= .9 * (xmax - xmin) / counts.max()
-        counts += xmin
-        ax.plot(middles, counts, color=line_color, lw=.55)
-        ax.fill_between(middles, counts, color=fill_color)
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(xmin, xmax)
+        for ax, x, (xmin, xmax) in zip(axes.diagonal(), chain, ranges):
+            counts, edges = np.histogram(
+                x, bins=100, range=(xmin, xmax), density=True
+            )
+            middles = .5 * (edges[1:] + edges[:-1])
+            counts *= .9 * (xmax - xmin) / counts.max()
+            counts += xmin
+            ax.plot(middles, counts, color=line_color, lw=.55)
+            ax.fill_between(middles, counts, color=fill_color)
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(xmin, xmax)
 
-    for ny, nx in zip(*np.tril_indices_from(axes, k=-1)):
-        x = chain[nx]
-        y = chain[ny]
-        hist = functools.partial(
-            np.histogram2d, x, y, range=(ranges[nx], ranges[ny])
-        )
+        for ny, nx in zip(*np.tril_indices_from(axes, k=-1)):
+            x = chain[nx]
+            y = chain[ny]
+            hist = functools.partial(
+                np.histogram2d, x, y, range=(ranges[nx], ranges[ny])
+            )
 
-        ax = axes[ny][nx]
-        H, xedges, yedges = hist(bins=100)
-        H[H == 0] = None
-        ax.pcolorfast(xedges, yedges, H.T, cmap=cmap)
+            ax = axes[ny][nx]
+            H, xedges, yedges = hist(bins=100)
+            H[H == 0] = None
+            ax.pcolorfast(xedges, yedges, H.T, cmap=cmap)
 
-        ax = axes[nx][ny]
-        H, xedges, yedges = hist(bins=30)
-        xmids = .5*(xedges[1:] + xedges[:-1])
-        ymids = .5*(yedges[1:] + yedges[:-1])
-        Hsorted = np.sort(H, axis=None)
-        cs = Hsorted.cumsum()
-        cs /= cs[-1]
-        V = np.array([Hsorted[np.count_nonzero(cs <= 1.-i)] for i in levels])
-        ax.plot(np.median(y), np.median(x), 'o', ms=2.5, mew=0,
-                color=cmap(1., alpha=.9))
-        ax.contour(ymids, xmids, H, V, colors=level_colors, linewidths=.55)
+            ax = axes[nx][ny]
+            H, xedges, yedges = hist(bins=30)
+            xmids = .5*(xedges[1:] + xedges[:-1])
+            ymids = .5*(yedges[1:] + yedges[:-1])
+            Hsorted = np.sort(H, axis=None)
+            cs = Hsorted.cumsum()
+            cs /= cs[-1]
+            V = np.array([Hsorted[np.count_nonzero(cs <= 1.-i)]
+                          for i in levels])
+            ax.plot(np.median(y), np.median(x), 'o', ms=2.5, mew=0,
+                    color=cmap(1., alpha=.9))
+            ax.contour(ymids, xmids, H, V, colors=level_colors, linewidths=.55)
 
-    for ax in axes.flat:
-        set_loc(ax, prune='lower')
-    for n, label in enumerate(labels):
-        axes[-1][n].set_xlabel(label, labelpad=2)
-        axes[n][0].set_ylabel(label)
+        for ax in axes.flat:
+            set_loc(ax, prune='lower')
+        for n, label in enumerate(labels):
+            axes[-1][n].set_xlabel(label, labelpad=2)
+            axes[n][0].set_ylabel(label)
 
-    finish(remove_ticks=False)
+        finish(remove_ticks=False)
 
 
 @plotfn
@@ -282,7 +286,7 @@ def prior_draws():
     nobs = len(observables)
     fig, axes = plt.subplots(
         nrows=nic, ncols=nobs, sharex='col',
-        figsize=(textwidth, 1.2*nic/nobs*aspect*textwidth))
+        figsize=(textwidth, 1.4*nic/nobs*aspect*textwidth))
 
     ylims = 6000., .14, .045
 
@@ -306,7 +310,7 @@ def prior_draws():
                 ax.set_xlabel('Centrality %')
                 ax.set_xlim(0, x.max() + .5)
 
-    finish(pad=.1, w_pad=.5)
+    finish(pad=.2, w_pad=.5)
 
 
 @plotfn
@@ -315,7 +319,7 @@ def post_draws():
     nobs = len(observables)
     fig, axes = plt.subplots(
         nrows=nic, ncols=nobs, sharex='col',
-        figsize=(textwidth, 1.2*nic/nobs*aspect*textwidth))
+        figsize=(textwidth, 1.4*nic/nobs*aspect*textwidth))
 
     sample_idx = np.random.randint(0, ic_data['glb']['cal_chain'].shape[0],
                                    size=100)
@@ -344,7 +348,7 @@ def post_draws():
                 ax.set_xlabel('Centrality %')
                 ax.set_xlim(0, x.max() + .5)
 
-    finish(pad=.1, w_pad=.5)
+    finish(pad=.2, w_pad=.5)
 
 
 @plotfn
@@ -395,7 +399,7 @@ def validation(ic='glb'):
             ax.set_ylabel('Observed', labelpad=2)
             ax.legend(loc='upper left', handletextpad=.1)
 
-    finish(pad=.1, w_pad=-.6)
+    finish(pad=.2, w_pad=-.6)
 
 
 @plotfn
@@ -404,7 +408,7 @@ def gp():
     plt.rc('axes', color_cycle=plt.cm.Set2(np.linspace(0, 1, 8)).tolist())
 
     fig, axes = plt.subplots(ncols=2, sharey='row',
-                             figsize=(textwidth, .65*aspect*textwidth))
+                             figsize=(textwidth, .7*aspect*textwidth))
 
     t = np.linspace(0, 5, 1000)
     x = np.linspace(.5, 4.5, 4)
@@ -631,7 +635,7 @@ def pc_scatter(ic='glb'):
 
 @plotfn
 def pc_var():
-    plt.figure(figsize=(.5*textwidth, .5*textwidth*aspect))
+    plt.figure(figsize=(.5*textwidth, .6*textwidth*aspect))
     ax = plt.gca()
 
     for ic, data in ic_data.items():
@@ -648,163 +652,7 @@ def pc_var():
     ax.set_ylabel('Explained variance')
     ax.legend(loc='lower right')
 
-    finish()
-
-
-@plotfn
-def pc_matrix():
-    fig, axes = plt.subplots(ncols=2, sharey='row',
-                             figsize=(columnwidth, 1.15*columnwidth))
-
-    for data, ax in zip(ic_data.values(), axes):
-        M = np.copy(data.pca.pc[:data.pca.npc].T[::-1])
-        nfeatures, npc = M.shape
-        for col in M.T:
-            if np.count_nonzero(col <= 0) > col.size/2:
-                col *= -1
-
-        ax.pcolormesh(M, vmin=-1, vmax=1, cmap=plt.cm.coolwarm,
-                      edgecolors='white', linewidths=.8)
-
-        for (y, x), m in np.ndenumerate(M):
-            ax.text(x+.5, y+.5, '{:.2f}'.format(m),
-                    color=offblack, fontsize=textiny,
-                    ha='center', va='center')
-
-        ax.set_xlabel('Principal component')
-        ax.set_xticks(np.arange(npc) + .5)
-        ax.set_xticklabels(np.arange(1, npc+1))
-
-        if ax.is_first_col():
-            ax.set_yticks(np.arange(nfeatures) + .5)
-            ax.set_yticklabels(list(reversed([
-                '{} {:02d}–{:02d}'.format(obs, cent, cent+5)
-                for obs in (r'$N_\mathrm{ch}$', r'$v_2$', r'$v_3$')
-                for cent in range(0, 51, 10)])))
-
-        ax.set_title(data.display_name)
-
-        for spine in ax.spines.values():
-            spine.set_visible(False)
-
-    finish(w_pad=.35)
-
-
-def tables():
-    try:
-        os.mkdir('../tables', mode=0o755)
-    except OSError:
-        pass
-
-    fmt_str = '{:#.3g}'
-
-    with open('../tables/posterior.tex', 'w') as f:
-        write = functools.partial(print, file=f)
-        write(r'\begin{ruledtabular}')
-        write(r'\begin{tabular}{lllllccc}')
-        write(r'  & Parameter & Prev.\ est. & Mean & Median & '
-              r'68\% C.I. & 95\% C.I. & 99\% C.I. \\')
-        for ic, data in ic_data.items():
-            write(r'  \hline')
-            write(r'  \multirow{' + str(len(data.labels)) +
-                  r'}{*}{\rotatebox{90}{' + data.display_name + r'\ \ }}')
-            for label, guess, samples in zip(
-                    data.labels, data.initial_params, data.cal_chain.T):
-                if label == 'Normalization':
-                    label = 'Norm.'
-                strings = [label, str(guess)]
-                if ic == 'kln' and label == r'$\eta/s$':
-                    strings[-1] += '0'
-
-                strings += [fmt_str.format(q(samples))
-                            for q in (np.mean, np.median)]
-
-                for p in 68, 95, 99:
-                    strings += ['--'.join((
-                        fmt_str.format(i)
-                        for i in np.percentile(samples, (50-p/2, 50+p/2))
-                    ))]
-
-                write('  & ' + ' & '.join(strings) + r' \\')
-        write(r'\end{tabular}')
-        write(r'\end{ruledtabular}')
-
-    with open('../tables/hyperpars.tex', 'w') as f:
-        write = functools.partial(print, file=f)
-        npc = ic_data['glb'].pca.npc
-        columns = 'll' + ''.join('c' for _ in range(npc))
-        write(r'\begin{ruledtabular}')
-        write(r'\begin{tabular}{' + columns + '}')
-        write(r'  & & \multicolumn{' + str(npc) +
-              r'}{c}{Principal component} \\')
-        write(r'  & & ' +
-              ' & '.join(str(i+1) for i in range(npc)) +
-              r' \\')
-        for data in ic_data.values():
-            labels = [r'$\sigma_\mathrm{GP}$']
-            for l in data.labels:
-                if l == 'Normalization':
-                    l = 'Norm'
-                labels += [r'$\ell$ ' + l]
-            labels += [r'$\sigma_n$']
-
-            write(r'  \hline')
-            write(r'  \multirow{' + str(len(labels)) +
-                  r'}{*}{\rotatebox{90}{' + data.display_name + r'\ \ \ }}')
-
-            for label, pars in zip(labels, np.sqrt(data.kernel_pars.T)):
-                write('  & ' + label + ' & ' +
-                      ' & '.join(fmt_str.format(p) for p in pars) +
-                      r' \\')
-
-        write(r'\end{tabular}')
-        write(r'\end{ruledtabular}')
-
-    with open('../tables/principal_components.tex', 'w') as f:
-        write = functools.partial(print, file=f)
-
-        npc = ic_data['glb'].pca.npc
-        cent = ic_data['glb'].cent
-        ncent = cent.size
-
-        write(r'\begin{ruledtabular}')
-        write(r'\begin{tabular}{' + 'll' + 'c'*(2*npc) + '}')
-        write(r'  & & ' +
-              ' & '.join('\multicolumn{' + str(npc) + '}{c}{' +
-                         data.display_name + ' principal components}'
-                         for data in ic_data.values()) +
-              r' \\')
-        write(r'  & & ' +
-              ' & '.join(
-                  ' & '.join(str(i+1) for i in range(npc))
-                  for _ in range(2)) +
-              r' \\')
-
-        for n, obs in enumerate(observables):
-            write(r'  \hline')
-            write(r'  \multirow{' + str(ncent) +
-                  r'}{*}{\rotatebox{90}{' + obs[1] + r'\ \ \ }}')
-
-            for m, c in enumerate(cent):
-                write('  & ' + '--'.join(str(int(c+d)) for d in (-2.5, 2.5)) +
-                      r'\% & ' +
-                      ' & '.join(
-                          ' & '.join('${:#.2g}$'.format(i)
-                                     for i in data.pca.pc[:npc, n*ncent+m])
-                          for data in ic_data.values()) +
-                      r' \\')
-
-        write(r'  \hline')
-        write(r'  \multicolumn{2}{c}{Weight} & ' +
-              ' & '.join(
-                  ' & '.join(fmt_str.format(i) for i in data.pca.weights[:npc])
-                  for data in ic_data.values()) +
-              r' \\')
-
-        write(r'\end{tabular}')
-        write(r'\end{ruledtabular}')
-
-plotfns['tables'] = tables
+    finish(pad=.2)
 
 
 def main():
