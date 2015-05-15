@@ -688,7 +688,7 @@ def tables():
         write(r'  & Parameter & Prev.\ est. & Mean & Median & '
               r'68\% C.I. & 95\% C.I. & 99\% C.I. \\')
         for ic, data in ic_data.items():
-            write(r'  \hline')
+            write(r'  \paddedhline')
             write(r'  \multirow{' + str(len(data.labels)) +
                   r'}{*}{\rotatebox{90}{' + data.display_name + r'\ \ }}')
             for label, guess, samples in zip(
@@ -720,9 +720,11 @@ def tables():
         write(r'\begin{tabular}{' + columns + '}')
         write(r'  & & \multicolumn{' + str(npc) +
               r'}{c}{Principal component} \\')
+        write(r'  \noalign{\smallskip}\cline{3-7}\noalign{\smallskip}')
         write(r'  & & ' +
               ' & '.join(str(i+1) for i in range(npc)) +
               r' \\')
+
         for data in ic_data.values():
             labels = [r'$\sigma_\mathrm{GP}$']
             for l in data.labels:
@@ -731,7 +733,7 @@ def tables():
                 labels += [r'$\ell$ ' + l]
             labels += [r'$\sigma_n$']
 
-            write(r'  \hline')
+            write(r'  \paddedhline')
             write(r'  \multirow{' + str(len(labels)) +
                   r'}{*}{\rotatebox{90}{' + data.display_name + r'\ \ \ }}')
 

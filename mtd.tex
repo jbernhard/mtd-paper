@@ -10,6 +10,7 @@
 \graphicspath{{fig/}}
 \usepackage{multirow}
 \usepackage{color}
+\usepackage{appendix}
 
 \newcommand{\colfig}[3][t]{
   \begin{figure}[#1]
@@ -41,6 +42,7 @@
 \newcommand{\tran}{^\intercal}
 \newcommand{\trento}{T\raisebox{-.5ex}{R}ENTo}
 \newcommand{\order}[1]{$\mathcal O(10^{#1})$}
+\newcommand{\paddedhline}{\noalign{\smallskip}\hline\noalign{\smallskip}}
 
 
 \begin{document}
@@ -136,7 +138,7 @@ We emphasize, however, that the methodology in this paper can easily be applied 
 
 \subsection{Initial conditions}
 
-Initial condition models provide the outcome of the collision's pre-equilibrium evolution at the hydrodynamic thermalization time, approximately 0.5 fm/c.
+Initial condition models provide the outcome of the collision's pre-equilibrium evolution at the hydrodynamic thermalization time, approximately 0.5 fm/$c$.
 Some models explicitly calculate pre-equilibrium dynamics \cite{Schenke:2012wb} starting from the initial state of the collision; others skip this time frame and generate initial conditions directly at the thermalization time \cite{Drescher:2006pi,Miller:2007ri,Moreland:2014oya}.
 
 We select two of the most widely used models in the latter category:
@@ -159,10 +161,10 @@ An equation of state
 \begin{equation}
   P = P(\epsilon)
 \end{equation}
-closes the system of hydrodynamic equations and is usually provided by a parameterization of lattice QCD calculations.
+closes the system of hydrodynamic equations and is usually provided by a parametrization of lattice QCD calculations.
 
-We employ an improved version of VISH2+1 \cite{Song:2007ux}, a stable, extensively tested implementation of boost-invariant viscous hydrodynamics that was recently updated to handle fluctuating event-by-event initial conditions \cite{Shen:2014vra}.
-VISH2+1 uses the prevalent s95 partial chemical equilibrium equation of state \cite{Huovinen:2009yb}.
+We employ an improved version of \small{VISH2+1} \cite{Song:2007ux}, a stable, extensively tested implementation of boost-invariant viscous hydrodynamics that was recently updated to handle fluctuating event-by-event initial conditions \cite{Shen:2014vra}.
+\small{VISH2+1} uses the prevalent s95 partial chemical equilibrium equation of state \cite{Huovinen:2009yb}.
 
 \subsection{Particlization}
 
@@ -175,7 +177,7 @@ The model generates particles by sampling the Cooper-Frye formula \cite{Cooper:1
 \end{equation}
 where $f_i$ is the distribution function for particle species $i$, $p^\mu$ is the four-momentum, and the integral is taken over the isothermal spacetime hypersurface $\sigma$ defined by the switching temperature.
 
-We use a recent hypersurface sampler designed to couple with VISH2+1 \cite{Qiu:2013wca,Shen:2014vra}.
+We use a recent hypersurface sampler designed to couple with \small{VISH2+1} \cite{Qiu:2013wca,Shen:2014vra}.
 
 \subsection{Hadronic phase}
 
@@ -230,7 +232,7 @@ These features are essential for emulation of computer codes.
 \newcommand{\muvec}{\boldsymbol\mu}
 \newcommand{\N}{\mathcal N}
 
-This subsection summarizes the theory of Gaussian process emulators as detailed in chapter 2 of \cite{Rasmussen:2006gp}.
+This subsection summarizes the theory of Gaussian process emulators as detailed in Chap.~2 of \cite{Rasmussen:2006gp}.
 
 A Gaussian process (GP) is defined as a collection of random variables, any finite number of which have a joint Gaussian distribution.
 A GP may be thought of as a stochastic function $f(\x)$ which maps $n$-dimensional input vectors $\x$ to normally distributed outputs $y$.
@@ -275,8 +277,8 @@ is the $m$-dimensional mean vector from applying the mean function to each input
 is the $m \times m$ covariance matrix from applying the covariance function to each pair of inputs.
 
 \colfig{gp}{
-  Top: random functions drawn from a Gaussian process using a squared-exponential covariance function with length scale $\ell = 1$.
-  Bottom: functions drawn from a GP conditioned on the training points indicated by dots.
+  Top: Random functions drawn from a Gaussian process using a squared-exponential covariance function with length scale $\ell = 1$.
+  Bottom: Functions drawn from a GP conditioned on the training points indicated by dots.
   In both plots, the dashed line represents the GP mean and the grey band is twice the GP standard deviation (roughly 95\% confidence interval).
 }
 
@@ -329,14 +331,14 @@ where
   \item Norm is the overall normalization factor, a multiplicative constant that determines how much entropy is deposited in the initial condition.
   \item I.C.\ param is a parameter specific to each initial condition model.
     For the Glauber model the parameter is $\alpha$, which controls how entropy is distributed to wounded nucleons and binary collisions;
-    for the KLN model it is $\lambda$, a dimensionless exponent in the saturation scale parameterization.
+    for the KLN model it is $\lambda$, a dimensionless exponent in the saturation scale parametrization.
     Both are related to the centrality dependence of multiplicity.
   \item $\tau_0$ is the QGP thermalization time and the starting time for hydrodynamic evolution.
   \item $\eta/s$ is the shear viscosity to entropy density ratio of the QGP, assumed to be fixed throughout the hydrodynamic evolution stage.
   \item $\tau_\pi$ is the shear stress relaxation time, which dictates how quickly the hydro medium relaxes to the Navier-Stokes limit.
     Since the relaxation time is a function of the shear viscosity and temperature and thus cannot be tuned explicitly, we use the coefficient $k_\pi$ in the relation $\tau_\pi = 6k_\pi\eta/(sT)$ as a tunable parameter.
 \end{itemize}
-We set intentionally large ranges for each parameter, summarized in table~\ref{tab:design}.
+We set intentionally large ranges for each parameter, summarized in Table~\ref{tab:design}.
 In this work, we fix several auxiliary parameters to reasonable defaults:
 nucleons are assumed to be disks with size determined by the inelastic nucleon-nucleon cross section $\sigma_\text{NN}$, and the hydro to micro switching temperature is set to 165 MeV, just below the equation of state transition temperature.
 However, the method can handle arbitrary numbers of parameters provided the sample size is sufficiently large.
@@ -348,7 +350,8 @@ However, the method can handle arbitrary numbers of parameters provided the samp
   }
   \begin{ruledtabular}
   \begin{tabular}{lll}
-    \bf Parameter & \bf Description & \bf Range \\
+    Parameter & Description & Range \\
+    \paddedhline
     Glb Norm & Overall normalization & 20--60 \\
     Glb $\alpha$ & Wounded nucleon / binary coll. & 0.05--0.30 \\
     KLN Norm & Overall normalization & 5--15 \\
@@ -456,7 +459,7 @@ For the present event-by-event model we perform the following steps:
     This converts everything to unitless quantities of order one.
   \item Multiply each observable by a manually specified weight factor, ratios 1.2~:~1.0~:~0.6 for observables $\avg\nch$~:~$\vnk 2 2$~:~$\vnk 3 2$.
     These subjective weights encourage the model to fit more strongly to more fundamental observables, e.g.\ we prefer a model that describes $\nch$ and $v_2$ at the expense of $v_3$ rather than fitting $v_3$ with incorrect $\nch$.
-    The weights will be discussed further in the results section \ref{sec:results}.
+    The weights will be discussed further in the results, Sec.~\ref{sec:results}.
   \item Concatenate the unitless, weighted data into a $254 \times 18$ matrix $Y$, where each row corresponds to a design point and each column to an observable and centrality bin.
   \item Subtract the mean of each column and transform $Y$ into principal components $Z_q$ with $q = 5$ PCs, retaining over 99\% of the variance as shown in Fig.~\ref{fig:pc_var}.
     The PC transformation matrices $U_q$, shown in Fig.~\ref{fig:pc_matrix}, reflect the natural correlations among observables, for example all observables are correlated in the first PC (${\sim}$75\% of total variance), while $N_\text{ch}$ is anti-correlated with the $v_n$ in the second PC (${\sim}$20\% of total variance).
@@ -474,7 +477,7 @@ The SVD of the data $Y$ is
   Y = VDW\tran
   \label{eq:svd}
 \end{equation}
-where $V$, $W$ are orthogonal matrices containing the so-called left and right-singular vectors of $Y$ and $D$ is diagonal containing the singular values.
+where $V$, $W$ are orthogonal matrices containing the so-called left- and right-singular vectors of $Y$ and $D$ is diagonal containing the singular values.
 Inserting \eqref{eq:svd} into \eqref{eq:cov} yields
 \begin{equation}
   Y\tran Y = W D^2 W\tran = U \Lambda U\tran,
@@ -490,7 +493,7 @@ hence the singular values $D$ are the square root of the eigenvalues $\Lambda$ a
 
 \widefig{validation}{
   Validation of the Gaussian process emulator for the Glauber model.
-  Each plot shows emulator predictions against explicit calculations for the 64 validation design points in centrality bins 0--5\% (green circles), 20--25\% (orange triangles), and 40-45\% (purple squares).
+  Each plot shows emulator predictions against explicit calculations for the 64 validation design points in centrality bins 0--5\% (green circles), 20--25\% (orange triangles), and 40--45\% (purple squares).
   The $x$-value of each data point is the emulator prediction with $2\sigma$ (95\%) horizontal error bars, the $y$-value is the explicit calculation with $2\sigma$ (95\%) vertical error bars, and the diagonal grey line represents $y = x$.
 }
 
@@ -510,7 +513,7 @@ We use a squared-exponential covariance function with a noise term:
 \end{equation}
 where $\sigma_\text{GP}^2$ is the overall variance of the GP and $\ell_k$ is the characteristic length scale for dimension $k$.
 These \emph{hyperparameters} $(\sigma_\text{GP}$, $\sigma_n$, $\ell_k)$ are not known a priori and must be estimated from the training data, however, in the present case predictions appear to be relatively insensitive to the precise choice of hyperparameters, as will be demonstrated promptly.
-For details about the selection of hyperparameters see appendix \ref{app:train}.
+For details about the selection of hyperparameters see the \hyperref[app:train]{Appendix}.
 
 As with any interpolation scheme, the GP emulator must be validated to ensure it faithfully predicts model output.
 In other words, given an arbitrary test point $\x_*$, the GP prediction at $\x_*$ should agree (within its uncertainty) with an explicit computation at $\x_*$.
@@ -573,7 +576,7 @@ Ensemble sampling notably has a much shorter autocorrelation time than Metropoli
 }
 
 The MCMC algorithm samples proposal points $\xs$ and calculates the posterior probability at each point via Bayes' theorem.
-We place a non-informative flat prior on $\xs$, that is, the prior probability is constant within the design range (table~\ref{tab:design}) and zero outside.
+We place a non-informative flat prior on $\xs$, that is, the prior probability is constant within the design range (Table~\ref{tab:design}) and zero outside.
 We evaluate the likelihood in principal component space:
 \begin{equation}
   P(\zexp|\xs) \propto \exp\biggl\{ -\frac{1}{2} (\zs - \zexp)\tran \Sigma_z^{-1} (\zs - \zexp) \biggr\},
@@ -609,7 +612,7 @@ and the upper triangle has contour plots of the same joint distributions, where 
 
 A wealth of information may be gained from these posterior visualizations; the following highlights some important features.
 
-Focusing on the Glauber results in Fig.~\ref{fig:cal_post_glb}, we see the shear viscosity $\eta/s$ (fourth diagonal plot) has a narrow approximately-normal distribution located near the commonly quoted value 0.08.
+Focusing on the Glauber results in Fig.~\ref{fig:cal_post_glb}, we see the shear viscosity $\eta/s$ (fourth diagonal plot) has a narrow approximately normal distribution located near the commonly quoted value 0.08.
 As expected, $\eta/s$ is tightly constrained by experimental flow data.
 Going across the fourth row, we observe nontrivial correlations among $\eta/s$ and other parameters, for example, $\eta/s$ and the hydrodynamic thermalization time $\tau_0$ are negatively correlated (fourth row, third column).
 As $\tau_0$ increases, the medium expands as a fluid for less time, so less flow develops, and viscosity must decrease to compensate.
@@ -628,7 +631,7 @@ The KLN results in Fig.~\ref{fig:cal_post_kln} generally exhibit wider, less nor
 This suggests that KLN is somewhat less flexible than Glauber, so its overall behavior is relatively insensitive to the specific values of input parameters.
 
 The shear viscosity $\eta/s$ has a narrow, irregular distribution covering the common value 0.20.
-As with Glauber, $\eta/s$ has a negative correlation with $\tau_0$, there is a strong inverse relationship between normalization and $\tau_0$, and $k_\Pi$ has no effect.
+As with Glauber, $\eta/s$ has a negative correlation with $\tau_0$, there is a strong inverse relationship between normalization and $\tau_0$, and $k_\pi$ has no effect.
 The KLN parameter $\lambda$ has a flat marginal distribution, but there are strongly excluded regions in the joint distributions with normalization and $\tau_0$.
 This appears to be the same effect as observed with Glauber $\alpha$, except the dependence on $\lambda$ is significantly weaker.
 
@@ -692,23 +695,26 @@ We will include additional physical properties such as the size and shape of nuc
 Finally, we anticipate upgrades to the methodology itself, notably more rigorous treatment of uncertainties and quantification of input-output correlations (analysis of variance).
 
 
-\section*{Acknowledgments}
-
+\begin{acknowledgments}
 We would like to thank Scott Pratt, Ulrich Heinz, Chun Shen, and Paul Sorensen for helpful discussions and valuable feedback.
 This work would not have been possible without the foundations laid by the MADAI collaboration, funded through NSF grant no.~PHY-0941373, and the Statistical and Applied Mathematical Sciences Institute (SAMSI) program on massive datasets, funded through NSF grant no.~DMS-1127914.
-SAB is supported by the U.S.\ Department of Energy Grant no.~DE-FG02-05ER41367;
-JEB by grants NSF no.~PHY-0941373 and DOE no.~DE-FG02-05ER41367;
-RLW by grants NSF no.~DMS-1228317 and NASA AISR no.~NNX09AK60G.
+SAB is supported by the U.S.\ Department of Energy grant no.~DE-FG02-05ER41367;
+JEB by NSF grant no.~PHY-0941373 and DOE grant no.~DE-FG02-05ER41367;
+RLW by NSF grant no.~DMS-1228317 and NASA AISR grant no.~NNX09AK60G.
 This research was completed using over five million CPU hours provided by the Open Science Grid \cite{Pordes:2007zzb,Sfiligoi:2010zz}, which is supported by the National Science Foundation and the U.S.\ Department of Energy's Office of Science.
 All code used in this project is publicly available \cite{Bernhard:2015mtd}.
 Several third-party software packages were invaluable:
 the Python MCMC toolkit \texttt{emcee} \cite{FM:2013mc} and Gaussian process library \texttt{george} \cite{Ambikasaran:2014gp}, and the general-purpose tool \texttt{GNU Parallel} \cite{Tange:2011pa}.
+\end{acknowledgments}
 
 
 \appendix
 
-
-\section{\label{app:train}Training the emulator}
+% only one appendix section -- don't want section a letter (Appendix A)
+% manually set the equation numbering to (A1), (A2), ...
+\section*{\label{app:train}Appendix: Training the emulator}
+\renewcommand{\theequation}{A\arabic{equation}}
+\setcounter{equation}{0}
 
 \newcommand{\vectheta}{\boldsymbol\theta}
 
@@ -779,7 +785,7 @@ We constrain the length scales to $[0.3, 10]$ for numerical robustness.
 In this work we fix the hyperparameters to the maximum-likelihood estimates during calibration.
 This neglects uncertainty in the hyperparameters themselves, although the present event-by-event model is well-behaved and the sample size is large, so varying the hyperparameters weakly affects the actual emulator predictions.
 But ideally, one would consider \emph{all} predictions consistent with the data---not only the most likely---by MCMC-sampling the hyperparameter posteriors.
-This significantly increases computational cost, since the GPs must be re-conditioned for every set of hyperparameters, and conditioning requires computation of the inverse covariance matrix, an $\mathcal O(n^3)$ operation.
+This significantly increases computational cost, since the GPs must be reconditioned for every set of hyperparameters, and conditioning requires computation of the inverse covariance matrix, an $\mathcal O(n^3)$ operation.
 We forgo this refinement until a future study.
 
 
