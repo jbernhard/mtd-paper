@@ -1,8 +1,8 @@
 \documentclass{beamer}
 
 \definecolor{theme}{RGB}{28,90,127}
-\definecolor{almostblack}{HTML}{262626}
-\setbeamercolor{normal text}{fg=almostblack}
+\definecolor{offblack}{HTML}{262626}
+\setbeamercolor{normal text}{fg=offblack}
 
 \usecolortheme[named=theme]{structure}
 \usecolortheme{dolphin}  % outer color theme
@@ -36,7 +36,17 @@
 
 % clean up footer
 \beamertemplatenavigationsymbolsempty
-\setbeamertemplate{footline}[frame number]
+\defbeamertemplate{footline}{custom footline}{
+  \usebeamercolor[fg]{page number in head/foot}
+  \usebeamerfont{page number in head/foot}
+  \quad
+  \insertauthor\enskip(\insertshortinstitute)
+  \hfill
+  \insertshorttitle
+  \hfill
+  \insertframenumber\,/\,\inserttotalframenumber\kern1em\vskip2pt
+}
+\setbeamertemplate{footline}[custom footline]
 
 \useinnertheme{default}
 \setbeamertemplate{itemize item}{\raise.35ex\hbox{\vrule width .7ex height .7ex}}
@@ -67,10 +77,10 @@
 \newcommand{\yexp}{\y_\text{exp}}
 \newcommand{\zexp}{\z_\text{exp}}
 
-\title{Quantifying properties of hot and dense QCD matter through systematic model-to-data comparison}
+\title[Quantifying QGP properties through model-to-data comparison]
+{Quantifying properties of hot and dense QCD matter through systematic model-to-data comparison}
 \author{Jonah Bernhard}
-\institute{QCD group meeting}
-\date{\today}
+\institute[Duke]{Duke University}
 
 
 \begin{document}
@@ -79,10 +89,31 @@
 \section{Title}
 
 \begin{frame}[plain,noframenumbering]
-  \maketitle
+  \centering
+  \linespread{1.3}
+
+  \large
+  \color{theme}
+  \parbox{.9\textwidth}{\centering\inserttitle}
+
+  \vskip1.5em
+
   \tiny
-  J.~E.~Bernhard, P.~W.~Marcy, C.~E.~Coleman-Smith, S.~Huzurbazar, R.~L.~Wolpert, and S.~A.~Bass,
-  arXiv:1502.00339 [nucl-th].
+  \color{offblack}
+  J.~E.~Bernhard, P.~W.~Marcy, C.~E.~Coleman-Smith, S.~Huzurbazar, R.~L.~Wolpert, and S.~A.~Bass, \\
+  PRC accepted, arXiv:1502.00339 [nucl-th].
+
+  \vskip3em
+  \color{theme}
+  \hrule
+  \vskip3em
+
+  \small
+  \color{offblack}
+  \insertauthor\ (\insertinstitute) \\
+  \vskip1em
+  \scriptsize
+  CIPANP 2015\hskip2ex\textbar\hskip2ex Friday, May 22
 \end{frame}
 
 
@@ -91,9 +122,9 @@
 \begin{frame}{Model-to-data comparison}
   \centering
   \def\tw{\textwidth}
-  \vspace{.03\tw}
+  \vspace{.02\tw}
   \begin{tikzpicture}[semithick]
-    \def\pw{.33\tw}
+    \def\pw{.30\tw}
     \def\dx{.55\tw}
     \def\dy{.26\tw}
     \node (lhc) {\includegraphics[width=\pw]{third_party/lhc}};
@@ -113,7 +144,7 @@
         \includegraphics[width=.33\tw]{third_party/evolution5}
       };
     \node[right of=expdata, node distance=\dx, draw, thin] (modeldata)
-      {\includegraphics[width=.4\tw]{prior_draws}};
+      {\includegraphics[width=.38\tw]{prior_draws}};
     \path[->] (lhc)        edge (expevent)
               (expevent)   edge (expdata)
               (modelinput) edge (modelevo)
@@ -160,7 +191,7 @@
     \end{center}
     \begin{itemize}
       \item Event-by-event model
-      \item Vary many parameters
+      \item Many parameters
       \item Continuous parameter space
       \item Quantitative constraints including uncertainty
     \end{itemize}
@@ -218,7 +249,6 @@
 \end{frame}
 
 \begin{frame}{Calibration parameters}
-  \smallskip
   \begin{equation*}
     \color{theme}
     \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, k_\pi)
@@ -237,37 +267,6 @@
     $k_\pi$ & Shear relax $\tau_\pi = 6k_\pi\eta/(sT)$ & 0.2--1.1 \\
     \bottomrule
   \end{tabular}
-
-  \medskip
-  Fixed parameters:
-  \begin{itemize}
-    \item Disk nucleons, size determined by $\sigma_\text{NN}$
-    \item $T_\text{switch} = 165$ MeV
-  \end{itemize}
-\end{frame}
-
-
-\begin{frame}{Computer experiment design}
-  \begin{columns}
-    \column{.5\textwidth}
-    Maximin Latin hypercube
-    \begin{itemize}
-      \item Random, space-filling points
-      \item \emph{Maximizes} the \emph{minimum} distance between points \\
-        $\rightarrow$ avoids gaps and clusters
-      \item Uniform projections into lower dimensions
-    \end{itemize}
-    \smallskip
-    This work:
-    \begin{itemize}
-      \item 256 points across 5 dimensions
-      \item 6 centrality bins
-      \item \order 7 events in total
-    \end{itemize}
-
-    \column{.5\textwidth}
-    \includegraphics{design}
-  \end{columns}
 \end{frame}
 
 
@@ -284,90 +283,32 @@
 \end{frame}
 
 
-\begin{frame}{Gaussian processes}
-  \tikz\node[fill=theme!25, text width=.94\textwidth, inner sep=.03\textwidth] {
-    A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
-  };
-  \smallskip
-  \begin{columns}[c]
-    \column{.6\textwidth}
-    \begin{itemize}
-      \item Stochastic function: $\x \rightarrow y$ \\
-        \begin{itemize}
-          \item $\x$ = $n$-dimensional input vector
-          \item $y$ = normally distributed output
-        \end{itemize}
-      \item Specified by
-        \begin{itemize}
-          \item Mean function $\mu(\x)$
-          \item Covariance function $\sigma(\x, \x')$ \\
-            e.g.:
-            \begin{equation*}
-              \sigma(\x, \x') = \exp\biggl( -\frac{|\x - \x'|^2}{2\ell^2} \biggr)
-            \end{equation*}
-        \end{itemize}
-    \end{itemize}
-    \column{.4\textwidth}
-    \hspace*{-.15\textwidth}
-    \includegraphics[width=1.2\textwidth, trim=0cm 0cm 5.1cm .4cm, clip]{gp}
-  \end{columns}
-\end{frame}
-
-
 \begin{frame}{Gaussian process emulator}
-  \begin{itemize}
-    \item Non-parametric interpolation
-    \item Predicts \emph{probability distributions}
-      \begin{itemize}
-        \item Narrow near training points, wide in gaps
-      \end{itemize}
-    \item Fast ``surrogate'' to actual model
-  \end{itemize}
-  \bigskip
+  \vspace{1em}
+  \begin{columns}[c]
+    \column{.52\textwidth}
+    \tikz\node[text width=\textwidth, align=justify, inner sep=1ex, draw, semithick, color=theme] {
+      A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+    };
+    \column{.57\textwidth}
+    \begin{itemize}
+      \item Non-parametric interpolation
+      \item Predicts \emph{probability distributions}
+        \begin{itemize}
+          \item Narrow near training points, \\ wide in gaps
+        \end{itemize}
+      \item Fast ``surrogate'' to actual model
+    \end{itemize}
+  \end{columns}
+  \vspace{1.5em}
   \centering
   \includegraphics{gp}
 \end{frame}
 
 
-\begin{frame}{Multivariate output}
-  3 observables $\times$ 6 centralities = 18 outputs \\
-  Training data $Y$ = 256 $\times$ 18 matrix
-  \smallskip
-  \begin{columns}[c]
-    \column{.5\textwidth}
-    \begin{itemize}
-      \item Independent emulators?
-        \begin{itemize}
-          \item What if 100 outputs?
-          \item Neglects correlations
-        \end{itemize}
-      \item Principal components
-        \begin{itemize}
-          \item Eigenvectors of sample covariance matrix
-            \begin{align*}
-              Y\tran Y &= U \Lambda U\tran \\
-              Z &= \sqrt m \, YU
-            \end{align*}
-          \item Orthogonal and uncorrelated
-        \end{itemize}
-    \end{itemize}
-    \centering
-    $\rightarrow$ Emulate each PC
-    \column{.5\textwidth}
-    \centering
-    \only<1>{\includegraphics{pc_scatter}}
-    \only<2>{
-      Dimensionality reduction: \\[1ex]
-      \includegraphics{pc_var}
-    }
-  \end{columns}
-\end{frame}
-
-
 \begin{frame}{Validation}
   \begin{itemize}
-    \item Independent 64-point design
-    \item Run model at each point
+    \item Run model at each validation point
     \item Predict output with emulator
   \end{itemize}
   \medskip
@@ -431,7 +372,7 @@
 \end{frame}
 
 
-\begin{frame}{}
+\begin{frame}[plain]
   \vspace{.5ex}
   \centering
   \includegraphics{cal_post_glb}
@@ -441,7 +382,7 @@
 \end{frame}
 
 
-\begin{frame}{}
+\begin{frame}[plain]
   \vspace{.5ex}
   \centering
   \includegraphics{cal_post_kln}
@@ -486,11 +427,11 @@
 
 \begin{frame}{Summary \& outlook}
   \begin{itemize}
-    \item Quantitative, systematic parameter extraction and model evaluation
+    \item Quantitative, systematic parameter extraction \\ and model evaluation
     \item Glauber approximately describes $\nch$, $v_2$, $v_3$
     \item KLN cannot simultaneously fit $v_2$, $v_3$
       \bigskip
-    \item New models: \trento; 3+1D hydro at RHIC
+    \item New models: \trento\ IC; 3+1D hydro at RHIC
     \item More input parameters and observables
     \item Improve treatment of uncertainty
   \end{itemize}
@@ -498,6 +439,65 @@
 
 
 \appendix
+
+
+\begin{frame}{Computer experiment design}
+  \begin{columns}
+    \column{.5\textwidth}
+    Maximin Latin hypercube
+    \begin{itemize}
+      \item Random, space-filling points
+      \item \emph{Maximizes} the \emph{minimum} distance between points \\
+        $\rightarrow$ avoids gaps and clusters
+      \item Uniform projections into lower dimensions
+    \end{itemize}
+    \smallskip
+    This work:
+    \begin{itemize}
+      \item 256 points across 5 dimensions
+      \item 6 centrality bins
+      \item \order 7 events in total
+    \end{itemize}
+
+    \column{.5\textwidth}
+    \includegraphics{design}
+  \end{columns}
+\end{frame}
+
+
+\begin{frame}{Multivariate output}
+  3 observables $\times$ 6 centralities = 18 outputs \\
+  Training data $Y$ = 256 $\times$ 18 matrix
+  \smallskip
+  \begin{columns}[c]
+    \column{.5\textwidth}
+    \begin{itemize}
+      \item Independent emulators?
+        \begin{itemize}
+          \item What if 100 outputs?
+          \item Neglects correlations
+        \end{itemize}
+      \item Principal components
+        \begin{itemize}
+          \item Eigenvectors of sample covariance matrix
+            \begin{align*}
+              Y\tran Y &= U \Lambda U\tran \\
+              Z &= \sqrt m \, YU
+            \end{align*}
+          \item Orthogonal and uncorrelated
+        \end{itemize}
+    \end{itemize}
+    \centering
+    $\rightarrow$ Emulate each PC
+    \column{.5\textwidth}
+    \centering
+    \only<1>{\includegraphics{pc_scatter}}
+    \only<2>{
+      Dimensionality reduction: \\[1ex]
+      \includegraphics{pc_var}
+    }
+  \end{columns}
+\end{frame}
 
 
 \begin{frame}{Training the emulator}
