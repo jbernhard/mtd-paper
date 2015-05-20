@@ -41,7 +41,7 @@
   \usebeamerfont{page number in head/foot}
   \quad
   \insertauthor\enskip(\insertshortinstitute)
-  \hfill
+  \hskip 7em
   \insertshorttitle
   \hfill
   \insertframenumber\,/\,\inserttotalframenumber\kern1em\vskip2pt
@@ -62,6 +62,7 @@
 \usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{tikz}
+\usetikzlibrary{matrix}
 
 \newcommand{\avg}[1]{\langle #1 \rangle}
 \newcommand{\nch}{N_\text{ch}}
@@ -155,6 +156,73 @@
 \end{frame}
 
 
+\begin{frame}{Collective flow and $\eta/s$}
+  \begin{columns}
+    \column{.13\textwidth}
+    \includegraphics[width=\textwidth]{third_party/evolution1} \\
+    \includegraphics[width=\textwidth]{third_party/evolution2} \\
+    \includegraphics[width=\textwidth]{third_party/evolution3} \\
+    \includegraphics[width=\textwidth]{third_party/evolution4} \\
+    \includegraphics[width=\textwidth]{third_party/evolution5}
+
+    \column{.55\textwidth}
+    \vspace{-2em}
+    \begin{center}
+      \begin{tikzpicture}
+        \small
+        \matrix[ampersand replacement=\&, column sep=2ex, row sep=2ex] {
+          \coordinate (L) at (-.48, 0);
+          \coordinate (R) at ( .48, 0);
+          \begin{scope}
+            \clip (L) circle (.8);
+            \clip (R) circle (.8);
+            \shade[inner color=yellow, outer color=red] (0, 0) ellipse (.4 and .7);
+          \end{scope}
+          \begin{scope}[thick]
+            \draw (L) circle (.8);
+            \draw (R) circle (.8);
+          \end{scope}
+          \draw[->] (L) -- (R) node[above] {$b$}; \&
+          \node {0 fm/$c$}; \\
+          \begin{scope}[semithick, ->]
+            \shade[inner color=red, outer color=black] (0, 0) ellipse (.6 and .3);
+            \draw (0:.7) -- (0:1.2);
+            \draw (0:-.7) -- (0:-1.2);
+            \draw (90:.4) -- (90:.6);
+            \draw (-90:.4) -- (-90:.6);
+          \end{scope} \&
+          \node {${\sim}$10 fm/$c$}; \\
+        };
+      \end{tikzpicture}
+    \end{center}
+    \raggedright
+    \parbox[t][.5\textwidth][t]{\textwidth}{
+      \only<1>{%
+        Initial spatial anisotropy \\
+        $\rightarrow$ final momentum anisotropy (flow) \\[1ex]
+        Shear viscosity $\eta/s$ washes out \\ collective behavior \\
+        $\rightarrow$ suppresses flow
+      }
+      \only<2>{%
+        Parametrize momentum anisotropy by flow (Fourier) coefficients $v_n$
+        \begin{equation*}
+          \frac{dN}{d\phi} \propto 1 + \sum_n v_n \cos [ n(\phi - \psi_n) ]
+        \end{equation*}
+        $v_2$ (elliptic), $v_3$ (triangular), \ldots \\[1ex]
+        increase $\eta/s$ $\implies$ $v_n$ decrease
+      }
+    }
+
+    \column{.28\textwidth}
+    \small
+    Fermi gas: \\[.5ex]
+    \includegraphics[width=.9\textwidth]{third_party/lithium} \\
+    \tiny K.~M.~O'Hara {\em et.\ al.}, Science {\bf 298}, 2179 (2002).
+  \end{columns}
+
+\end{frame}
+
+
 \begin{frame}{Measuring QGP $\eta/s$}
   \begin{enumerate}
     \item Observe experimental $v_n$
@@ -235,45 +303,47 @@
 
 
 \begin{frame}{Event-by-event model}
-  \begin{itemize}
-    \item MC-Glauber \& MC-KLN initial conditions \\
-      \hspace{1em} {\tiny H.-J.\ Drescher and Y.\ Nara, PRC {\bf 74}, 044905 (2006).}
-    \item Viscous 2+1D hydro \\
-      \hspace{1em} {\tiny H.\ Song and U.\ Heinz, PRC {\bf 77}, 064901 (2008).}
-    \item Cooper-Frye hypersurface sampler \\
-      \hspace{1em} {\tiny C.~Shen, Z.~Qiu, H.~Song, J.~Bernhard, S.~Bass, and U.~Heinz, arXiv:1409.8164 [nucl-th].}
-    \item UrQMD \\
-      \hspace{1em} {\tiny S.\ Bass \emph{et.\ al.}, Prog.\ Part.\ Nucl.\ Phys.\  {\bf 41}, 255 (1998).} \\[-1ex]
-      \hspace{1em} {\tiny M.\ Bleicher \emph{et.\ al.}, J.\ Phys.\ G {\bf 25}, 1859 (1999).}
-  \end{itemize}
+    \begin{itemize}
+      \item MC-Glauber \& MC-KLN initial conditions \\
+        \quad {\tiny H.-J.\ Drescher and Y.\ Nara, PRC {\bf 74}, 044905 (2006).}
+      \item Viscous 2+1D hydro \\
+        \quad {\tiny H.\ Song and U.\ Heinz, PRC {\bf 77}, 064901 (2008).}
+      \item Cooper-Frye hypersurface sampler \\
+        \quad {\tiny C.~Shen, Z.~Qiu, H.~Song, J.~Bernhard, S.~Bass, and U.~Heinz, arXiv:1409.8164 [nucl-th].}
+      \item UrQMD \\
+        \quad {\tiny S.\ Bass \emph{et.\ al.}, Prog.\ Part.\ Nucl.\ Phys.\  {\bf 41}, 255 (1998).} \\[-1ex]
+        \quad {\tiny M.\ Bleicher \emph{et.\ al.}, J.\ Phys.\ G {\bf 25}, 1859 (1999).}
+    \end{itemize}
 \end{frame}
 
-\begin{frame}{Calibration parameters}
-  \begin{equation*}
-    \color{theme}
-    \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, k_\pi)
-  \end{equation*}
 
-  \begin{tabular}{lll}
-    \toprule
-    Parameter & Description & Range \\
-    \midrule
-    Glb Norm & Overall normalization & 20--60 \\
-    Glb $\alpha$ & Wounded nucleon / binary coll. & 0.05--0.30 \\
-    KLN Norm & Overall normalization & 5--15 \\
-    KLN $\lambda$ & Saturation scale exponent & 0.1--0.3 \\
-    $\tau_0$ & Thermalization time & 0.2--1.0 fm \\
-    $\eta/s$ & Specific shear viscosity & 0--0.3 \\
-    $k_\pi$ & Shear relax $\tau_\pi = 6k_\pi\eta/(sT)$ & 0.2--1.1 \\
-    \bottomrule
-  \end{tabular}
+\begin{frame}{Calibration parameters}
+  Initial condition params:
+  \begin{itemize}
+    \item Overall normalization factor
+    \item $\alpha$ (Glauber), $\lambda$ (KLN) \\
+      $\rightarrow$ both control centrality dependence of multiplicity
+  \end{itemize}
+  Hydro params:
+  \begin{itemize}
+    \item Thermalization time $\tau_0$
+    \item Specific shear viscosity $\eta/s$
+    \item Shear relaxation time $\tau_\pi = 6k_\pi\eta/(sT)$ \enskip [vary $k_\pi$]
+  \end{itemize}
+  \bigskip
+  Design:
+  \begin{itemize}
+    \item 250 points in parameter space
+    \item $\mathcal O(10^4)$ events at each point
+    \item All parameters varied simultaneously
+  \end{itemize}
 \end{frame}
 
 
 \begin{frame}{Training data}
   \bigskip
   \centering
-  Model calculations for each design point \\
+  Model calculations at each parameter point \\
   \bigskip
   \includegraphics{prior_draws}
   \flushright
@@ -321,45 +391,20 @@
   \begin{equation*}
     \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, k_\pi)
   \end{equation*}
-  \hspace{1em}$\rightarrow$ assume exists \emph{true} parameters $\xs$, find probability dist. \\[2ex]
-  \textbf{Bayes' theorem:}
-  \begin{equation*}
-    P(\xs|X,Y,\yexp) \propto P(X,Y,\yexp|\xs) P(\xs)
-  \end{equation*}
-  \vspace{-3ex}
-  \begin{itemize}
-    \item $P(\xs)$ = prior \\
-      $\rightarrow$ initial knowledge of $\xs$
-    \item $P(X,Y,\yexp|\xs)$ = likelihood \\
-      $\rightarrow$ prob.\ of observing $(X, Y, \yexp)$ given proposed $\xs$
-      \color{theme!80!black}
-    \item $P(\xs|X,Y,\yexp)$ = posterior \\
-      $\rightarrow$ prob.\ of $\xs$ given observations $(X, Y, \yexp)$
-  \end{itemize}
-\end{frame}
+  \quad $\rightarrow$ find posterior probability distribution of true parameters $\xs$
 
+  \bigskip
 
-\begin{frame}{MCMC}
-  Markov chain Monte Carlo
+  Markov chain Monte Carlo (MCMC):
   \begin{itemize}
-    \item Directly samples posterior probability
+    \item Directly samples probability
+      \begin{equation*}
+        P(\xs) \sim \exp\biggl[ -\frac{(\xs - \x_\text{exp})^2}{2\sigma^2} \biggr]
+      \end{equation*}
     \item Random walk through parameter space
     \item Large number of samples \\
-      $\rightarrow$ chain equilibrates to posterior
+      $\rightarrow$ chain equilibrates to posterior distribution
   \end{itemize}
-  \medskip
-  Likelihood:
-  \begin{equation*}
-    P(\zexp|\xs) \propto \exp\biggl[ -\frac{(\zs - \zexp)^2}{2\sigma_z^2} \biggr]
-  \end{equation*}
-  \vspace{-1em}
-  \begin{itemize}
-    \item $\zexp$ = PC transformed experimental data
-    \item $\zs$ = PC emulator prediction at $\xs$
-    \item $\sigma_z$ = fractional uncertainty = 0.06
-  \end{itemize}
-  \smallskip
-  Posterior = likelihood within design range, zero outside
 \end{frame}
 
 
@@ -431,14 +476,58 @@
     \item Glauber approximately describes $\nch$, $v_2$, $v_3$
     \item KLN cannot simultaneously fit $v_2$, $v_3$
       \bigskip
-    \item New models: \trento\ IC; 3+1D hydro at RHIC
+    \item New models
     \item More input parameters and observables
+    \item RHIC and LHC
     \item Improve treatment of uncertainty
   \end{itemize}
 \end{frame}
 
 
 \appendix
+
+
+\begin{frame}{Gaussian processes}
+  \tikz\node[fill=theme!25, text width=.94\textwidth, inner sep=.03\textwidth] {
+    A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+  };
+  \smallskip
+  \begin{columns}[c]
+    \column{.6\textwidth}
+    \begin{itemize}
+      \item Stochastic function: $\x \rightarrow y$ \\
+        \begin{itemize}
+          \item $\x$ = $n$-dimensional input vector
+          \item $y$ = normally distributed output
+        \end{itemize}
+      \item Specified by
+        \begin{itemize}
+          \item Mean function $\mu(\x)$
+          \item Covariance function $\sigma(\x, \x')$ \\
+            e.g.:
+            \begin{equation*}
+              \sigma(\x, \x') = \exp\biggl( -\frac{|\x - \x'|^2}{2\ell^2} \biggr)
+            \end{equation*}
+        \end{itemize}
+    \end{itemize}
+    \column{.4\textwidth}
+    \hspace*{-.15\textwidth}
+    \includegraphics[width=1.2\textwidth, trim=0cm 0cm 5.1cm .4cm, clip]{gp}
+  \end{columns}
+\end{frame}
+
+
+\begin{frame}{Training the emulator}
+  Covariance function:
+  \begin{equation*}
+    \sigma(x, x') = \exp\biggl( -\frac{|x - x'|^2}{2\ell^2} \biggr) +
+                    \sigma_n^2\delta_{xx'}
+  \end{equation*}
+  $(\ell, \sigma_n)$ are unknown hyperparameters \\
+  \bigskip
+  \centering
+  \includegraphics{training}
+\end{frame}
 
 
 \begin{frame}{Computer experiment design}
@@ -500,16 +589,19 @@
 \end{frame}
 
 
-\begin{frame}{Training the emulator}
-  Covariance function:
+\begin{frame}{Bayes' theorem}
   \begin{equation*}
-    \sigma(x, x') = \exp\biggl( -\frac{|x - x'|^2}{2\ell^2} \biggr) +
-                    \sigma_n^2\delta_{xx'}
+    P(\xs|X,Y,\yexp) \propto P(X,Y,\yexp|\xs) P(\xs)
   \end{equation*}
-  $(\ell, \sigma_n)$ are unknown hyperparameters \\
-  \bigskip
-  \centering
-  \includegraphics{training}
+  \begin{itemize}
+    \item $P(\xs)$ = prior \\
+      $\rightarrow$ initial knowledge of $\xs$
+    \item $P(X,Y,\yexp|\xs)$ = likelihood \\
+      $\rightarrow$ prob.\ of observing $(X, Y, \yexp)$ given proposed $\xs$
+      \color{theme!80!black}
+    \item $P(\xs|X,Y,\yexp)$ = posterior \\
+      $\rightarrow$ prob.\ of $\xs$ given observations $(X, Y, \yexp)$
+  \end{itemize}
 \end{frame}
 
 
