@@ -120,6 +120,60 @@
 
 \section{Introduction}
 
+\begin{frame}{Collective flow and $\eta/s$}
+  \begin{columns}
+    \column{.13\textwidth}
+    \includegraphics[width=\textwidth]{third_party/evolution1} \\
+    \includegraphics[width=\textwidth]{third_party/evolution2} \\
+    \includegraphics[width=\textwidth]{third_party/evolution3} \\
+    \includegraphics[width=\textwidth]{third_party/evolution4} \\
+    \includegraphics[width=\textwidth]{third_party/evolution5}
+
+    \column{.55\textwidth}
+    \vspace{-2em}
+    \begin{center}
+      \begin{tikzpicture}
+        \small
+        \matrix[ampersand replacement=\&, column sep=2ex, row sep=3ex] {
+          \coordinate (L) at (-.48, 0);
+          \coordinate (R) at ( .48, 0);
+          \begin{scope}
+            \clip (L) circle (.8);
+            \clip (R) circle (.8);
+            \shade[inner color=yellow, outer color=red] (0, 0) ellipse (.4 and .7);
+          \end{scope}
+          \begin{scope}[thick]
+            \draw (L) circle (.8);
+            \draw (R) circle (.8);
+          \end{scope}
+          \draw[->] (L) -- (R) node[above] {$b$}; \&
+          \node {0 fm/$c$}; \\
+          \begin{scope}[semithick, ->]
+            \shade[inner color=red, outer color=black] (0, 0) ellipse (.6 and .3);
+            \draw (0:.7) -- (0:1.2);
+            \draw (0:-.7) -- (0:-1.2);
+            \draw (90:.4) -- (90:.6);
+            \draw (-90:.4) -- (-90:.6);
+          \end{scope} \&
+          \node {${\sim}$10 fm/$c$}; \\
+        };
+      \end{tikzpicture}
+    \end{center}
+    \raggedright
+      Initial spatial anisotropy \\
+      $\rightarrow$ final momentum anisotropy (flow) \\[1ex]
+      Shear viscosity $\eta/s$ washes out \\ collective behavior \\
+      $\rightarrow$ suppresses flow
+
+    \column{.28\textwidth}
+    \small
+    Fermi gas: \\[.5ex]
+    \includegraphics[width=.9\textwidth]{third_party/lithium} \\
+    \tiny K.~M.~O'Hara {\em et.\ al.}, Science {\bf 298}, 2179 (2002).
+  \end{columns}
+\end{frame}
+
+
 \begin{frame}{Model-to-data comparison}
   \centering
   \def\tw{\textwidth}
@@ -156,77 +210,10 @@
 \end{frame}
 
 
-\begin{frame}{Collective flow and $\eta/s$}
-  \begin{columns}
-    \column{.13\textwidth}
-    \includegraphics[width=\textwidth]{third_party/evolution1} \\
-    \includegraphics[width=\textwidth]{third_party/evolution2} \\
-    \includegraphics[width=\textwidth]{third_party/evolution3} \\
-    \includegraphics[width=\textwidth]{third_party/evolution4} \\
-    \includegraphics[width=\textwidth]{third_party/evolution5}
-
-    \column{.55\textwidth}
-    \vspace{-2em}
-    \begin{center}
-      \begin{tikzpicture}
-        \small
-        \matrix[ampersand replacement=\&, column sep=2ex, row sep=2ex] {
-          \coordinate (L) at (-.48, 0);
-          \coordinate (R) at ( .48, 0);
-          \begin{scope}
-            \clip (L) circle (.8);
-            \clip (R) circle (.8);
-            \shade[inner color=yellow, outer color=red] (0, 0) ellipse (.4 and .7);
-          \end{scope}
-          \begin{scope}[thick]
-            \draw (L) circle (.8);
-            \draw (R) circle (.8);
-          \end{scope}
-          \draw[->] (L) -- (R) node[above] {$b$}; \&
-          \node {0 fm/$c$}; \\
-          \begin{scope}[semithick, ->]
-            \shade[inner color=red, outer color=black] (0, 0) ellipse (.6 and .3);
-            \draw (0:.7) -- (0:1.2);
-            \draw (0:-.7) -- (0:-1.2);
-            \draw (90:.4) -- (90:.6);
-            \draw (-90:.4) -- (-90:.6);
-          \end{scope} \&
-          \node {${\sim}$10 fm/$c$}; \\
-        };
-      \end{tikzpicture}
-    \end{center}
-    \raggedright
-    \parbox[t][.5\textwidth][t]{\textwidth}{
-      \only<1>{%
-        Initial spatial anisotropy \\
-        $\rightarrow$ final momentum anisotropy (flow) \\[1ex]
-        Shear viscosity $\eta/s$ washes out \\ collective behavior \\
-        $\rightarrow$ suppresses flow
-      }
-      \only<2>{%
-        Parametrize momentum anisotropy by flow (Fourier) coefficients $v_n$
-        \begin{equation*}
-          \frac{dN}{d\phi} \propto 1 + \sum_n v_n \cos [ n(\phi - \psi_n) ]
-        \end{equation*}
-        $v_2$ (elliptic), $v_3$ (triangular), \ldots \\[1ex]
-        increase $\eta/s$ $\implies$ $v_n$ decrease
-      }
-    }
-
-    \column{.28\textwidth}
-    \small
-    Fermi gas: \\[.5ex]
-    \includegraphics[width=.9\textwidth]{third_party/lithium} \\
-    \tiny K.~M.~O'Hara {\em et.\ al.}, Science {\bf 298}, 2179 (2002).
-  \end{columns}
-
-\end{frame}
-
-
 \begin{frame}{Measuring QGP $\eta/s$}
   \begin{enumerate}
-    \item Observe experimental $v_n$
-    \item Run model with variable $\eta/s$
+    \item Observe experimental flow coefficients $v_n$
+    \item Run model with variable $\eta/s$ \\
     \item Constrain $\eta/s$ by matching $v_n$
   \end{enumerate}
   \medskip
@@ -246,6 +233,7 @@
     \begin{center}
       \bf Older work
     \end{center}
+    \vspace{-1ex}
     \begin{itemize}
       \item Average calculations
       \item Only $\eta/s$
@@ -257,6 +245,7 @@
     \begin{center}
       \bf New projects
     \end{center}
+    \vspace{-1ex}
     \begin{itemize}
       \item Event-by-event model
       \item Many parameters
@@ -306,10 +295,13 @@
     \begin{itemize}
       \item MC-Glauber \& MC-KLN initial conditions \\
         \quad {\tiny H.-J.\ Drescher and Y.\ Nara, PRC {\bf 74}, 044905 (2006).}
+        \smallskip
       \item Viscous 2+1D hydro \\
         \quad {\tiny H.\ Song and U.\ Heinz, PRC {\bf 77}, 064901 (2008).}
+        \smallskip
       \item Cooper-Frye hypersurface sampler \\
         \quad {\tiny C.~Shen, Z.~Qiu, H.~Song, J.~Bernhard, S.~Bass, and U.~Heinz, arXiv:1409.8164 [nucl-th].}
+        \smallskip
       \item UrQMD \\
         \quad {\tiny S.\ Bass \emph{et.\ al.}, Prog.\ Part.\ Nucl.\ Phys.\  {\bf 41}, 255 (1998).} \\[-1ex]
         \quad {\tiny M.\ Bleicher \emph{et.\ al.}, J.\ Phys.\ G {\bf 25}, 1859 (1999).}
@@ -318,13 +310,13 @@
 
 
 \begin{frame}{Calibration parameters}
-  Initial condition params:
+  Initial condition parameters:
   \begin{itemize}
     \item Overall normalization factor
     \item $\alpha$ (Glauber), $\lambda$ (KLN) \\
       $\rightarrow$ both control centrality dependence of multiplicity
   \end{itemize}
-  Hydro params:
+  Hydro parameters:
   \begin{itemize}
     \item Thermalization time $\tau_0$
     \item Specific shear viscosity $\eta/s$
@@ -378,7 +370,8 @@
 
 \begin{frame}{Validation}
   \begin{itemize}
-    \item Run model at each validation point
+    \item Independent set of validation points \\
+      $\rightarrow$ run model at each point
     \item Predict output with emulator
   \end{itemize}
   \medskip
