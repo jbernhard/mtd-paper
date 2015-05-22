@@ -407,8 +407,8 @@ def gp():
     np.random.seed(321478)
     plt.rc('axes', color_cycle=plt.cm.Set2(np.linspace(0, 1, 8)).tolist())
 
-    fig, axes = plt.subplots(ncols=2, sharey='row',
-                             figsize=(textwidth, .65*aspect*textwidth))
+    fig, axes = plt.subplots(nrows=2, sharex='col',
+                             figsize=(.45*textwidth, .85*textheight))
 
     t = np.linspace(0, 5, 1000)
     x = np.linspace(.5, 4.5, 4)
@@ -421,16 +421,13 @@ def gp():
     y -= .5*(y.max() + y.min())
 
     mean_kw = dict(color='.42', dashes=(3.5, 1.5))
-    err_kw = dict(color='.93')
+    err_kw = dict(color='.9')
 
     ax = axes[0]
     ax.axhspan(-2, 2, **err_kw)
     ax.axhline(0, **mean_kw)
     for s in gp.sample(t, size=4):
         ax.plot(t, s)
-
-    ax.set_title('Random functions', fontsize=texnormal)
-    ax.set_ylabel('$y$')
 
     ax = axes[1]
     mu, cov = gp.predict(y, t)
@@ -441,14 +438,29 @@ def gp():
         ax.plot(t, s)
     ax.plot(x, y, 'o', ms=3, color=offblack)
 
-    ax.set_title('Conditioned on data', fontsize=texnormal)
+    ax.set_xlabel('Input')
+
+    ax.annotate(
+        '\n'.join([
+            'Dashed line: mean',
+            'Band: 2$\\sigma$ uncertainty',
+            'Colored lines: sampled functions'
+        ]), (.03, .03), xycoords='axes fraction',
+        ha='left', va='bottom', fontsize=7)
+
+    titles = ['Random functions',
+              'Conditioned on training data (dots)']
+
+    for ax, title in zip(axes, titles):
+        ax.annotate(title, (.5, .995), xycoords='axes fraction',
+                    ha='center', va='top', fontsize=7)
 
     for ax in axes:
-        ax.set_xlabel('$x$')
+        ax.set_ylabel('Output')
         ax.set_xlim(0, 5)
-        ax.set_ylim(-2.3, 2.3)
+        ax.set_ylim(-2.5, 2.5)
 
-    finish(pad=.1, w_pad=.6)
+    finish(pad=.2, h_pad=1)
 
 
 @plotfn

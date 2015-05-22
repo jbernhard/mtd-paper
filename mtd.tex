@@ -348,11 +348,14 @@
 \begin{frame}{Gaussian process emulator}
   \vspace{1em}
   \begin{columns}[c]
-    \column{.52\textwidth}
-    \tikz\node[text width=\textwidth, align=justify, inner sep=1ex, draw, semithick, color=theme] {
-      A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
-    };
-    \column{.57\textwidth}
+    \column{.58\textwidth}
+    Gaussian process:
+    \begin{itemize}
+      \item Stochastic function: maps inputs to normally-distributed outputs
+      \item Specified by mean and covariance functions
+    \end{itemize}
+    \bigskip
+    As a model emulator:
     \begin{itemize}
       \item Non-parametric interpolation
       \item Predicts \emph{probability distributions}
@@ -361,21 +364,23 @@
         \end{itemize}
       \item Fast ``surrogate'' to actual model
     \end{itemize}
+    \column{.45\textwidth}
+    \includegraphics{gp}
   \end{columns}
-  \vspace{1.5em}
-  \centering
-  \includegraphics{gp}
 \end{frame}
 
 
 \begin{frame}{Validation}
   \begin{itemize}
-    \item Independent set of validation points \\
-      $\rightarrow$ run model at each point
-    \item Predict output with emulator
+    \item Independent set of validation points
+    \item Run model and predict output with emulator at each point
+    \item Accurate predictions fall on diagonal line
   \end{itemize}
   \medskip
-  \includegraphics{validation}
+  \includegraphics{validation} \\[1em]
+  \scriptsize
+  \hspace{2em} Horizontal error bars: $2\sigma$ emulator uncertainty \\
+  \hspace{2em} Vertical error bars: $2\sigma$ statistical uncertainty
 \end{frame}
 
 
@@ -463,12 +468,16 @@
 
 \section{Conclusion}
 
-\begin{frame}{Summary \& outlook}
+\begin{frame}{Conclusion}
+  Summary:
   \begin{itemize}
     \item Quantitative, systematic parameter extraction \\ and model evaluation
     \item Glauber approximately describes $\nch$, $v_2$, $v_3$
     \item KLN cannot simultaneously fit $v_2$, $v_3$
-      \bigskip
+  \end{itemize}
+  \bigskip
+  Outlook:
+  \begin{itemize}
     \item New models
     \item More input parameters and observables
     \item RHIC and LHC
@@ -481,34 +490,39 @@
 
 
 \begin{frame}{Gaussian processes}
-  \tikz\node[fill=theme!25, text width=.94\textwidth, inner sep=.03\textwidth] {
+  \begin{definition}
     A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
-  };
-  \smallskip
-  \begin{columns}[c]
-    \column{.6\textwidth}
-    \begin{itemize}
-      \item Stochastic function: $\x \rightarrow y$ \\
-        \begin{itemize}
-          \item $\x$ = $n$-dimensional input vector
-          \item $y$ = normally distributed output
-        \end{itemize}
-      \item Specified by
-        \begin{itemize}
-          \item Mean function $\mu(\x)$
-          \item Covariance function $\sigma(\x, \x')$ \\
-            e.g.:
-            \begin{equation*}
-              \sigma(\x, \x') = \exp\biggl( -\frac{|\x - \x'|^2}{2\ell^2} \biggr)
-            \end{equation*}
-        \end{itemize}
-    \end{itemize}
-    \column{.4\textwidth}
-    \hspace*{-.15\textwidth}
-    \includegraphics[width=1.2\textwidth, trim=0cm 0cm 5.1cm .4cm, clip]{gp}
-  \end{columns}
+  \end{definition}
+  \medskip
+  Stochastic function: $\x \rightarrow y$ \\
+  \begin{itemize}
+    \item $\x$ = $n$-dimensional input vector
+    \item $y$ = normally distributed output
+  \end{itemize}
+  Specified by
+  \begin{itemize}
+    \item Mean function $\mu(\x)$
+    \item Covariance function $\sigma(\x, \x')$, e.g.:
+      \begin{equation*}
+        \sigma(\x, \x') = \exp\biggl( -\frac{|\x - \x'|^2}{2\ell^2} \biggr)
+      \end{equation*}
+  \end{itemize}
 \end{frame}
 
+
+\begin{frame}{Conditioning a Gaussian process}
+  Given
+  \begin{itemize}
+    \item training input points $X$ and
+    \item observed training outputs $\y$ at $X$
+  \end{itemize}
+  the predictive distribution at arbitrary test points $X_*$ is the multivariate-normal distribution
+  \begin{align*}
+    \y_* &\sim \mathcal N(\boldsymbol\mu, \Sigma), \\
+    \boldsymbol\mu &= \sigma(X_*, X)\sigma(X, X)^{-1}\y, \\
+    \Sigma &= \sigma(X_*,X_*) - \sigma(X_*,X)\sigma(X,X)^{-1}\sigma(X,X_*).
+  \end{align*}
+\end{frame}
 
 \begin{frame}{Training the emulator}
   Covariance function:
