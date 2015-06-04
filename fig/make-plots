@@ -9,6 +9,7 @@ import sys
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patch
 import matplotlib.ticker as tick
 import scipy.optimize as opt
 import george
@@ -665,6 +666,94 @@ def pc_var():
     ax.legend(loc='lower right')
 
     finish(pad=.2)
+
+
+@plotfn
+def sensitivity(ic, data):
+    sys.path.append('../mcmc')
+    with open('../mcmc/{}-data_handler.pkl'.format(ic), 'rb') as f:
+        data_handler = pickle.load(f)
+
+    npc = 5
+    ndim = data_handler.ndim
+    kernel = (
+        1. *
+        mtd.kernels.ExpSquaredKernel(np.full(ndim, .5), ndim=ndim) +
+        mtd.kernels.WhiteKernel(1e-8, ndim=ndim)
+    )
+    mgp = mtd.MultiGP(data_handler.design, data_handler.training_data,
+                      kernel, npc=npc)
+
+    for n, pars in enumerate(data.kernel_pars):
+        mgp.set_kernel_pars(n, pars)
+
+    post_mean = data.cal_chain.mean(axis=0)
+    ntest = 200
+
+    fig, axes = plt.subplots(nrows=len(observables), ncols=ndim,
+                             sharex='col', sharey='row',
+                             figsize=(1.1*textwidth, 1.03*textheight))
+
+    for n, (col, samples) in enumerate(zip(axes.T, data.cal_chain.T)):
+        interval = np.percentile(samples, (16, 84))
+        for ax, obs in zip(col, observables):
+            test_points = np.empty((ntest, ndim))
+            test_points[:] = post_mean
+
+            xmin, xmax = data.param_ranges[n]
+            X = np.linspace(xmin, xmax, ntest)
+            test_points[:, n] = X
+
+            pred_mean, pred_var = mgp.predict(test_points, mean_only=False)
+            pred = data_handler.unpack(pred_mean, np.sqrt(pred_var))
+
+            for icent in range(0, 5, 2):
+                Y = pred[obs[0]]['mean'][:, icent]
+                Yerr = pred[obs[0]]['std'][:, icent]
+
+                color = data.cmap(.9 - .1*icent)[:3]
+
+                centlabel = '–'.join(str(int(data.cent[icent]+d))
+                                     for d in (-2.5, 2.5)) + '%'
+
+                ax.plot(X, Y, color=color, lw=.5, zorder=50,
+                        label=centlabel)
+                ax.fill_between(X, Y+Yerr, Y-Yerr,
+                                facecolor=color, alpha=.3,
+                                edgecolor='none', zorder=30)
+
+                exp_mean = exp[obs[0]]['mean'][icent]
+                exp_err = exp[obs[0]]['sys'][icent]
+
+                ax.plot(post_mean[n], exp_mean, 'o', ms=1.8, mew=0,
+                        color=str(.3 + .05*icent))
+                rect = patch.Rectangle((interval[0], exp_mean - exp_err),
+                                       interval.ptp(), 2*exp_err, color='.8')
+                ax.add_patch(rect)
+
+            ax.set_xlim(xmin, xmax)
+
+        ax.set_xlabel(data.labels[n], labelpad=3)
+
+    for ax, obs, ymax in zip(axes[:, 0], observables, [4000, .12, .038]):
+        ax.set_ylabel(obs[1], labelpad=3)
+        ax.set_ylim(0, ymax)
+
+    for ax in axes.flat:
+        set_loc(ax)
+
+    axes[-1, 0].legend(loc='lower right', labelspacing=.3, fontsize=textiny)
+
+    for msg, ax in zip(
+            ['$x$ = posterior mean\nband = 1$\sigma$ C.I.',
+             '$y$ = ALICE value\nband = uncertainty'],
+            axes[-1, 1:3]):
+        ax.annotate(msg, (.07, .04), xycoords='axes fraction',
+                    ha='left', va='bottom', fontsize=textiny)
+
+    del mgp  # this should not be necessary!
+
+    finish(w_pad=.3)
 
 
 def main():
