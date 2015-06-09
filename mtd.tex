@@ -36,7 +36,18 @@
 
 % clean up footer
 \beamertemplatenavigationsymbolsempty
-\setbeamertemplate{footline}[frame number]
+\beamertemplatenavigationsymbolsempty
+\defbeamertemplate{footline}{custom footline}{
+  \usebeamercolor[fg]{page number in head/foot}
+  \usebeamerfont{page number in head/foot}
+  \quad
+  \insertauthor\enskip(\insertshortinstitute)
+  \hskip 7em
+  \insertshorttitle
+  \hfill
+  \insertframenumber\,/\,\inserttotalframenumber\kern1em\vskip2pt
+}
+\setbeamertemplate{footline}[custom footline]
 
 \useinnertheme{default}
 \setbeamertemplate{itemize item}{\raise.35ex\hbox{\vrule width .7ex height .7ex}}
@@ -70,7 +81,7 @@
 
 \title{Bayesian methods for constraining initial conditions and viscosity}
 \author{Jonah Bernhard}
-\institute{Duke University}
+\institute[Duke]{Duke University}
 
 
 \begin{document}
