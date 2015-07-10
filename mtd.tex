@@ -79,7 +79,9 @@
 \newcommand{\yexp}{\y_\text{exp}}
 \newcommand{\zexp}{\z_\text{exp}}
 
-\title{Bayesian methods for constraining initial conditions and viscosity}
+\title
+[Quantifying QCD properties through model-to-data comparison]
+{Quantifying properties of hot and dense QCD matter through systematic model-to-data comparison}
 \author{Jonah Bernhard}
 \institute[Duke]{Duke University}
 
@@ -97,7 +99,7 @@
 
   \large
   \color{theme}
-  \parbox{.6\textwidth}{\centering\inserttitle}
+  \parbox{.9\textwidth}{\centering\inserttitle}
 
   \vskip2em
   \color{theme}
@@ -106,11 +108,11 @@
 
   \small
   \color{offblack}
-  \insertauthor\ (\insertinstitute) \\
+  \insertauthor \\
   \vskip1em
   \scriptsize
-  2015 RHIC \& AGS Annual Users' Meeting \\
-  Tuesday, June 9
+  INT workshop: Correlations and fluctuations in p+A and A+A collisions \\
+  Tuesday, July 14, 2015
 
   \tikz[remember picture, overlay]
     \node[text width=\textwidth, anchor=south west, inner sep=1em]
@@ -189,7 +191,7 @@
     \vspace{-1ex}
     \begin{itemize}
       \item Average calculations
-      \item Only $\eta/s$
+      \item Single parameter and observable ($\eta/s \leftrightarrow v_2$)
       \item Several discrete values
       \item Qualitative constraints lacking uncertainty
     \end{itemize}
@@ -201,7 +203,7 @@
     \vspace{-1ex}
     \begin{itemize}
       \item Event-by-event model
-      \item Many parameters
+      \item Multiple parameters \\ and observables
       \item Continuous parameter space
       \item Quantitative constraints including uncertainty
     \end{itemize}
@@ -215,12 +217,12 @@
       PRC \textbf{89}, 034917 (2014), arXiv:1303.5769 [nucl-th].
     \item R.~A.~Soltz, I.~Garishvili, M.~Cheng, B.~Abelev, A.~Glenn, J.~Newby, L.~A.~Linden Levy, and S.~Pratt, \\
       PRC {\bf 87}, 044901 (2013), arXiv:1208.0897 [nucl-th].
-    \item  S.~Pratt, E.~Sangaline, P.~Sorensen,  and H.~Wang,
-      arXiv:1501.04042 [nucl-th].
+    \item  S.~Pratt, E.~Sangaline, P.~Sorensen,  and H.~Wang, \\
+      PRL {\bf 114}, 202301 (2015), arXiv:1501.04042 [nucl-th].
   \end{itemize}
 
   \tikz[overlay,remember picture]
-    \node[xshift=-3ex,yshift=6ex] at (current page.center)
+    \node[xshift=-3ex,yshift=10ex] at (current page.center)
     {$\color{theme}\Large\boldsymbol\longrightarrow$};
 \end{frame}
 
@@ -237,7 +239,7 @@
     \item Run model at small $\mathcal O(10^1$--$10^2)$ set of parameter points
     \item Interpolate with Gaussian process emulator \\
       $\rightarrow$ fast stand-in for actual model
-    \item Systematically explore parameter space with Markov chain Monte Carlo (MCMC)
+    \item Systematically explore parameter space using Bayes' theorem and Markov chain Monte Carlo (MCMC)
     \item Calibrate model emulator to optimally reproduce data \\
       $\rightarrow$ extract probability distributions for each parameter
   \end{enumerate}
@@ -269,19 +271,38 @@
     \item $\alpha$ (Glauber), $\lambda$ (KLN) \\
       $\rightarrow$ both control centrality dependence of multiplicity
   \end{itemize}
+  \medskip
   Hydro parameters:
   \begin{itemize}
     \item Thermalization time $\tau_0$
     \item Specific shear viscosity $\eta/s$
     \item Shear relaxation time $\tau_\pi = 6k_\pi\eta/(sT)$ \enskip [vary $k_\pi$]
   \end{itemize}
-  \bigskip
-  Design:
-  \begin{itemize}
-    \item 250 points in parameter space
-    \item $\mathcal O(10^4)$ events at each point
-    \item All parameters varied simultaneously
-  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Computer experiment design}
+  \begin{columns}
+    \column{.5\textwidth}
+    Latin-hypercube design:
+    \begin{itemize}
+      \item Semi-randomized, space-filling points
+      \item Avoids large gaps and tight clusters
+      \item All parameters varied simultaneously
+      \item Needs only $m \gtrsim 10n$ points
+    \end{itemize}
+    \smallskip
+    This work:
+    \begin{itemize}
+      \item $m = 256$ points across $n = 5$ dimensions
+      \item \order 4 events per point
+    \end{itemize}
+
+    \column{.5\textwidth}
+    \small
+    Design projected into $(\tau_0, \eta/s)$ dimensions: \\[1em]
+    \includegraphics{design}
+  \end{columns}
 \end{frame}
 
 
@@ -323,6 +344,34 @@
 \end{frame}
 
 
+\begin{frame}{Multivariate output}
+  \begin{columns}[t]
+    \column{.5\textwidth}
+    Model outputs $(\nch, v_2, v_3)$ \\
+    $\rightarrow$ independent emulators?
+    \begin{itemize}
+      \item Neglects correlations
+      \item What if 100 outputs?
+    \end{itemize}
+    \medskip
+    Principal components:
+    \begin{itemize}
+      \item Linear combinations of model output data
+      \item Orthogonal and uncorrelated
+    \end{itemize}
+    \medskip
+    $\rightarrow$ Emulate each PC
+    \column{.5\textwidth}
+    \small
+    PC decomposition of $\nch$ and $v_2$ data in one centrality bin: \\[1ex]
+    \includegraphics{pc_scatter}
+  \end{columns}
+  \medskip
+  $\nch$~:~$v_2$~:~$v_3$ weighted 1.2~:~1.0~:~0.6 \\
+  $\rightarrow$ encodes relative importance of describing each observable
+\end{frame}
+
+
 \begin{frame}{Validation}
   \begin{itemize}
     \item Independent set of validation points
@@ -342,19 +391,45 @@
   \begin{equation*}
     \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, k_\pi)
   \end{equation*}
-  \quad $\rightarrow$ find posterior probability distribution of true parameters $\xs$
+  \emph{Assume} true parameters $\xs$ exist $\rightarrow$ find probability dist.\ for $\xs$ \\[1.5ex]
+  Bayes' theorem:
+  \begin{equation*}
+    P(\xs|X,Y,\yexp) \propto P(X,Y,\yexp|\xs) P(\xs)
+  \end{equation*}
+  \vskip -1.5ex
+  \begin{itemize}
+    \item $P(\xs)$ = prior \\
+      $\rightarrow$ initial knowledge of $\xs$
+    \item $P(X,Y,\yexp|\xs)$ = likelihood \\
+      $\rightarrow$ prob.\ of observing $(X, Y, \yexp)$ given proposed $\xs$
+      \color{theme!80!black}
+    \item $P(\xs|X,Y,\yexp)$ = posterior \\
+      $\rightarrow$ prob.\ of $\xs$ given observations $(X, Y, \yexp)$
+  \end{itemize}
+\end{frame}
 
-  \bigskip
 
+\begin{frame}{MCMC}
   Markov chain Monte Carlo (MCMC):
   \begin{itemize}
-    \item Directly samples probability
-      \begin{equation*}
-        P(\xs) \sim \exp\biggl[ -\frac{(\xs - \x_\text{exp})^2}{2\sigma^2} \biggr]
-      \end{equation*}
-    \item Random walk through parameter space
+    \item Random walk through parameter space weighted by posterior
     \item Large number of samples \\
       $\rightarrow$ chain equilibrates to posterior distribution
+  \end{itemize}
+  \vskip 3ex
+  \begin{equation*}
+    \color{theme!80!black}
+    P(\xs|X,Y,\yexp) \propto P(X,Y,\yexp|\xs) P(\xs)
+  \end{equation*}
+  \vskip -3ex
+  \begin{itemize}
+    \item Flat prior within design range, zero outside
+    \item Likelihood:
+      \begin{equation*}
+        \log P(X,Y,\yexp|\xs) \sim -\frac{(\y_\star - \y_\text{exp})^2}{2\sigma^2}
+      \end{equation*}
+      $\sigma = 0.06$ on principal components (includes correlations)
+    \item Posterior = likelihood within design range, zero outside
   \end{itemize}
 \end{frame}
 
@@ -457,23 +532,32 @@
 \section{Conclusion}
 
 \begin{frame}{Summary}
+  Framework for quantitative, systematic parameter extraction \\ and model evaluation
+  \medskip
   \begin{itemize}
-    \item Quantitative, systematic parameter extraction \\ and model evaluation
+    \itemsep 2ex
+    \item Gaussian process emulator accurately predicts model output
+    \item MCMC gives full probability distributions for all parameters
     \item Glauber approximately describes $\nch$, $v_2$, $v_3$
     \item KLN cannot simultaneously fit $v_2$, $v_3$
   \end{itemize}
-  \medskip
-  Next:
+\end{frame}
+
+
+\begin{frame}{Next}
   \begin{itemize}
-    \item Initial condition models
+    \itemsep 1ex
+    \item Parametric initial condition models
       \begin{itemize}
-        \item Trento {\tiny(J.~S.~Moreland, J.~E.~Bernhard, S.~A.~Bass, arXiv:1412.4708 [nucl-th].)}
+        \item Trento (see Scott Moreland's talk tomorrow)
         \item fluctuated Glauber
       \end{itemize}
-    \item More input parameters: nucleon size, $T_\text{switch}$ \\
-    \item More observables: $\avg{p_T}$, $\vnk 2 4$, HBT, identified particles
+    \item More input parameters: nucleon size, \\ temperature-dependent $\eta/s$, bulk viscosity, $T_\text{switch}$
+    \item More observables: $\avg{p_T}$, $\vnk 2 4$, identified particles, HBT
     \item RHIC and LHC
     \item Improve treatment of uncertainty
+      \medskip
+    \item Eventually: simultaneous calibration to small systems
   \end{itemize}
 \end{frame}
 
@@ -529,77 +613,21 @@
 \end{frame}
 
 
-\begin{frame}{Computer experiment design}
-  \begin{columns}
-    \column{.5\textwidth}
-    Maximin Latin hypercube
-    \begin{itemize}
-      \item Random, space-filling points
-      \item \emph{Maximizes} the \emph{minimum} distance between points \\
-        $\rightarrow$ avoids gaps and clusters
-      \item Uniform projections into lower dimensions
-    \end{itemize}
-    \smallskip
-    This work:
-    \begin{itemize}
-      \item 256 points across 5 dimensions
-      \item 6 centrality bins
-      \item \order 7 events in total
-    \end{itemize}
-
-    \column{.5\textwidth}
-    \includegraphics{design}
-  \end{columns}
-\end{frame}
-
-
-\begin{frame}{Multivariate output}
-  3 observables $\times$ 6 centralities = 18 outputs \\
-  Training data $Y$ = 256 $\times$ 18 matrix
-  \smallskip
-  \begin{columns}[c]
-    \column{.5\textwidth}
-    \begin{itemize}
-      \item Independent emulators?
-        \begin{itemize}
-          \item What if 100 outputs?
-          \item Neglects correlations
-        \end{itemize}
-      \item Principal components
-        \begin{itemize}
-          \item Eigenvectors of sample covariance matrix
-            \begin{align*}
-              Y\tran Y &= U \Lambda U\tran \\
-              Z &= \sqrt m \, YU
-            \end{align*}
-          \item Orthogonal and uncorrelated
-        \end{itemize}
-    \end{itemize}
-    \centering
-    $\rightarrow$ Emulate each PC
-    \column{.5\textwidth}
-    \centering
-    \only<1>{\includegraphics{pc_scatter}}
-    \only<2>{
-      Dimensionality reduction: \\[1ex]
-      \includegraphics{pc_var}
-    }
-  \end{columns}
-\end{frame}
-
-
-\begin{frame}{Bayes' theorem}
-  \begin{equation*}
-    P(\xs|X,Y,\yexp) \propto P(X,Y,\yexp|\xs) P(\xs)
-  \end{equation*}
+\begin{frame}{Principal component analysis}
   \begin{itemize}
-    \item $P(\xs)$ = prior \\
-      $\rightarrow$ initial knowledge of $\xs$
-    \item $P(X,Y,\yexp|\xs)$ = likelihood \\
-      $\rightarrow$ prob.\ of observing $(X, Y, \yexp)$ given proposed $\xs$
-      \color{theme!80!black}
-    \item $P(\xs|X,Y,\yexp)$ = posterior \\
-      $\rightarrow$ prob.\ of $\xs$ given observations $(X, Y, \yexp)$
+    \item Concatenate model output data into matrix $Y$ where columns correspond to observables and rows to design points.
+    \item Principal components are the eigenvectors $U$ of the sample covariance matrix:
+      \begin{equation*}
+        Y\tran Y = U \Lambda U\tran
+      \end{equation*}
+    \item ``Rotate'' data into PC space:
+      \begin{equation*}
+        Z = \sqrt m \, YU
+      \end{equation*}
+    \item Transform back:
+      \begin{equation*}
+        Y' = \frac{1}{\sqrt m} Z' U\tran
+      \end{equation*}
   \end{itemize}
 \end{frame}
 
