@@ -80,7 +80,7 @@
 \newcommand{\zexp}{\z_\text{exp}}
 
 \title
-[Quantifying QCD properties through model-to-data comparison]
+[Quantifying QGP properties through model-to-data comparison]
 {Quantifying properties of hot and dense QCD matter through systematic model-to-data comparison}
 \author{Jonah Bernhard}
 \institute[Duke]{Duke University}
@@ -391,7 +391,7 @@
   \begin{equation*}
     \x = (\text{Norm}, \text{I.C.\ param}, \tau_0, \eta/s, k_\pi)
   \end{equation*}
-  \emph{Assume} true parameters $\xs$ exist $\rightarrow$ find probability dist.\ for $\xs$ \\[1.5ex]
+  Assume true parameters $\xs$ exist $\rightarrow$ find probability dist.\ for $\xs$ \\[1.5ex]
   Bayes' theorem:
   \begin{equation*}
     P(\xs|X,Y,\yexp) \propto P(X,Y,\yexp|\xs) P(\xs)
@@ -409,20 +409,12 @@
 \end{frame}
 
 
-\begin{frame}{MCMC}
-  Markov chain Monte Carlo (MCMC):
+\begin{frame}{Markov chain Monte Carlo (MCMC)}
   \begin{itemize}
     \item Random walk through parameter space weighted by posterior
     \item Large number of samples \\
       $\rightarrow$ chain equilibrates to posterior distribution
-  \end{itemize}
-  \vskip 3ex
-  \begin{equation*}
-    \color{theme!80!black}
-    P(\xs|X,Y,\yexp) \propto P(X,Y,\yexp|\xs) P(\xs)
-  \end{equation*}
-  \vskip -3ex
-  \begin{itemize}
+      \bigskip
     \item Flat prior within design range, zero outside
     \item Likelihood:
       \begin{equation*}
@@ -436,11 +428,28 @@
 
 \section{Results}
 
-\begin{frame}[plain,noframenumbering]
+\begin{frame}{$\eta/s$ posteriors}
+  \begin{itemize}
+    \item
+      \parbox{3.5em}{Glauber}
+      \parbox{5em}{$\eta/s \sim 0.06$,}
+      95\% C.I.\ $\sim$ 0.02--0.10
+    \item
+      \parbox{3.5em}{KLN}
+      \parbox{5em}{$\eta/s \sim 0.16$,}
+      95\% C.I.\ $\sim$ 0.12--0.21
+  \end{itemize}
+  \medskip
   \centering
-  \LARGE
-  Posterior distributions
+  \includegraphics{post_compare}
 \end{frame}
+
+
+% \begin{frame}[plain,noframenumbering]
+%   \centering
+%   \LARGE
+%   Posterior distributions
+% \end{frame}
 
 
 \begin{frame}[plain]
@@ -474,23 +483,6 @@
     Emulator predictions from calibrated posterior \\[3ex]
     \includegraphics{post_draws}
   }
-\end{frame}
-
-
-\begin{frame}{$\eta/s$ posteriors}
-  \begin{itemize}
-    \item
-      \parbox{3.5em}{Glauber}
-      \parbox{5em}{$\eta/s \sim 0.06$,}
-      95\% C.I.\ $\sim$ 0.02--0.10
-    \item
-      \parbox{3.5em}{KLN}
-      \parbox{5em}{$\eta/s \sim 0.16$,}
-      95\% C.I.\ $\sim$ 0.12--0.21
-  \end{itemize}
-  \medskip
-  \centering
-  \includegraphics{post_compare}
 \end{frame}
 
 
@@ -544,15 +536,15 @@
 \end{frame}
 
 
-\begin{frame}{Next}
+\begin{frame}{Version 2.0}
   \begin{itemize}
     \itemsep 1ex
     \item Parametric initial condition models
       \begin{itemize}
-        \item Trento (see Scott Moreland's talk tomorrow)
+        \item \trento\ (see Scott Moreland's talk tomorrow)
         \item fluctuated Glauber
       \end{itemize}
-    \item More input parameters: nucleon size, \\ temperature-dependent $\eta/s$, bulk viscosity, $T_\text{switch}$
+    \item More input parameters: nucleon size, \\ temperature-dependent $\eta/s$, bulk viscosity, \\ hydro-to-UrQMD switching temperature
     \item More observables: $\avg{p_T}$, $\vnk 2 4$, identified particles, HBT
     \item RHIC and LHC
     \item Improve treatment of uncertainty
