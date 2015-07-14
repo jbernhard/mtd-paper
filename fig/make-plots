@@ -756,6 +756,87 @@ def sensitivity(ic, data):
     finish(w_pad=.3)
 
 
+@plotfn
+def sensitivity_compare():
+    sys.path.append('../mcmc')
+
+    ntest = 200
+    test_idx = 3
+    obs = observables[1]
+
+    fig, axes = plt.subplots(ncols=len(ic_data), sharey='row',
+                             figsize=(.9*textwidth, .5*textheight))
+
+    for (ic, data), ax in zip(ic_data.items(), axes):
+        with open('../mcmc/{}-data_handler.pkl'.format(ic), 'rb') as f:
+            data_handler = pickle.load(f)
+
+        npc = 5
+        ndim = data_handler.ndim
+        kernel = (
+            1. *
+            mtd.kernels.ExpSquaredKernel(np.full(ndim, .5), ndim=ndim) +
+            mtd.kernels.WhiteKernel(1e-8, ndim=ndim)
+        )
+        mgp = mtd.MultiGP(data_handler.design, data_handler.training_data,
+                        kernel, npc=npc)
+
+        for n, pars in enumerate(data.kernel_pars):
+            mgp.set_kernel_pars(n, pars)
+
+        samples = data.cal_chain[:, test_idx]
+        interval = np.percentile(samples, (16, 84))
+
+        post_mean = data.cal_chain.mean(axis=0)
+
+        test_points = np.empty((ntest, ndim))
+        test_points[:] = post_mean
+
+        xmin, xmax = data.param_ranges[test_idx]
+        X = np.linspace(xmin, xmax, ntest)
+        test_points[:, test_idx] = X
+
+        pred_mean, pred_var = mgp.predict(test_points, mean_only=False)
+        pred = data_handler.unpack(pred_mean, np.sqrt(pred_var))
+
+        for icent in range(0, 5, 2):
+            Y = pred[obs[0]]['mean'][:, icent]
+            Yerr = pred[obs[0]]['std'][:, icent]
+
+            color = data.cmap(.9 - .1*icent)[:3]
+
+            centlabel = '–'.join(str(int(data.cent[icent]+d))
+                                    for d in (-2.5, 2.5)) + '%'
+
+            ax.plot(X, Y, color=color, lw=.5, zorder=50,
+                    label=centlabel)
+            ax.fill_between(X, Y+Yerr, Y-Yerr,
+                            facecolor=color, alpha=.3,
+                            edgecolor='none', zorder=30)
+
+            exp_mean = exp[obs[0]]['mean'][icent]
+            exp_err = exp[obs[0]]['sys'][icent]
+
+            ax.plot(post_mean[test_idx], exp_mean, 'o', ms=1.8, mew=0,
+                    color=str(.3 + .05*icent))
+            rect = patch.Rectangle((interval[0], exp_mean - exp_err),
+                                    interval.ptp(), 2*exp_err, color='.8')
+            ax.add_patch(rect)
+
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(0, 0.14)
+        ax.set_xlabel(data.labels[test_idx], labelpad=3)
+        ax.set_title(data.display_name, fontsize=texnormal)
+        set_loc(ax)
+
+        del mgp  # this should not be necessary!
+
+    axes[0].set_ylabel(obs[1], labelpad=3)
+    axes[0].legend(loc='upper right')
+
+    finish(pad=.1, w_pad=.4, remove_ticks=False)
+
+
 def main():
     if len(sys.argv) > 1:
         for a in sys.argv[1:]:
